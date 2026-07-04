@@ -11,6 +11,7 @@ export interface SpecTraitData {
   subTrees: SubTreeRecord[]
 }
 
+const NODE_TYPE_TIERED = 1
 const NODE_TYPE_CHOICE = 2
 const NODE_TYPE_SUBTREE_SELECTION = 3
 
@@ -133,11 +134,20 @@ export async function buildTraitData(source: WagoSource): Promise<Map<number, Sp
         ? 'subtree-selection'
         : type === NODE_TYPE_CHOICE
           ? 'choice'
-          : 'single'
+          : type === NODE_TYPE_TIERED
+            ? 'tiered'
+            : 'single'
+    const maxRanks =
+      type === NODE_TYPE_TIERED
+        ? Math.max(
+            1,
+            entryRecords.reduce((total, entry) => total + entry.maxRanks, 0),
+          )
+        : Math.max(1, ...entryRecords.map((entry) => entry.maxRanks))
     const record: SpecTraitNodeRecord = {
       id: nodeId,
       kind,
-      maxRanks: Math.max(1, ...entryRecords.map((entry) => entry.maxRanks)),
+      maxRanks,
       posX: asFloat(row, 'PosX'),
       posY: asFloat(row, 'PosY'),
       subTreeId: asInt(row, 'TraitSubTreeID'),

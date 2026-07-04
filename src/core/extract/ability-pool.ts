@@ -35,15 +35,15 @@ export function extractAbilityPool(input: ExtractionInput): Ability[] {
   for (const selection of selections) {
     const node = nodeById.get(selection.nodeId)
     if (!node || selection.ranks === 0) continue
-    const entry =
-      selection.choiceIndex !== null ? node.entries[selection.choiceIndex] : node.entries[0]
-    if (!entry || entry.spellId === 0) continue
-    talentSpellIds.add(entry.spellId)
-    if (entry.overridesSpellId > 0) overriddenSpellIds.add(entry.overridesSpellId)
-    sourceNodesBySpellId.set(entry.spellId, [
-      ...(sourceNodesBySpellId.get(entry.spellId) ?? []),
-      node.id,
-    ])
+    for (const entry of activeEntries(node, selection)) {
+      if (entry.spellId === 0) continue
+      talentSpellIds.add(entry.spellId)
+      if (entry.overridesSpellId > 0) overriddenSpellIds.add(entry.overridesSpellId)
+      sourceNodesBySpellId.set(entry.spellId, [
+        ...(sourceNodesBySpellId.get(entry.spellId) ?? []),
+        node.id,
+      ])
+    }
   }
 
   const baselineSpellIds = new Set<number>()
@@ -102,6 +102,25 @@ export function extractAbilityPool(input: ExtractionInput): Ability[] {
   }
 
   return abilities
+}
+
+function activeEntries(
+  node: SpecSnapshot['nodes'][number],
+  selection: NodeSelection,
+): SpecSnapshot['nodes'][number]['entries'] {
+  if (node.kind === 'tiered') {
+    const active: SpecSnapshot['nodes'][number]['entries'] = []
+    let remaining = selection.ranks
+    for (const entry of node.entries) {
+      if (remaining <= 0) break
+      active.push(entry)
+      remaining -= entry.maxRanks
+    }
+    return active
+  }
+  const entry =
+    selection.choiceIndex !== null ? node.entries[selection.choiceIndex] : node.entries[0]
+  return entry ? [entry] : []
 }
 
 function buildAbility(

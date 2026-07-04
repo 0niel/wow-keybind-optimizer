@@ -84,6 +84,20 @@
      50
     ]
    }
+  },
+  {
+   "label": "elemental-ingame-real-hash",
+   "encoded": "CYQARUG2fGwHkLP0T7/MoTNl/AAAAAzMLbzMGjZZZhxMMDAAAAYxMbwAGwsxEysAAz2YmxMbLmWGzMGLGzMmZ2mNmlZwMzyAAzMAYmxwM+A",
+   "specId": 262,
+   "expected": {
+    "selected": 80,
+    "purchased": 77,
+    "granted": 3,
+    "choices": 18,
+    "heroSubTrees": [
+     56
+    ]
+   }
   }
  ],
  "specNodes": {
@@ -1100,18 +1114,18 @@
    },
    {
     "id": 110420,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110422,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110423,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110442,
@@ -2292,18 +2306,18 @@
    },
    {
     "id": 110417,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110418,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110419,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    }
   ],
   "259": [
@@ -3319,23 +3333,1095 @@
    },
    {
     "id": 110432,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110433,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110434,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110576,
     "kind": "single",
     "maxRanks": 1
+   }
+  ],
+  "262": [
+   {
+    "id": 80938,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80939,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80941,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80942,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80943,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80944,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80945,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 80947,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80948,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80949,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80950,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 80951,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80953,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80954,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80958,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80959,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80960,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80961,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80962,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80963,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80964,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80967,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80968,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80969,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80973,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80974,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80975,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80976,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80978,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80981,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80983,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80984,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 80985,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 80988,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80989,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80990,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80991,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80992,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80993,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80995,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80996,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80997,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 80998,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 80999,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 81000,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 81002,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81003,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81004,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81005,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81007,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81008,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81010,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81012,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81015,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81016,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81018,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81019,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81021,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81022,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81024,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81027,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81031,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 81032,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 81033,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 81037,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81038,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81039,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81040,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81041,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81042,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81043,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 81044,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81046,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81047,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81048,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81049,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81050,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81051,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81052,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 81055,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 81073,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 92219,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 92675,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 92677,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94858,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94859,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94860,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94861,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94862,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94863,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94866,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94867,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94868,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94869,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94870,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94871,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94872,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94873,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94874,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94875,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94877,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94879,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94880,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94881,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94882,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94883,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94884,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 94885,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94886,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94887,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94888,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94889,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94890,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94891,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94892,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94893,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 94894,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 99845,
+    "kind": "subtree-selection",
+    "maxRanks": 1
+   },
+   {
+    "id": 99846,
+    "kind": "subtree-selection",
+    "maxRanks": 1
+   },
+   {
+    "id": 99847,
+    "kind": "subtree-selection",
+    "maxRanks": 1
+   },
+   {
+    "id": 103427,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103428,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103429,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103430,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103432,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103433,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103434,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103436,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103579,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103581,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103582,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103583,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103584,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103585,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103586,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103587,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103588,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103590,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103591,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103593,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103594,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103596,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103598,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103599,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103600,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103601,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103602,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103605,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103606,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103607,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103608,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103610,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103611,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103612,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103613,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103614,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103615,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103616,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103617,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103618,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103620,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103622,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103623,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103624,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103625,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103626,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103627,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103628,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103630,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103631,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103632,
+    "kind": "single",
+    "maxRanks": 2
+   },
+   {
+    "id": 103633,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103634,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103635,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103636,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103637,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103638,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103639,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103640,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 103641,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103642,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103871,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 103915,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 104124,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109190,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109191,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109192,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109193,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109194,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109301,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109386,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109387,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109388,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109389,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109492,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109493,
+    "kind": "choice",
+    "maxRanks": 1
+   },
+   {
+    "id": 109724,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109725,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109726,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109727,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109728,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109729,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109730,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109731,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109732,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 109909,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 110066,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 110083,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 110084,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 110085,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 110186,
+    "kind": "single",
+    "maxRanks": 1
+   },
+   {
+    "id": 110401,
+    "kind": "tiered",
+    "maxRanks": 4
+   },
+   {
+    "id": 110402,
+    "kind": "tiered",
+    "maxRanks": 4
+   },
+   {
+    "id": 110403,
+    "kind": "tiered",
+    "maxRanks": 4
    }
   ],
   "263": [
@@ -4396,18 +5482,18 @@
    },
    {
     "id": 110401,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110402,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110403,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    }
   ],
   "1480": [
@@ -5533,18 +6619,18 @@
    },
    {
     "id": 110416,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110425,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    },
    {
     "id": 110427,
-    "kind": "single",
-    "maxRanks": 2
+    "kind": "tiered",
+    "maxRanks": 4
    }
   ]
  }

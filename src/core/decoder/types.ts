@@ -1,4 +1,4 @@
-export type TraitNodeKind = 'single' | 'choice' | 'subtree-selection'
+export type TraitNodeKind = 'single' | 'tiered' | 'choice' | 'subtree-selection'
 
 export interface OrderedTraitNode {
   id: number
