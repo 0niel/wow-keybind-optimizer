@@ -1,8 +1,11 @@
 import type { TraitNodeKind } from '@/core/decoder'
+import type { AbilityCategory } from './ability-category'
 
 export type SpecRole = 'dps' | 'healer' | 'tank'
 
 export type Targeting = 'self' | 'enemy' | 'ally' | 'ground' | 'none'
+
+export type TreeSection = 'class' | 'spec' | 'hero'
 
 export interface SnapshotManifest {
   gameVersion: string
@@ -16,6 +19,7 @@ export interface ClassRecord {
   id: number
   slug: string
   color: string
+  names: Record<string, string>
   specIds: number[]
 }
 
@@ -23,6 +27,7 @@ export interface RaceRecord {
   id: number
   slug: string
   faction: 'alliance' | 'horde' | 'neutral'
+  names: Record<string, string>
   racialSpellIds: number[]
 }
 
@@ -35,6 +40,9 @@ export interface SpellMetaRecord {
   gcd: 'normal' | 'off'
   rangeYd: number
   targeting: Targeting
+  category: AbilityCategory
+  reactivity: number
+  panic: number
 }
 
 export interface TraitEntryRecord {
@@ -54,6 +62,7 @@ export interface SpecTraitNodeRecord {
   posX: number
   posY: number
   subTreeId: number
+  section: TreeSection
   forSpec: boolean
   entries: TraitEntryRecord[]
 }
@@ -73,14 +82,20 @@ export interface SubTreeRecord {
   name: string
 }
 
+export interface BaselineSpellRecord {
+  spellId: number
+  raceIds?: number[]
+}
+
 export interface SpecSnapshot {
   specId: number
   classId: number
   role: SpecRole
+  names: Record<string, string>
   traitTreeId: number
   nodes: SpecTraitNodeRecord[]
   subTrees: SubTreeRecord[]
-  baselineSpellIds: number[]
+  baseline: BaselineSpellRecord[]
   pvpTalents: PvpTalentRecord[]
   defaultPvpTalentIds: number[]
   frequencyBySpellId: Record<string, AbilityFrequencyRecord>

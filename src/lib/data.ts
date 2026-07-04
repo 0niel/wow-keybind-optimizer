@@ -1,0 +1,60 @@
+import type {
+  ClassRecord,
+  RaceRecord,
+  SnapshotManifest,
+  SpecSnapshot,
+  SpellMetaShard,
+  SpellTextShard,
+} from '@/core/model/snapshot'
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
+
+const cache = new Map<string, unknown>()
+
+async function fetchJson<T>(path: string): Promise<T> {
+  const cached = cache.get(path)
+  if (cached !== undefined) return cached as T
+  const response = await fetch(`${basePath}${path}`)
+  if (!response.ok) throw new Error(`Failed to load ${path} (${response.status})`)
+  const payload = (await response.json()) as T
+  cache.set(path, payload)
+  return payload
+}
+
+export interface TextShard {
+  spells: SpellTextShard
+  subTrees: Record<string, string>
+}
+
+export async function loadLatestBuild(): Promise<string> {
+  const { build } = await fetchJson<{ build: string }>('/data/retail/latest.json')
+  return build
+}
+
+export async function loadManifest(build: string): Promise<SnapshotManifest> {
+  return fetchJson<SnapshotManifest>(`/data/retail/${build}/manifest.json`)
+}
+
+export async function loadClasses(build: string): Promise<ClassRecord[]> {
+  return fetchJson<ClassRecord[]>(`/data/retail/${build}/classes.json`)
+}
+
+export async function loadRaces(build: string): Promise<RaceRecord[]> {
+  return fetchJson<RaceRecord[]>(`/data/retail/${build}/races.json`)
+}
+
+export async function loadSpellMeta(build: string): Promise<SpellMetaShard> {
+  return fetchJson<SpellMetaShard>(`/data/retail/${build}/spell-meta.json`)
+}
+
+export async function loadSpec(build: string, specId: number): Promise<SpecSnapshot> {
+  return fetchJson<SpecSnapshot>(`/data/retail/${build}/specs/${specId}.json`)
+}
+
+export async function loadText(build: string, locale: string): Promise<TextShard> {
+  return fetchJson<TextShard>(`/data/retail/${build}/text/${locale}.json`)
+}
+
+export function spellIconUrl(icon: string): string {
+  return `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`
+}

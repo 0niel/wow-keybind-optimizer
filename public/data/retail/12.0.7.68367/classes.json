@@ -1,0 +1,185 @@
+[
+ {
+  "id": 8,
+  "slug": "mage",
+  "color": "#3fc7eb",
+  "names": {
+   "en": "Mage",
+   "ru": "Маг"
+  },
+  "specIds": [
+   62,
+   63,
+   64
+  ]
+ },
+ {
+  "id": 2,
+  "slug": "paladin",
+  "color": "#f48cba",
+  "names": {
+   "en": "Paladin",
+   "ru": "Паладин"
+  },
+  "specIds": [
+   65,
+   66,
+   70
+  ]
+ },
+ {
+  "id": 1,
+  "slug": "warrior",
+  "color": "#c69b6d",
+  "names": {
+   "en": "Warrior",
+   "ru": "Воин"
+  },
+  "specIds": [
+   71,
+   72,
+   73
+  ]
+ },
+ {
+  "id": 11,
+  "slug": "druid",
+  "color": "#ff7c0a",
+  "names": {
+   "en": "Druid",
+   "ru": "Друид"
+  },
+  "specIds": [
+   102,
+   103,
+   104,
+   105
+  ]
+ },
+ {
+  "id": 6,
+  "slug": "deathknight",
+  "color": "#c41e3a",
+  "names": {
+   "en": "Death Knight",
+   "ru": "Рыцарь смерти"
+  },
+  "specIds": [
+   250,
+   251,
+   252
+  ]
+ },
+ {
+  "id": 3,
+  "slug": "hunter",
+  "color": "#aad372",
+  "names": {
+   "en": "Hunter",
+   "ru": "Охотник"
+  },
+  "specIds": [
+   253,
+   254,
+   255
+  ]
+ },
+ {
+  "id": 5,
+  "slug": "priest",
+  "color": "#ffffff",
+  "names": {
+   "en": "Priest",
+   "ru": "Жрец"
+  },
+  "specIds": [
+   256,
+   257,
+   258
+  ]
+ },
+ {
+  "id": 4,
+  "slug": "rogue",
+  "color": "#fff468",
+  "names": {
+   "en": "Rogue",
+   "ru": "Разбойник"
+  },
+  "specIds": [
+   259,
+   260,
+   261
+  ]
+ },
+ {
+  "id": 7,
+  "slug": "shaman",
+  "color": "#0070dd",
+  "names": {
+   "en": "Shaman",
+   "ru": "Шаман"
+  },
+  "specIds": [
+   262,
+   263,
+   264
+  ]
+ },
+ {
+  "id": 9,
+  "slug": "warlock",
+  "color": "#8788ee",
+  "names": {
+   "en": "Warlock",
+   "ru": "Чернокнижник"
+  },
+  "specIds": [
+   265,
+   266,
+   267
+  ]
+ },
+ {
+  "id": 10,
+  "slug": "monk",
+  "color": "#00ff98",
+  "names": {
+   "en": "Monk",
+   "ru": "Монах"
+  },
+  "specIds": [
+   268,
+   269,
+   270
+  ]
+ },
+ {
+  "id": 12,
+  "slug": "demonhunter",
+  "color": "#a330c9",
+  "names": {
+   "en": "Demon Hunter",
+   "ru": "Охотник на демонов"
+  },
+  "specIds": [
+   577,
+   581,
+   1480
+  ]
+ },
+ {
+  "id": 13,
+  "slug": "evoker",
+  "color": "#33937f",
+  "names": {
+   "en": "Evoker",
+   "ru": "Пробудитель"
+  },
+  "specIds": [
+   1467,
+   1468,
+   1473
+  ]
+ }
+]

@@ -141,6 +141,7 @@ export async function buildTraitData(source: WagoSource): Promise<Map<number, Sp
       posX: asFloat(row, 'PosX'),
       posY: asFloat(row, 'PosY'),
       subTreeId: asInt(row, 'TraitSubTreeID'),
+      section: 'class',
       forSpec: false,
       entries: entryRecords,
     }

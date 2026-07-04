@@ -1,6 +1,117 @@
 {
   "app": {
     "title": "WoW Keybind Optimizer",
-    "tagline": "Provably good keybind layouts for your spec, hardware, and game mode"
+    "tagline": "Provably good keybind layouts for your spec, hardware, and game mode",
+    "loadingData": "Loading game data…",
+    "solving": "Optimizing layout…",
+    "solveError": "Optimization failed",
+    "dataError": "Failed to load game data",
+    "emptyTitle": "Paste your talent export string",
+    "emptyHint": "Open the talent frame in game, click the share button, and copy the export string. The optimizer detects your class and spec automatically.",
+    "layoutTitle": "Keybind layout",
+    "trinket": "Trinket",
+    "theme": "Theme"
+  },
+  "input": {
+    "importString": "Talent export string",
+    "importPlaceholder": "CcQAAAAAAAAAAAAAAAAAAAAAA…",
+    "importHint": "Paste the export string from the in-game talent frame",
+    "invalidString": "Not a valid export string",
+    "mode": "Game mode",
+    "modes": {
+      "raid": "Raid",
+      "mythicPlus": "Mythic+",
+      "arena": "Arena",
+      "rbg": "RBG",
+      "battleground": "Battleground"
+    },
+    "targetScheme": {
+      "focus": "Focus targeting",
+      "arena123": "Arena 1/2/3 targeting"
+    },
+    "race": "Race",
+    "pvpTalents": "PvP talents",
+    "pvpTalentsHint": "{count} of 3 selected",
+    "hardware": "Hardware",
+    "keyboard": {
+      "full": "Full-size",
+      "tkl": "TKL",
+      "sixty": "60%"
+    },
+    "mouse": {
+      "none": "No extra buttons",
+      "twoButton": "2 side buttons",
+      "mmo": "MMO 12 buttons"
+    },
+    "modifiers": "Modifiers:",
+    "wheel": "Mouse wheel"
+  },
+  "results": {
+    "layerBase": "Base",
+    "heatmapNone": "Binds",
+    "heatmapAccessibility": "Accessibility",
+    "heatmapFrequency": "Press frequency",
+    "movement": "move",
+    "trinket": "Trinket",
+    "pvpTrinket": "PvP Trinket"
+  },
+  "hover": {
+    "keyTier": "{tier}-tier key",
+    "marginal": "score +{value}",
+    "reasonReactive": "Reactive ability — demands a top-tier key with instant reach",
+    "reasonPanic": "Panic button — placed without a modifier for stress-proof access",
+    "reasonFrequent": "High cast frequency — deserves a comfortable key",
+    "reasonSTier": "S-tier key: minimal finger travel from movement keys",
+    "reasonLocked": "Locked by you",
+    "reasonFocusVariant": "Focus macro variant — shares the base spell's key on another layer",
+    "reasonArenaVariant": "Arena target variant — clustered with its 1/2/3 siblings",
+    "reasonSynergy": "Placed near abilities it is often cast with",
+    "partners": "Synergies"
+  },
+  "categories": {
+    "rotational-core": "Rotation",
+    "rotational-proc": "Proc",
+    "cooldown-burst": "Burst cooldown",
+    "defensive-major": "Major defensive",
+    "defensive-minor": "Minor defensive",
+    "external": "External",
+    "heal-utility": "Healing utility",
+    "interrupt": "Interrupt",
+    "cc-hard": "Hard CC",
+    "cc-soft": "Soft CC",
+    "dispel": "Dispel",
+    "mobility": "Mobility",
+    "utility": "Utility",
+    "trinket": "Trinket"
+  },
+  "score": {
+    "title": "Optimization score",
+    "objective": "Objective",
+    "baseline": "Greedy baseline",
+    "improvement": "vs baseline",
+    "binds": "Binds",
+    "time": "Solve time",
+    "warningRelaxed": "S-tier requirement relaxed to {value} — not enough top keys for all reactive abilities",
+    "warningUnassigned": "{count} abilities could not be assigned"
+  },
+  "tree": {
+    "title": "Talent tree",
+    "hint": "Click a bind to see which talent granted it; click a node to find its bind.",
+    "classTree": "Class tree",
+    "specTree": "Spec tree",
+    "heroTree": "Hero tree"
+  },
+  "export": {
+    "tabList": "Bind list",
+    "tabMacros": "Macros",
+    "tabLua": "Lua addon",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "download": "Download",
+    "share": "Share link",
+    "trinket": "Trinket",
+    "pvpTrinket": "PvP Trinket",
+    "macrosHint": "Create these macros in game (Esc → Macros) and drag them onto the listed keys, or use the Lua addon tab to apply everything automatically.",
+    "luaHint": "Create folder Interface/AddOns/KeybindOptimizer with these two files, then /reload. The addon creates the macros and applies every keybind."
   }
 }
