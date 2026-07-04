@@ -43,6 +43,7 @@ export function KeyboardView({
   onAbilityClick,
 }: Props) {
   const t = useTranslations('results')
+  const tCat = useTranslations('categories')
   const [layer, setLayer] = useState<Modifier>('none')
   const [heatmap, setHeatmap] = useState<HeatmapMode>('none')
   const [hover, setHover] = useState<HoverInfo | null>(null)
@@ -72,6 +73,15 @@ export function KeyboardView({
     }
     return map
   }, [assignments, slotById, abilityById])
+
+  const presentCategories = useMemo(() => {
+    const seen = new Set<string>()
+    for (const bind of assignments) {
+      const ability = abilityById.get(bind.abilityId)
+      if (ability) seen.add(ability.category)
+    }
+    return [...seen]
+  }, [assignments, abilityById])
 
   const accessibilityByKey = useMemo(() => {
     const map = new Map<string, number>()
@@ -106,7 +116,7 @@ export function KeyboardView({
     y: number,
     w: number,
     h: number,
-    isMouse: boolean,
+    _isMouse: boolean,
   ) => {
     const slotId = slotIdFor(keyId)
     const bind = bindBySlotId.get(slotId)
@@ -171,32 +181,42 @@ export function KeyboardView({
           opacity={opacity}
           style={{ transition: 'fill 0.25s ease-out, opacity 0.2s ease-out' }}
         />
-        {ability && meta && heatmap === 'none' && (
-          <image
-            href={spellIconUrl(meta.icon)}
-            x={w * KEY_UNIT - GAP - 26}
-            y={h * KEY_UNIT - GAP - 26}
-            width={22}
-            height={22}
-            opacity={dimmed ? 0.3 : 0.95}
-            style={{ clipPath: 'inset(0 round 5px)' }}
-          />
+        {ability && heatmap === 'none' && (
+          <>
+            {meta ? (
+              <image
+                href={spellIconUrl(meta.icon)}
+                x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2}
+                y={(h * KEY_UNIT - GAP - iconSize(w, h)) / 2 + 3}
+                width={iconSize(w, h)}
+                height={iconSize(w, h)}
+                opacity={dimmed ? 0.3 : 1}
+                style={{ clipPath: 'inset(0 round 7px)' }}
+              >
+                <title>{abilityName ?? ''}</title>
+              </image>
+            ) : (
+              <text
+                x={(w * KEY_UNIT - GAP) / 2}
+                y={(h * KEY_UNIT - GAP) / 2 + 8}
+                textAnchor="middle"
+                fontSize={15}
+              >
+                🎒
+              </text>
+            )}
+          </>
         )}
         <text
-          x={7}
-          y={17}
-          fontSize={12}
-          fontWeight={600}
-          fill={ability && heatmap === 'none' ? '#ffffff' : 'var(--text-soft)'}
+          x={6}
+          y={13}
+          fontSize={9.5}
+          fontWeight={650}
+          fill={ability && heatmap === 'none' ? 'rgba(255,255,255,0.9)' : 'var(--text-soft)'}
           style={{ userSelect: 'none' }}
         >
           {label}
         </text>
-        {ability && heatmap === 'none' && abilityName && (
-          <text x={7} y={h * KEY_UNIT - GAP - 8} fontSize={8.5} fill="#ffffff" opacity={0.92}>
-            {truncate(abilityName, isMouse ? 9 : Math.floor(w * 8))}
-          </text>
-        )}
         {isMovement && !ability && heatmap === 'none' && (
           <text x={7} y={h * KEY_UNIT - GAP - 8} fontSize={8} fill="var(--text-faint)">
             {t('movement')}
@@ -257,11 +277,32 @@ export function KeyboardView({
           })}
         </svg>
       </div>
+      {heatmap === 'none' && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', marginTop: 16 }}>
+          {presentCategories.map((category) => (
+            <span
+              key={category}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: '0.8rem',
+                color: 'var(--text-soft)',
+              }}
+            >
+              <span
+                style={{ width: 10, height: 10, borderRadius: 3, background: `var(--cat-${category})` }}
+              />
+              {tCat(category)}
+            </span>
+          ))}
+        </div>
+      )}
       {hover && <HoverCard info={hover} />}
     </div>
   )
 }
 
-function truncate(value: string, max: number): string {
-  return value.length > max ? `${value.slice(0, max - 1)}…` : value
+function iconSize(w: number, h: number): number {
+  return Math.min(30, Math.min(w, h) * KEY_UNIT - 20)
 }

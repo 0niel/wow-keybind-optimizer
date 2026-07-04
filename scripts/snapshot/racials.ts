@@ -12,8 +12,8 @@ export interface RaceData {
 }
 
 const FACTION_BY_ALLIANCE_COLUMN: Record<number, 'alliance' | 'horde' | 'neutral'> = {
-  0: 'horde',
-  1: 'alliance',
+  0: 'alliance',
+  1: 'horde',
   2: 'neutral',
 }
 

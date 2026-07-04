@@ -17,7 +17,6 @@
     "importPlaceholder": "CcQAAAAAAAAAAAAAAAAAAAAAA…",
     "importHint": "Open the talent frame in game → share button → Copy Export String",
     "invalidString": "Not a valid export string",
-    "racePlaceholder": "Choose a race (optional)",
     "factions": {
       "alliance": "Alliance",
       "horde": "Horde",
@@ -36,8 +35,9 @@
       "arena123": "Arena 1/2/3 targeting"
     },
     "race": "Race",
+    "racialsLabel": "Active racials — they enter the layout too",
     "pvpTalents": "PvP talents",
-    "hardware": "Hardware",
+    "hardware": "Keyboard",
     "keyboard": {
       "full": "Full-size",
       "tkl": "TKL",
@@ -90,13 +90,18 @@
     "trinket": "Trinket"
   },
   "score": {
-    "title": "Optimization score",
-    "objective": "Objective",
-    "baseline": "Greedy baseline",
-    "improvement": "vs baseline",
-    "binds": "Binds",
+    "quality": "Layout quality",
+    "qualityHint": "Sum over all binds: ability importance × key comfort, plus bonuses when related abilities sit next to each other",
+    "baseline": "Naive layout",
+    "baselineHint": "For comparison: abilities simply dealt onto the best keys in order, ignoring how they relate to each other",
+    "improvement": "Optimizer gain",
+    "improvementHint": "How much better the optimized layout is than the naive one",
+    "binds": "Abilities placed",
     "time": "Solve time",
-    "warningRelaxed": "S-tier requirement relaxed to {value} — not enough top keys for all reactive abilities",
+    "explainer": "The optimizer searched tens of thousands of arrangements: frequent abilities got the most comfortable keys, interrupts got instantly reachable ones, panic buttons avoid modifiers, and pairs like an interrupt and its focus variant landed on neighboring keys or layers of the same key.",
+    "categoriesTitle": "Key comfort by ability type",
+    "categoriesHint": "100 — the most comfortable keys (right next to your WASD fingers), 0 — the farthest",
+    "warningRelaxed": "Not enough top-tier keys for every reactive ability — the bar was relaxed to {value}",
     "warningUnassigned": "{count} abilities could not be assigned"
   },
   "tree": {

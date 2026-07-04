@@ -236,6 +236,7 @@ export function OptimizerApp() {
                 abilities={outcome.abilities}
                 highlightNodeIds={highlightNodeIds}
                 onNodeClick={handleNodeClick}
+                spellMeta={data.spellMeta}
                 text={data.text}
               />
               <ExportPanel

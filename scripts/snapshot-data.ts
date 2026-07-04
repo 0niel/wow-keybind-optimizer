@@ -99,6 +99,7 @@ async function main() {
   console.log(`emitting ${specIds.length} specs`)
 
   const referencedSpellIds = new Set<number>()
+  const nameOnlySpellIds = new Set<number>()
   const specSnapshots: SpecSnapshot[] = []
 
   for (const specId of specIds) {
@@ -226,6 +227,17 @@ async function main() {
         localizedSpecNames.get(locale)?.get(specId) ?? specName
     }
 
+    const iconBySpellId: Record<string, string> = {}
+    for (const node of nodesWithSection) {
+      if (!node.forSpec) continue
+      for (const entry of node.entries) {
+        if (entry.spellId === 0) continue
+        const icon = universe.iconBySpellId.get(entry.spellId)
+        if (icon !== undefined) iconBySpellId[String(entry.spellId)] = icon
+        if (!poolSpellIds.has(entry.spellId)) nameOnlySpellIds.add(entry.spellId)
+      }
+    }
+
     specSnapshots.push({
       specId,
       classId,
@@ -239,6 +251,7 @@ async function main() {
       defaultPvpTalentIds: [],
       frequencyBySpellId,
       synergyPairs,
+      iconBySpellId,
     })
   }
 
@@ -288,6 +301,12 @@ async function main() {
         }
       }
       spells[String(spellId)] = { name, description }
+    }
+    for (const spellId of nameOnlySpellIds) {
+      if (spells[String(spellId)] !== undefined) continue
+      const name = names.get(spellId) ?? ''
+      if (name === '') continue
+      spells[String(spellId)] = { name, description: descriptions.get(spellId) ?? '' }
     }
     const subTreeNames: Record<string, string> = {}
     for (const snapshot of specSnapshots) {

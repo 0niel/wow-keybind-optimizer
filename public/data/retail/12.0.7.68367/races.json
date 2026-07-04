@@ -2,7 +2,7 @@
  {
   "id": 1,
   "slug": "human",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Human",
    "ru": "Человек"
@@ -14,7 +14,7 @@
  {
   "id": 2,
   "slug": "orc",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Orc",
    "ru": "Орк"
@@ -28,7 +28,7 @@
  {
   "id": 3,
   "slug": "dwarf",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Dwarf",
    "ru": "Дворф"
@@ -40,7 +40,7 @@
  {
   "id": 4,
   "slug": "night-elf",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Night Elf",
    "ru": "Ночной эльф"
@@ -52,7 +52,7 @@
  {
   "id": 5,
   "slug": "undead",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Undead",
    "ru": "Нежить"
@@ -65,7 +65,7 @@
  {
   "id": 6,
   "slug": "tauren",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Tauren",
    "ru": "Таурен"
@@ -77,7 +77,7 @@
  {
   "id": 7,
   "slug": "gnome",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Gnome",
    "ru": "Гном"
@@ -89,7 +89,7 @@
  {
   "id": 8,
   "slug": "troll",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Troll",
    "ru": "Тролль"
@@ -101,7 +101,7 @@
  {
   "id": 9,
   "slug": "goblin",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Goblin",
    "ru": "Гоблин"
@@ -114,7 +114,7 @@
  {
   "id": 10,
   "slug": "blood-elf",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Blood Elf",
    "ru": "Эльф крови"
@@ -134,7 +134,7 @@
  {
   "id": 11,
   "slug": "draenei",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Draenei",
    "ru": "Дреней"
@@ -155,7 +155,7 @@
  {
   "id": 22,
   "slug": "worgen",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Worgen",
    "ru": "Ворген"
@@ -180,7 +180,7 @@
  {
   "id": 27,
   "slug": "nightborne",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Nightborne",
    "ru": "Ночнорожденный"
@@ -193,7 +193,7 @@
  {
   "id": 28,
   "slug": "highmountain-tauren",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Highmountain Tauren",
    "ru": "Таурен Крутогорья"
@@ -205,7 +205,7 @@
  {
   "id": 29,
   "slug": "void-elf",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Void Elf",
    "ru": "Эльф Бездны"
@@ -217,7 +217,7 @@
  {
   "id": 30,
   "slug": "lightforged-draenei",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Lightforged Draenei",
    "ru": "Озаренный дреней"
@@ -229,7 +229,7 @@
  {
   "id": 31,
   "slug": "zandalari-troll",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Zandalari Troll",
    "ru": "Зандалар"
@@ -243,7 +243,7 @@
  {
   "id": 32,
   "slug": "kul-tiran",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Kul Tiran",
    "ru": "Култирасец"
@@ -255,7 +255,7 @@
  {
   "id": 34,
   "slug": "dark-iron-dwarf",
-  "faction": "horde",
+  "faction": "alliance",
   "names": {
    "en": "Dark Iron Dwarf",
    "ru": "Дворф из клана Черного Железа"
@@ -267,7 +267,7 @@
  {
   "id": 35,
   "slug": "vulpera",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Vulpera",
    "ru": "Вульпера"
@@ -280,7 +280,7 @@
  {
   "id": 36,
   "slug": "mag-har-orc",
-  "faction": "alliance",
+  "faction": "horde",
   "names": {
    "en": "Mag'har Orc",
    "ru": "Маг'хар"

@@ -100,6 +100,7 @@ export interface SpecSnapshot {
   defaultPvpTalentIds: number[]
   frequencyBySpellId: Record<string, AbilityFrequencyRecord>
   synergyPairs: Array<[number, number, number]>
+  iconBySpellId: Record<string, string>
 }
 
 export interface SpellTextRecord {

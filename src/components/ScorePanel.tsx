@@ -45,16 +45,35 @@ export function ScorePanel({ result, baseline, abilities, slots, elapsedMs }: Pr
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
           gap: 20,
-          marginBottom: 28,
+          marginBottom: 20,
         }}
       >
-        <Stat label={t('objective')} value={result.objective.toFixed(2)} />
-        <Stat label={t('baseline')} value={baseline.objective.toFixed(2)} />
-        <Stat label={t('improvement')} value={`+${improvement.toFixed(1)}%`} tone="ok" />
+        <Stat label={t('quality')} value={result.objective.toFixed(2)} hint={t('qualityHint')} />
+        <Stat label={t('baseline')} value={baseline.objective.toFixed(2)} hint={t('baselineHint')} />
+        <Stat
+          label={t('improvement')}
+          value={`+${improvement.toFixed(1)}%`}
+          tone="ok"
+          hint={t('improvementHint')}
+        />
         <Stat label={t('binds')} value={String(result.assignments.length)} />
         {elapsedMs !== null && <Stat label={t('time')} value={`${elapsedMs} ms`} />}
+      </div>
+      <p
+        style={{
+          fontSize: '0.9rem',
+          color: 'var(--text-soft)',
+          maxWidth: 860,
+          marginBottom: 28,
+          lineHeight: 1.6,
+        }}
+      >
+        {t('explainer')}
+      </p>
+      <div className="label" title={t('categoriesHint')} style={{ cursor: 'help' }}>
+        {t('categoriesTitle')} ⓘ
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {categoryQuality.map(({ category, average, count }) => (
@@ -135,11 +154,26 @@ function formatWarning(warning: string, t: ReturnType<typeof useTranslations>): 
   return warning
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: 'ok' }) {
+function Stat({
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  label: string
+  value: string
+  tone?: 'ok'
+  hint?: string
+}) {
   return (
-    <div className="inset-panel" style={{ padding: '16px 20px' }}>
+    <div
+      className="inset-panel"
+      style={{ padding: '16px 20px', cursor: hint ? 'help' : 'default' }}
+      title={hint}
+    >
       <div className="stat-label" style={{ marginBottom: 4 }}>
         {label}
+        {hint ? ' ⓘ' : ''}
       </div>
       <div className="stat-value" style={{ color: tone === 'ok' ? 'var(--ok)' : 'var(--text)' }}>
         {value}

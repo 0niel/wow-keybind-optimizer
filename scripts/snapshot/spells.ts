@@ -10,6 +10,7 @@ export type UncategorizedSpellMeta = Omit<SpellMetaRecord, 'category' | 'reactiv
 export interface SpellUniverse {
   metaBySpellId: Map<number, UncategorizedSpellMeta>
   passiveSpellIds: Set<number>
+  iconBySpellId: Map<number, string>
   namesByLocale: Map<string, Map<number, string>>
   descriptionsByLocale: Map<string, Map<number, string>>
   spellIdsByNormalizedName: Map<string, number[]>
@@ -82,9 +83,12 @@ export async function buildSpellUniverse(
 
   const metaBySpellId = new Map<number, UncategorizedSpellMeta>()
   const passiveSpellIds = new Set<number>()
+  const iconBySpellId = new Map<number, string>()
   for (const row of misc) {
     if (asInt(row, 'DifficultyID') !== 0) continue
     const spellId = asInt(row, 'SpellID')
+    const icon = iconByFileDataId.get(asInt(row, 'SpellIconFileDataID'))
+    if (icon !== undefined) iconBySpellId.set(spellId, icon)
     const attributes = asInt(row, 'Attributes_0')
     if ((attributes & PASSIVE_ATTRIBUTE_BIT) !== 0) {
       passiveSpellIds.add(spellId)
@@ -139,5 +143,12 @@ export async function buildSpellUniverse(
     spellIdsByNormalizedName.set(normalized, existing)
   }
 
-  return { metaBySpellId, passiveSpellIds, namesByLocale, descriptionsByLocale, spellIdsByNormalizedName }
+  return {
+    metaBySpellId,
+    passiveSpellIds,
+    iconBySpellId,
+    namesByLocale,
+    descriptionsByLocale,
+    spellIdsByNormalizedName,
+  }
 }

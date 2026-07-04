@@ -10,6 +10,7 @@ import type { OptimizerInputs } from '@/state/inputs'
 import type { TextShard } from '@/lib/data'
 import { spellIconUrl } from '@/lib/data'
 import { SegmentedControl, ChipToggle } from './controls'
+import { RacePicker } from './RacePicker'
 
 export function detectSpecId(importString: string): number | null {
   if (importString.trim().length < 10) return null
@@ -106,18 +107,6 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
   const updateHardware = (partial: Partial<OptimizerInputs['hardware']>) =>
     onChange({ ...inputs, hardware: { ...inputs.hardware, ...partial } })
 
-  const factionOrder = ['alliance', 'horde', 'neutral'] as const
-  const racesByFaction = useMemo(
-    () =>
-      factionOrder.map((faction) => ({
-        faction,
-        list: races
-          .filter((race) => race.faction === faction)
-          .sort((a, b) => (a.names[locale] ?? '').localeCompare(b.names[locale] ?? '')),
-      })),
-    [races, locale],
-  )
-
   return (
     <section className="panel fade-in">
       <div className="settings-grid">
@@ -150,26 +139,14 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
 
         <div>
           <span className="label">{t('race')}</span>
-          <select
-            value={inputs.raceId ?? ''}
-            onChange={(event) =>
-              update({ raceId: event.target.value === '' ? null : Number(event.target.value) })
-            }
-            style={{ width: '100%', cursor: 'pointer' }}
-          >
-            <option value="">{t('racePlaceholder')}</option>
-            {racesByFaction.map(({ faction, list }) =>
-              list.length === 0 ? null : (
-                <optgroup key={faction} label={t(`factions.${faction}`)}>
-                  {list.map((race) => (
-                    <option key={race.id} value={race.id}>
-                      {race.names[locale] ?? race.slug}
-                    </option>
-                  ))}
-                </optgroup>
-              ),
-            )}
-          </select>
+          <RacePicker
+            races={races}
+            selectedRaceId={inputs.raceId}
+            onSelect={(raceId) => update({ raceId })}
+            spellMeta={spellMeta}
+            text={text}
+            locale={locale}
+          />
           {isPvpMode && spec && spec.pvpTalents.length > 0 && (
             <div style={{ marginTop: 20 }}>
               <span className="label">

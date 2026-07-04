@@ -4,8 +4,9 @@ import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import type { NodeSelection } from '@/core/decoder'
 import type { Ability } from '@/core/model/ability'
-import type { SpecSnapshot, SpecTraitNodeRecord } from '@/core/model/snapshot'
+import type { SpecSnapshot, SpecTraitNodeRecord, SpellMetaShard } from '@/core/model/snapshot'
 import type { TextShard } from '@/lib/data'
+import { spellIconUrl } from '@/lib/data'
 
 interface Props {
   spec: SpecSnapshot
@@ -13,13 +14,23 @@ interface Props {
   abilities: Ability[]
   highlightNodeIds: Set<number> | null
   onNodeClick: (nodeId: number) => void
+  spellMeta: SpellMetaShard
   text: TextShard
 }
 
-const VIEW_WIDTH = 900
-const VIEW_HEIGHT = 460
+const VIEW_WIDTH = 920
+const VIEW_HEIGHT = 500
+const ICON = 26
 
-export function TalentTreeView({ spec, selections, abilities, highlightNodeIds, onNodeClick, text }: Props) {
+export function TalentTreeView({
+  spec,
+  selections,
+  abilities,
+  highlightNodeIds,
+  onNodeClick,
+  spellMeta,
+  text,
+}: Props) {
   const t = useTranslations('tree')
   const selectedByNodeId = useMemo(
     () => new Map(selections.map((selection) => [selection.nodeId, selection])),
@@ -67,73 +78,114 @@ export function TalentTreeView({ spec, selections, abilities, highlightNodeIds, 
   }, [visibleNodes])
 
   const scaleX = (value: number) =>
-    ((value - bounds.minX) / Math.max(1, bounds.maxX - bounds.minX)) * (VIEW_WIDTH - 60) + 30
+    ((value - bounds.minX) / Math.max(1, bounds.maxX - bounds.minX)) * (VIEW_WIDTH - 70) + 35
   const scaleY = (value: number) =>
-    ((value - bounds.minY) / Math.max(1, bounds.maxY - bounds.minY)) * (VIEW_HEIGHT - 50) + 25
+    ((value - bounds.minY) / Math.max(1, bounds.maxY - bounds.minY)) * (VIEW_HEIGHT - 60) + 30
 
-  const nodeLabel = (node: SpecTraitNodeRecord): string => {
+  const nodeEntry = (node: SpecTraitNodeRecord) => {
     const selection = selectedByNodeId.get(node.id)
-    const entry =
-      selection?.choiceIndex !== null && selection?.choiceIndex !== undefined
-        ? node.entries[selection.choiceIndex]
-        : node.entries[0]
-    if (!entry) return ''
-    return text.spells[String(entry.spellId)]?.name ?? ''
+    return selection?.choiceIndex !== null && selection?.choiceIndex !== undefined
+      ? node.entries[selection.choiceIndex]
+      : node.entries[0]
   }
 
+  const sectionColor = (node: SpecTraitNodeRecord): string =>
+    node.section === 'hero'
+      ? 'var(--cat-cc-hard)'
+      : node.section === 'class'
+        ? 'var(--cat-rotational-core)'
+        : 'var(--accent)'
+
   return (
-    <div className="panel">
+    <section className="panel">
       <div className="label">{t('title')}</div>
-      <div style={{ fontSize: '0.8rem', color: 'var(--text-faint)', marginBottom: 10 }}>
+      <div style={{ fontSize: '0.85rem', color: 'var(--text-faint)', marginBottom: 12 }}>
         {t('hint')}
       </div>
       <div style={{ overflowX: 'auto' }}>
-        <svg viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} width="100%" style={{ minWidth: 640 }}>
+        <svg viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} width="100%" style={{ minWidth: 680 }}>
           {visibleNodes.map((node) => {
             const selection = selectedByNodeId.get(node.id)
             const isSelected = selection !== undefined && selection.ranks > 0
             const isBound = boundNodeIds.has(node.id)
             const isHighlighted = highlightNodeIds?.has(node.id) ?? false
             const dimmed = highlightNodeIds !== null && !isHighlighted
-            const radius = node.kind === 'subtree-selection' ? 11 : node.kind === 'choice' ? 9 : 7
-            const fill = !isSelected
-              ? 'var(--inset-strong)'
-              : node.section === 'hero'
-                ? 'var(--cat-cc-hard)'
-                : node.section === 'class'
-                  ? 'var(--cat-rotational-core)'
-                  : 'var(--accent)'
+            const entry = nodeEntry(node)
+            const icon = entry
+              ? (spec.iconBySpellId[String(entry.spellId)] ?? spellMeta[String(entry.spellId)]?.icon)
+              : undefined
+            const name = entry ? (text.spells[String(entry.spellId)]?.name ?? '') : ''
+            const x = scaleX(node.posX)
+            const y = scaleY(node.posY)
+
+            if (!isSelected) {
+              return (
+                <circle
+                  key={node.id}
+                  cx={x}
+                  cy={y}
+                  r={5}
+                  fill="var(--inset-strong)"
+                  opacity={dimmed ? 0.15 : 0.5}
+                >
+                  <title>{name}</title>
+                </circle>
+              )
+            }
+
             return (
               <g
                 key={node.id}
-                transform={`translate(${scaleX(node.posX)}, ${scaleY(node.posY)})`}
+                transform={`translate(${x - ICON / 2}, ${y - ICON / 2})`}
                 onClick={() => onNodeClick(node.id)}
                 style={{ cursor: isBound ? 'pointer' : 'default' }}
+                opacity={dimmed ? 0.25 : 1}
               >
                 {isHighlighted && (
-                  <circle r={radius + 5} fill="none" stroke="var(--warn)" strokeWidth={3} />
+                  <rect
+                    x={-4.5}
+                    y={-4.5}
+                    width={ICON + 9}
+                    height={ICON + 9}
+                    rx={10}
+                    fill="none"
+                    stroke="var(--warn)"
+                    strokeWidth={3}
+                  />
                 )}
-                <circle
-                  r={radius}
-                  fill={fill}
-                  opacity={dimmed ? 0.25 : isSelected ? 1 : 0.45}
-                  stroke={isBound && isSelected ? 'var(--text)' : 'none'}
-                  strokeWidth={1.5}
-                  style={{ transition: 'opacity 0.2s ease-out' }}
-                >
-                  <title>{nodeLabel(node)}</title>
-                </circle>
+                <rect
+                  x={-2.5}
+                  y={-2.5}
+                  width={ICON + 5}
+                  height={ICON + 5}
+                  rx={8.5}
+                  fill={sectionColor(node)}
+                />
+                {icon ? (
+                  <image
+                    href={spellIconUrl(icon)}
+                    width={ICON}
+                    height={ICON}
+                    style={{ clipPath: 'inset(0 round 6px)' }}
+                  >
+                    <title>{name}</title>
+                  </image>
+                ) : (
+                  <rect width={ICON} height={ICON} rx={6} fill="var(--inset)">
+                    <title>{name}</title>
+                  </rect>
+                )}
               </g>
             )
           })}
         </svg>
       </div>
-      <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: '0.78rem', color: 'var(--text-faint)' }}>
+      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>
         <LegendDot color="var(--cat-rotational-core)" label={t('classTree')} />
         <LegendDot color="var(--accent)" label={t('specTree')} />
         <LegendDot color="var(--cat-cc-hard)" label={t('heroTree')} />
       </div>
-    </div>
+    </section>
   )
 }
 
