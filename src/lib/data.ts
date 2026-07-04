@@ -55,6 +55,18 @@ export async function loadText(build: string, locale: string): Promise<TextShard
   return fetchJson<TextShard>(`/data/retail/${build}/text/${locale}.json`)
 }
 
+export interface ExamplePreset {
+  id: string
+  string: string
+  mode: string
+  scheme?: string
+  raceSlug?: string
+}
+
+export async function loadExamples(): Promise<ExamplePreset[]> {
+  return fetchJson<ExamplePreset[]>('/data/examples.json')
+}
+
 export function spellIconUrl(icon: string): string {
   return `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`
 }

@@ -7,6 +7,8 @@ import { useSolver } from '@/hooks/useSolver'
 import { DEFAULT_INPUTS, deserializeInputs, serializeInputs } from '@/state/inputs'
 import type { OptimizerInputs } from '@/state/inputs'
 import { HeroInput, SettingsPanel, detectSpecId } from './InputPanel'
+import { ExamplePicker, presetToMode } from './ExamplePicker'
+import type { ExamplePreset } from '@/lib/data'
 import { KeyboardView } from './KeyboardView'
 import { ScorePanel } from './ScorePanel'
 import { TalentTreeView } from './TalentTreeView'
@@ -114,6 +116,25 @@ export function OptimizerApp() {
     return map
   }, [outcome, data, t, selectedVariant])
 
+  const pickExample = useCallback(
+    (preset: ExamplePreset) => {
+      const raceId =
+        preset.raceSlug && data
+          ? (data.races.find((race) => race.slug === preset.raceSlug)?.id ?? null)
+          : null
+      updateInputs({
+        ...inputs,
+        importString: preset.string,
+        mode: presetToMode(preset.mode),
+        arenaTargetScheme: preset.scheme === 'arena123' ? 'arena123' : 'focus',
+        raceId,
+        pvpTalentIds: [],
+        seed: 1,
+      })
+    },
+    [data, inputs, updateInputs],
+  )
+
   const toggleKeyBan = useCallback(
     (keyId: string) => {
       const banned = inputs.hardware.bannedKeyIds.includes(keyId)
@@ -198,6 +219,10 @@ export function OptimizerApp() {
           spec={spec}
           locale={locale}
         />
+
+        {data && !spec && (
+          <ExamplePicker classes={data.classes} locale={locale} onPick={pickExample} />
+        )}
 
         {!data && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>

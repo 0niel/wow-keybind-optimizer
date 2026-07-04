@@ -14,6 +14,9 @@
     "title": "Keybinds your fingers will thank you for",
     "subtitle": "Paste the talent export string from the game — the optimizer reads your build, weighs every ability against real cast data, and solves the layout for your keyboard, mouse, and game mode."
   },
+  "examples": {
+    "title": "Or try a ready-made popular build:"
+  },
   "input": {
     "importString": "Talent export string",
     "importPlaceholder": "CcQAAAAAAAAAAAAAAAAAAAAAA…",

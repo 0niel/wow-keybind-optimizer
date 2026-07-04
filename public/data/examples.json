@@ -1,0 +1,51 @@
+[
+  {
+    "id": "enhancement-mplus",
+    "string": "CcQAAAAAAAAAAAAAAAAAAAAAAMzMjZmZmZmZmZmZGzAAAAAAAAAALwGMjFN2GAzA2AYWmxMzYZZGYmZjlZmZGGGzAAMDwYmJmZAgxA",
+    "mode": "mythic-plus",
+    "raceSlug": "orc"
+  },
+  {
+    "id": "elemental-arena",
+    "string": "CYQARUG2fGwHkLP0T7/MoTNl/AAAAAzMLbzMGjZZZhxMMDAAAAYxMbwAGwsxEysAAz2YmxMbLmWGzMGLGzMmZ2mNmlZwMzyAAzMAYmxwM+A",
+    "mode": "arena",
+    "scheme": "arena123",
+    "raceSlug": "orc"
+  },
+  {
+    "id": "frost-mage-raid",
+    "string": "CAEAAAAAAAAAAAAAAAAAAAAAAYGGLzMzsMmZmYmZmZMjZWMzMzMjZAAAgZmZWWmZaDAAAAAAsBw22YmZGMLzDYMDLAAAMzCwMwAmBD",
+    "mode": "raid",
+    "raceSlug": "gnome"
+  },
+  {
+    "id": "assassination-mplus",
+    "string": "CMQAAAAAAAAAAAAAAAAAAAAAAYmlxsZwAAAAAAzyglZAAAAAAttNzMzMzMGzMzMbzsMzMDmZmZmxMDjBwALwMGNmFALDYzAgZmBD",
+    "mode": "mythic-plus",
+    "raceSlug": "blood-elf"
+  },
+  {
+    "id": "holy-paladin-raid",
+    "string": "CEEAAAAAAAAAAAAAAAAAAAAAAAAAAYBAMAAglxMzYGzMzGjxYWGbzMLmpJmlZMzMMMbZAYAYDsZWmxMLz2Mzs1AAAAsAAbMGDzMAAwMDzYMMA",
+    "mode": "raid",
+    "raceSlug": "human"
+  },
+  {
+    "id": "devourer-mplus",
+    "string": "CgcBAAAAAAAAAAAAAAAAAAAAAAA2MmZmZmZmxwMAAAAAAAegxsNYGAAAAAAAAmxMMzMzMzMzMDzsYGjFZhZmZmt2mZmBwwAQgZMYMD",
+    "mode": "mythic-plus",
+    "raceSlug": "void-elf"
+  },
+  {
+    "id": "beast-mastery-mplus",
+    "string": "C0PAAAAAAAAAAAAAAAAAAAAAAAMmxwGsAzwQDbAAYGPwyMzsYGmZmZGzMMzMmhZGzMDbzMjZMDLjpZAAAAAAAAAMzYAzsBgZWAbDA",
+    "mode": "mythic-plus",
+    "raceSlug": "orc"
+  },
+  {
+    "id": "blood-dk-mplus",
+    "string": "CoPAAAAAAAAAAAAAAAAAAAAAAwMzyMzMmxMzMMLzMz0MLGjxMGAAAAwMmZmZmZYGjBAjZmZGAAgxsNwAWCWGmADLAmhZAAMzAYYA",
+    "mode": "mythic-plus",
+    "raceSlug": "dwarf"
+  }
+]
