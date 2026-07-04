@@ -173,6 +173,14 @@ describe('lua addon generator', () => {
     expect(lua).toContain('decorateButton')
     expect(lua).toContain('SetColorTexture')
     expect(lua).toContain('MultiBarBottomLeftButton')
+    expect(lua).toContain('wipeManagedBars')
+    expect(lua).toContain('GetBindingKey')
+    expect(lua).toContain('HasAction')
+    expect(lua).toContain('KeybindOptimizerDB')
+    expect(lua).toContain('local LEGEND = {')
+    expect(lua).toContain('KeybindOptimizerLegend')
+    expect(lua).toMatch(/command == "colors"/)
+    expect(lua).toMatch(/command == "legend"/)
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 
@@ -282,5 +290,8 @@ describe('lua addon generator', () => {
       parseLua(extracted['KeybindOptimizer/KeybindOptimizer.lua'] ?? '', { luaVersion: '5.1' }),
     ).not.toThrow()
     expect(extracted['KeybindOptimizer/KeybindOptimizer.toc']).toMatch(/^## Interface:/)
+    expect(extracted['KeybindOptimizer/KeybindOptimizer.toc']).toContain(
+      '## SavedVariables: KeybindOptimizerDB',
+    )
   })
 })
