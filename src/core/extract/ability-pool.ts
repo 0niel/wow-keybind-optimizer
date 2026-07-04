@@ -85,6 +85,8 @@ export function extractAbilityPool(input: ExtractionInput): Ability[] {
     abilities.push(buildAbility(spellId, meta, spec, sourceNodesBySpellId.get(spellId) ?? []))
   }
 
+  assignRotationRanks(abilities, spec)
+
   abilities.push(trinketAbility('trinket:1', isPvp))
   if (isPvp) abilities.push(pvpTrinketAbility())
 
@@ -123,6 +125,26 @@ function activeEntries(
   return entry ? [entry] : []
 }
 
+function assignRotationRanks(abilities: Ability[], spec: SpecSnapshot): void {
+  const aplRankOf = (ability: Ability): number =>
+    spec.frequencyBySpellId[String(ability.spellId)]?.aplRank ?? Number.MAX_SAFE_INTEGER
+  const ranked = abilities
+    .filter(
+      (ability) =>
+        (ability.category === 'rotational-core' || ability.category === 'rotational-proc') &&
+        ability.variantKind === 'base' &&
+        (ability.frequency >= 0.35 || aplRankOf(ability) !== Number.MAX_SAFE_INTEGER),
+    )
+    .sort((a, b) => {
+      if (b.frequency !== a.frequency) return b.frequency - a.frequency
+      if (aplRankOf(a) !== aplRankOf(b)) return aplRankOf(a) - aplRankOf(b)
+      return a.spellId - b.spellId
+    })
+  ranked.forEach((ability, index) => {
+    ability.rotationRank = ranked.length > 1 ? index / (ranked.length - 1) : 0
+  })
+}
+
 function buildAbility(
   spellId: number,
   meta: SpellMetaRecord,
@@ -142,6 +164,7 @@ function buildAbility(
     targeting: meta.targeting,
     sourceNodeIds,
     importance: 0,
+    rotationRank: null,
   }
 }
 
@@ -198,6 +221,7 @@ function trinketAbility(id: string, isPvp: boolean): Ability {
     targeting: 'self',
     sourceNodeIds: [],
     importance: 0,
+    rotationRank: null,
   }
 }
 
@@ -215,5 +239,6 @@ function pvpTrinketAbility(): Ability {
     targeting: 'self',
     sourceNodeIds: [],
     importance: 0,
+    rotationRank: null,
   }
 }

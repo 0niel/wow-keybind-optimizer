@@ -1,7 +1,7 @@
 import type { HardwareConfig, Modifier, PhysicalKey } from '@/core/model/hardware'
 import type { Slot } from '@/core/model/ability'
 import { buildKeyboardGeometry, isBindableKey } from '@/core/hardware/keyboards'
-import { DEFAULT_TIER, MOVEMENT_SCHEMES } from '@/core/hardware/movement-schemes'
+import { DEFAULT_TIER, MOVEMENT_SCHEMES, ROTATION_KEY_ORDER } from '@/core/hardware/movement-schemes'
 import { MOUSE_BUTTONS, WHEEL_BUTTONS } from '@/core/hardware/mice'
 
 const TIER_WEIGHT = 0.65
@@ -33,6 +33,15 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
   }
   const maxFitts = Math.max(0.001, ...rawFitts.values())
 
+  const rotationOrder = ROTATION_KEY_ORDER[config.movementScheme]
+  const sequenceOrdinalByKey = new Map<string, number>()
+  const availableOrder = rotationOrder.filter((keyId) =>
+    bindableKeys.some((key) => key.id === keyId),
+  )
+  availableOrder.forEach((keyId, index) => {
+    sequenceOrdinalByKey.set(keyId, availableOrder.length > 1 ? index / (availableOrder.length - 1) : 0)
+  })
+
   const slots: Slot[] = []
   for (const key of bindableKeys) {
     const tier = scheme.tierByKeyId[key.id] ?? DEFAULT_TIER
@@ -53,6 +62,7 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
         fitts,
         accessibility,
         isMouse: false,
+        sequenceOrdinal: modifier === 'none' ? (sequenceOrdinalByKey.get(key.id) ?? null) : null,
       })
     }
   }
@@ -74,6 +84,7 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
         fitts: 0,
         accessibility,
         isMouse: true,
+        sequenceOrdinal: null,
       })
     }
   }

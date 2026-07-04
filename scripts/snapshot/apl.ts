@@ -69,6 +69,7 @@ export function parseApl(text: string): AplProfile {
     const match = line.match(/^actions(?:\.([a-z0-9_]+))?\+?=\/?([a-z0-9_]+)/)
     if (!match) continue
     const list = match[1] ?? 'default'
+    if (list === 'precombat') continue
     const action = match[2] ?? ''
     if (action === 'use_items' || action === 'use_item') usesItems = true
     if (NON_ABILITY_ACTIONS.has(action)) continue

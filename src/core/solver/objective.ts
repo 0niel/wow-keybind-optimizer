@@ -51,6 +51,11 @@ export function compileProblem(
       if (!feasibleFn(a, s)) continue
       feasible[a * slotCount + s] = 1
       let value = ability.importance * slot.accessibility
+      if (ability.rotationRank !== null && slot.sequenceOrdinal !== null) {
+        value +=
+          problem.weights.rotationFlow *
+          (1 - Math.abs(ability.rotationRank - slot.sequenceOrdinal))
+      }
       if (hasPreserved && !switchCostBySlot[a]?.has(s)) {
         value -= problem.weights.switchCost * ability.importance
       }

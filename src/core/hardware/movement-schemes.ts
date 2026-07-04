@@ -78,3 +78,46 @@ export const MOVEMENT_SCHEMES: Record<MovementSchemeId, MovementScheme> = {
 }
 
 export const DEFAULT_TIER = 0.1
+
+export const ROTATION_KEY_ORDER: Record<MovementSchemeId, string[]> = {
+  wasd: [
+    'Digit1',
+    'Digit2',
+    'Digit3',
+    'Digit4',
+    'KeyQ',
+    'KeyE',
+    'KeyR',
+    'KeyF',
+    'KeyC',
+    'KeyX',
+    'KeyV',
+    'KeyT',
+    'KeyG',
+    'KeyZ',
+    'KeyB',
+    'Tab',
+    'CapsLock',
+    'Digit5',
+  ],
+  esdf: [
+    'Digit1',
+    'Digit2',
+    'Digit3',
+    'Digit4',
+    'KeyW',
+    'KeyR',
+    'KeyT',
+    'KeyG',
+    'KeyV',
+    'KeyC',
+    'KeyB',
+    'KeyY',
+    'KeyH',
+    'KeyX',
+    'KeyN',
+    'Tab',
+    'CapsLock',
+    'Digit5',
+  ],
+}

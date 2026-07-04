@@ -119,6 +119,19 @@ async function main() {
 
     const nodesWithSection = assignSections(traits.nodes)
 
+    const talentGrantedNames = new Set<string>()
+    for (const node of nodesWithSection) {
+      for (const entry of node.entries) {
+        if (entry.spellId === 0) continue
+        const entryName = enNames.get(entry.spellId)
+        if (entryName) talentGrantedNames.add(normalizeSpellName(entryName))
+      }
+    }
+    for (const spell of spellbook.specSpellsBySpecId.get(specId) ?? []) {
+      const spellName = enNames.get(spell.spellId)
+      if (spellName) talentGrantedNames.add(normalizeSpellName(spellName))
+    }
+
     const baseline: BaselineSpellRecord[] = []
     const seenBaselineNames = new Set<string>()
     for (const record of spellbook.baselineByClassId.get(classId) ?? []) {
@@ -127,6 +140,7 @@ async function main() {
       if (!universe.metaBySpellId.has(record.spellId)) continue
       const normalizedName = normalizeSpellName(name)
       if (seenBaselineNames.has(normalizedName)) continue
+      if (talentGrantedNames.has(normalizedName)) continue
       seenBaselineNames.add(normalizedName)
       if (record.raceMaskLow === 0n && record.raceMaskHigh === 0n) {
         baseline.push({ spellId: record.spellId })

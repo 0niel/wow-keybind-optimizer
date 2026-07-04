@@ -21,6 +21,7 @@ export interface Ability {
   targeting: Targeting
   sourceNodeIds: number[]
   importance: number
+  rotationRank: number | null
 }
 
 export interface Slot {
@@ -32,6 +33,7 @@ export interface Slot {
   fitts: number
   accessibility: number
   isMouse: boolean
+  sequenceOrdinal: number | null
 }
 
 export interface SynergyEdge {
@@ -59,6 +61,7 @@ export interface ObjectiveWeights {
   quadratic: number
   arenaCluster: number
   switchCost: number
+  rotationFlow: number
   reactiveSlotThreshold: number
   frequentSlotTierFloor: number
   frequencyForTierFloor: number
@@ -68,6 +71,7 @@ export const DEFAULT_OBJECTIVE_WEIGHTS: ObjectiveWeights = {
   quadratic: 0.25,
   arenaCluster: 0.2,
   switchCost: 0.15,
+  rotationFlow: 0.35,
   reactiveSlotThreshold: 0.75,
   frequentSlotTierFloor: 0.55,
   frequencyForTierFloor: 0.5,

@@ -34,6 +34,13 @@ export function HoverCard({ info }: { info: HoverInfo }) {
   if (info.ability.frequency >= 0.5) reasons.push(t('reasonFrequent'))
   if (info.slot.modifier === 'none' && info.slot.accessibility >= 0.75) reasons.push(t('reasonSTier'))
   if (info.bind.constraintNotes.includes('locked')) reasons.push(t('reasonLocked'))
+  if (
+    info.ability.rotationRank !== null &&
+    info.slot.sequenceOrdinal !== null &&
+    Math.abs(info.ability.rotationRank - info.slot.sequenceOrdinal) < 0.25
+  ) {
+    reasons.push(t('reasonRotationOrder'))
+  }
   if (info.ability.variantKind === 'focus') reasons.push(t('reasonFocusVariant'))
   if (info.ability.variantKind.startsWith('arena')) reasons.push(t('reasonArenaVariant'))
   if (info.bind.synergyScore > 0.01) reasons.push(t('reasonSynergy'))

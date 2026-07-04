@@ -183,17 +183,28 @@ export function KeyboardView({
         {ability && heatmap === 'none' && (
           <>
             {meta ? (
-              <image
-                href={spellIconUrl(meta.icon)}
-                x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2}
-                y={(h * KEY_UNIT - GAP - CATEGORY_BAR - iconSize(w, h)) / 2}
-                width={iconSize(w, h)}
-                height={iconSize(w, h)}
-                opacity={dimmed ? 0.3 : 1}
-                style={{ clipPath: 'inset(0 round 8px)' }}
-              >
-                <title>{abilityName ?? ''}</title>
-              </image>
+              <>
+                <rect
+                  x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2 - 2}
+                  y={(h * KEY_UNIT - GAP - CATEGORY_BAR - iconSize(w, h)) / 2 - 2}
+                  width={iconSize(w, h) + 4}
+                  height={iconSize(w, h) + 4}
+                  rx={9}
+                  fill="rgba(140, 150, 170, 0.22)"
+                  opacity={dimmed ? 0.3 : 1}
+                />
+                <image
+                  href={spellIconUrl(meta.icon)}
+                  x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2}
+                  y={(h * KEY_UNIT - GAP - CATEGORY_BAR - iconSize(w, h)) / 2}
+                  width={iconSize(w, h)}
+                  height={iconSize(w, h)}
+                  opacity={dimmed ? 0.3 : 1}
+                  style={{ clipPath: 'inset(0 round 8px)' }}
+                >
+                  <title>{abilityName ?? ''}</title>
+                </image>
+              </>
             ) : (
               <text
                 x={(w * KEY_UNIT - GAP) / 2}
@@ -217,6 +228,21 @@ export function KeyboardView({
         )}
         {ability && heatmap === 'none' && (
           <rect x={3} y={3} width={17} height={15} rx={5} fill="var(--panel)" opacity={0.9} />
+        )}
+        {ability && ability.variantKind !== 'base' && heatmap === 'none' && (
+          <g transform={`translate(${w * KEY_UNIT - GAP - 11}, 11)`}>
+            <circle r={8} fill="var(--accent)" opacity={dimmed ? 0.3 : 1} />
+            <text
+              textAnchor="middle"
+              y={3.5}
+              fontSize={9}
+              fontWeight={800}
+              fill="var(--on-accent)"
+              opacity={dimmed ? 0.4 : 1}
+            >
+              {ability.variantKind === 'focus' ? 'F' : ability.variantKind.slice(-1)}
+            </text>
+          </g>
         )}
         <text
           x={ability && heatmap === 'none' ? 11.5 : 7}
