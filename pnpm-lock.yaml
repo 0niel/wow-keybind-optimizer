@@ -22,6 +22,9 @@ dependencies:
     version: 3.25.76
 
 devDependencies:
+  '@types/luaparse':
+    specifier: ^0.2.13
+    version: 0.2.13
   '@types/node':
     specifier: ^22.15.0
     version: 22.20.0
@@ -37,6 +40,9 @@ devDependencies:
   eslint:
     specifier: ^9.25.0
     version: 9.39.4
+  luaparse:
+    specifier: ^0.3.1
+    version: 0.3.1
   tsx:
     specifier: ^4.19.0
     version: 4.23.0
@@ -1250,6 +1256,10 @@ packages:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
     dev: true
 
+  /@types/luaparse@0.2.13:
+    resolution: {integrity: sha512-nWs2m9b/zrMcAA2Rs+wTxdIsBkSYMo0+6ko8mpeqS5dhchU3hQN9kZGcSw96n497Vc7kGpDLtSicjdpaUrRAkw==}
+    dev: true
+
   /@types/node@22.20.0:
     resolution: {integrity: sha512-QWlFW2wf3nTjC13/DqRnBpR4ZO36VJH/JVBkA/vcnmbTBNQIlnObqyqZE1tUR7+Ni23Lda8R1BxMfbXRpCUx5g==}
     dependencies:
@@ -1969,6 +1979,11 @@ packages:
 
   /loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
+    dev: true
+
+  /luaparse@0.3.1:
+    resolution: {integrity: sha512-b21h2bFEbtGXmVqguHogbyrMAA0wOHyp9u/rx+w6Yc9pW1t9YjhGUsp87lYcp7pFRqSWN/PhFkrdIqKEUzRjjQ==}
+    hasBin: true
     dev: true
 
   /magic-string@0.30.21:

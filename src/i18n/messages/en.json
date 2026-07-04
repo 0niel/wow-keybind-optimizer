@@ -127,6 +127,6 @@
     "trinket": "Trinket",
     "pvpTrinket": "PvP Trinket",
     "macrosHint": "Create these macros in game (Esc → Macros) and drag them onto the listed keys, or use the Lua addon tab to apply everything automatically.",
-    "luaHint": "Create folder Interface/AddOns/KeybindOptimizer with these two files, then /reload. The addon creates the macros and applies every keybind."
+    "luaHint": "Create folder Interface/AddOns/KeybindOptimizer with these two files, then /reload. The addon creates the macros (@focus/@arena/@mouseover) itself, places abilities onto action bars 2-5 (they never page with stances or forms), and binds every key. Works on any client language — abilities are resolved by ID. Re-run any time with /kbo out of combat; unlearned abilities are listed in chat."
   }
 }
