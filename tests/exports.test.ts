@@ -166,6 +166,13 @@ describe('lua addon generator', () => {
         utility: 'Utility',
         trinket: 'Trinket',
       },
+      settings: {
+        optionsTitle: 'Keybind Optimizer',
+        colorsLabel: 'Category colors',
+        colorsTooltip: 'Color action buttons by category.',
+        legendLabel: 'Color legend',
+        legendTooltip: 'Show the color legend.',
+      },
     }
     const entries = buildLuaBindEntries(layout.binds, decor)
     expect(entries.some((entry) => entry.color !== undefined && entry.note !== undefined)).toBe(true)
@@ -181,6 +188,10 @@ describe('lua addon generator', () => {
     expect(lua).toContain('KeybindOptimizerLegend')
     expect(lua).toMatch(/command == "colors"/)
     expect(lua).toMatch(/command == "legend"/)
+    expect(lua).toContain('UIPanelCloseButton')
+    expect(lua).toContain('buildOptions')
+    expect(lua).toMatch(/RegisterAddOnCategory|InterfaceOptions_AddCategory/)
+    expect(lua).toContain('UICheckButtonTemplate')
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 

@@ -47,8 +47,18 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     const labelByCategory = Object.fromEntries(
       ALL_CATEGORIES.map((category) => [category, tCat(category)]),
     ) as Record<AbilityCategory, string>
-    return { colorByCategory: CATEGORY_HEX, labelByCategory }
-  }, [tCat])
+    return {
+      colorByCategory: CATEGORY_HEX,
+      labelByCategory,
+      settings: {
+        optionsTitle: 'Keybind Optimizer',
+        colorsLabel: t('settingColors'),
+        colorsTooltip: t('settingColorsHint'),
+        legendLabel: t('settingLegend'),
+        legendTooltip: t('settingLegendHint'),
+      },
+    }
+  }, [tCat, t])
 
   const content = useMemo(() => {
     if (tab === 'list') return renderPlainList(binds)

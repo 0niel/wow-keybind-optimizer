@@ -130,7 +130,11 @@
     "share": "Share link",
     "trinket": "Trinket",
     "pvpTrinket": "PvP Trinket",
+    "settingColors": "Category colors",
+    "settingColorsHint": "Color action buttons by the ability's category.",
+    "settingLegend": "Color legend",
+    "settingLegendHint": "Show the draggable category color legend.",
     "macrosHint": "Create these macros in game (Esc → Macros) and drag them onto the listed keys, or use the Lua addon tab to apply everything automatically.",
-    "luaHint": "1. Click \"Download addon (.zip)\" and extract it into World of Warcraft/_retail_/Interface/AddOns — you should get a KeybindOptimizer folder inside.  2. Fully restart the game (or /reload if it is running).  3. On the character-select screen open \"AddOns\" and tick \"Load out of date AddOns\" if KeybindOptimizer is marked outdated.  The addon owns action bars 2-5: it clears them and fills them densely in order — base layer first, then Shift/Ctrl/Alt — binds every key while removing stale conflicting binds, colors buttons by category, and shows a draggable color legend like on the site. The main bar (1) is left untouched — clear old duplicates from it with /kbo clearmain. Works on any client language — abilities are resolved by ID. Commands: /kbo — re-apply, /kbo colors — toggle colors, /kbo legend — toggle the legend."
+    "luaHint": "1. Click \"Download addon (.zip)\" and extract it into World of Warcraft/_retail_/Interface/AddOns — you should get a KeybindOptimizer folder inside.  2. Fully restart the game (or /reload if it is running).  3. On the character-select screen open \"AddOns\" and tick \"Load out of date AddOns\" if KeybindOptimizer is marked outdated.  The addon owns action bars 2-5: it clears them and fills them densely in order — base layer first, then Shift/Ctrl/Alt — binds every key while removing stale conflicting binds, colors buttons by category, and shows a draggable color legend like on the site. The main bar (1) is left untouched — clear old duplicates from it with /kbo clearmain. Works on any client language — abilities are resolved by ID. Hide the legend with its close button or in Options → AddOns → Keybind Optimizer, which also has checkboxes for the colors and the legend. Commands: /kbo — re-apply, /kbo colors — toggle colors, /kbo legend — toggle the legend."
   }
 }
