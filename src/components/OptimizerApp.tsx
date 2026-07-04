@@ -70,7 +70,7 @@ export function OptimizerApp() {
   const outcome = solverState.outcome
 
   const synergyPartnersByAbility = useMemo(() => {
-    const map = new Map<string, Array<{ name: string; slotLabel: string }>>()
+    const map = new Map<string, Array<{ name: string; slotLabel: string; icon: string | null }>>()
     if (!outcome || !data) return map
     const abilityById = new Map(outcome.abilities.map((ability) => [ability.id, ability]))
     const slotById = new Map(outcome.slots.map((slot) => [slot.id, slot]))
@@ -82,6 +82,11 @@ export function OptimizerApp() {
       if (!ability) return ''
       if (ability.spellId === 0) return t('trinket')
       return data.text.spells[String(ability.spellId)]?.name ?? ''
+    }
+    const iconOf = (abilityId: string): string | null => {
+      const ability = abilityById.get(abilityId)
+      if (!ability || ability.spellId === 0) return null
+      return data.spellMeta[String(ability.spellId)]?.icon ?? null
     }
     for (const edge of outcome.synergies) {
       if (edge.weight < 0.3) continue
@@ -96,7 +101,7 @@ export function OptimizerApp() {
         const entry = map.get(self) ?? []
         if (entry.length < 3) {
           const label = slot.modifier === 'none' ? slot.keyLabel : `${slot.modifier}+${slot.keyLabel}`
-          entry.push({ name: nameOf(partner), slotLabel: label })
+          entry.push({ name: nameOf(partner), slotLabel: label, icon: iconOf(partner) })
           map.set(self, entry)
         }
       }
@@ -244,6 +249,7 @@ export function OptimizerApp() {
                 abilities={outcome.abilities}
                 slots={outcome.slots}
                 spells={data.text.spells}
+                spellMeta={data.spellMeta}
                 build={data.build}
               />
             </div>

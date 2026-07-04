@@ -120,10 +120,14 @@ async function main() {
     const nodesWithSection = assignSections(traits.nodes)
 
     const baseline: BaselineSpellRecord[] = []
+    const seenBaselineNames = new Set<string>()
     for (const record of spellbook.baselineByClassId.get(classId) ?? []) {
       const name = enNames.get(record.spellId) ?? ''
       if (name === '' || isDenied(name, curated)) continue
       if (!universe.metaBySpellId.has(record.spellId)) continue
+      const normalizedName = normalizeSpellName(name)
+      if (seenBaselineNames.has(normalizedName)) continue
+      seenBaselineNames.add(normalizedName)
       if (record.raceMaskLow === 0n && record.raceMaskHigh === 0n) {
         baseline.push({ spellId: record.spellId })
         continue

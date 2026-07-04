@@ -11,7 +11,7 @@ export interface HoverInfo {
   name: string
   description: string
   icon: string | null
-  partners: Array<{ name: string; slotLabel: string }>
+  partners: Array<{ name: string; slotLabel: string; icon: string | null }>
   x: number
   y: number
 }
@@ -98,8 +98,42 @@ export function HoverCard({ info }: { info: HoverInfo }) {
         </ul>
       )}
       {info.partners.length > 0 && (
-        <div style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text-faint)' }}>
-          {t('partners')}: {info.partners.map((p) => `${p.name} (${p.slotLabel})`).join(', ')}
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-faint)', marginBottom: 6 }}>
+            {t('partners')}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {info.partners.map((partner) => (
+              <div
+                key={`${partner.name}-${partner.slotLabel}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem' }}
+              >
+                {partner.icon && (
+                  <img
+                    src={spellIconUrl(partner.icon)}
+                    alt=""
+                    width={22}
+                    height={22}
+                    style={{ borderRadius: 6 }}
+                  />
+                )}
+                <span style={{ color: 'var(--text-soft)' }}>{partner.name}</span>
+                <span
+                  style={{
+                    marginLeft: 'auto',
+                    fontSize: '0.75rem',
+                    fontWeight: 650,
+                    color: 'var(--text)',
+                    background: 'var(--inset)',
+                    borderRadius: 6,
+                    padding: '2px 8px',
+                  }}
+                >
+                  {partner.slotLabel}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

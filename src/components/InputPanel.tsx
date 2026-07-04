@@ -170,7 +170,7 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
                         }
                       }}
                     >
-                      {icon && <img src={spellIconUrl(icon)} alt="" width={20} height={20} />}
+                      {icon && <img src={spellIconUrl(icon)} alt="" width={24} height={24} />}
                       {name}
                     </ChipToggle>
                   )

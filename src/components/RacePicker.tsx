@@ -110,7 +110,7 @@ export function RacePicker({ races, selectedRaceId, onSelect, spellMeta, text, l
                   title={text.spells[String(spellId)]?.description ?? ''}
                   style={{ cursor: 'help' }}
                 >
-                  <img src={spellIconUrl(meta.icon)} alt="" width={20} height={20} />
+                  <img src={spellIconUrl(meta.icon)} alt="" width={24} height={24} />
                   {name}
                 </span>
               )
@@ -152,9 +152,9 @@ function RaceTile({
       onClick={onClick}
       title={name}
       style={{
-        width: 44,
-        height: 44,
-        borderRadius: 13,
+        width: 48,
+        height: 48,
+        borderRadius: 14,
         overflow: 'hidden',
         background: 'var(--inset)',
         display: 'inline-flex',
@@ -180,8 +180,8 @@ function RaceTile({
         <img
           src={portraitUrl(race.slug)}
           alt={name}
-          width={44}
-          height={44}
+          width={48}
+          height={48}
           loading="lazy"
           onError={() => setImageFailed(true)}
         />

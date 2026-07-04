@@ -21,15 +21,16 @@ interface Props {
   slots: Slot[]
   abilities: Ability[]
   assignments: BindAssignment[]
-  synergyPartnersByAbility: Map<string, Array<{ name: string; slotLabel: string }>>
+  synergyPartnersByAbility: Map<string, Array<{ name: string; slotLabel: string; icon: string | null }>>
   spellMeta: SpellMetaShard
   text: TextShard
   highlightAbilityIds: Set<string> | null
   onAbilityClick?: (abilityId: string) => void
 }
 
-const KEY_UNIT = 52
-const GAP = 4
+const KEY_UNIT = 58
+const GAP = 5
+const CATEGORY_BAR = 5
 
 export function KeyboardView({
   hardware,
@@ -138,10 +139,8 @@ export function KeyboardView({
       const value = Math.min(1, (frequencyByKey.get(keyId) ?? 0) / 1.2)
       fill = `color-mix(in srgb, var(--cat-cooldown-burst) ${Math.round(value * 90)}%, var(--inset))`
     } else if (ability) {
-      fill = `var(--cat-${ability.category})`
-      opacity = dimmed ? 0.25 : 1
-    } else if (isMovement) {
       fill = 'var(--inset-strong)'
+      opacity = dimmed ? 0.3 : 1
     }
 
     const abilityName =
@@ -187,38 +186,51 @@ export function KeyboardView({
               <image
                 href={spellIconUrl(meta.icon)}
                 x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2}
-                y={(h * KEY_UNIT - GAP - iconSize(w, h)) / 2 + 3}
+                y={(h * KEY_UNIT - GAP - CATEGORY_BAR - iconSize(w, h)) / 2}
                 width={iconSize(w, h)}
                 height={iconSize(w, h)}
                 opacity={dimmed ? 0.3 : 1}
-                style={{ clipPath: 'inset(0 round 7px)' }}
+                style={{ clipPath: 'inset(0 round 8px)' }}
               >
                 <title>{abilityName ?? ''}</title>
               </image>
             ) : (
               <text
                 x={(w * KEY_UNIT - GAP) / 2}
-                y={(h * KEY_UNIT - GAP) / 2 + 8}
+                y={(h * KEY_UNIT - GAP) / 2 + 6}
                 textAnchor="middle"
-                fontSize={15}
+                fontSize={20}
               >
                 🎒
               </text>
             )}
+            <rect
+              x={5}
+              y={h * KEY_UNIT - GAP - CATEGORY_BAR - 4}
+              width={w * KEY_UNIT - GAP - 10}
+              height={CATEGORY_BAR}
+              rx={CATEGORY_BAR / 2}
+              fill={`var(--cat-${ability.category})`}
+              opacity={dimmed ? 0.3 : 1}
+            />
           </>
         )}
+        {ability && heatmap === 'none' && (
+          <rect x={3} y={3} width={17} height={15} rx={5} fill="var(--panel)" opacity={0.9} />
+        )}
         <text
-          x={6}
-          y={13}
-          fontSize={9.5}
-          fontWeight={650}
-          fill={ability && heatmap === 'none' ? 'rgba(255,255,255,0.9)' : 'var(--text-soft)'}
+          x={ability && heatmap === 'none' ? 11.5 : 7}
+          y={14.5}
+          fontSize={10}
+          fontWeight={700}
+          textAnchor={ability && heatmap === 'none' ? 'middle' : 'start'}
+          fill={ability && heatmap === 'none' ? 'var(--text)' : 'var(--text-soft)'}
           style={{ userSelect: 'none' }}
         >
           {label}
         </text>
         {isMovement && !ability && heatmap === 'none' && (
-          <text x={7} y={h * KEY_UNIT - GAP - 8} fontSize={8} fill="var(--text-faint)">
+          <text x={7} y={h * KEY_UNIT - GAP - 8} fontSize={8.5} fill="var(--text-faint)">
             {t('movement')}
           </text>
         )}
@@ -304,5 +316,5 @@ export function KeyboardView({
 }
 
 function iconSize(w: number, h: number): number {
-  return Math.min(30, Math.min(w, h) * KEY_UNIT - 20)
+  return Math.min(40, Math.min(w, h) * KEY_UNIT - GAP - CATEGORY_BAR - 10)
 }

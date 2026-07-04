@@ -18,9 +18,9 @@ interface Props {
   text: TextShard
 }
 
-const VIEW_WIDTH = 920
-const VIEW_HEIGHT = 500
-const ICON = 26
+const VIEW_WIDTH = 960
+const VIEW_HEIGHT = 540
+const ICON = 34
 
 export function TalentTreeView({
   spec,
