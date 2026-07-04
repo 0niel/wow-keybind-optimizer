@@ -156,7 +156,9 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
                 {spec.pvpTalents.map((talent) => {
                   const active = inputs.pvpTalentIds.includes(talent.id)
                   const name = text.spells[String(talent.spellId)]?.name ?? `#${talent.spellId}`
-                  const icon = spellMeta[String(talent.spellId)]?.icon
+                  const icon =
+                    spellMeta[String(talent.spellId)]?.icon ??
+                    spec.iconBySpellId[String(talent.spellId)]
                   return (
                     <ChipToggle
                       key={talent.id}

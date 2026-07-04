@@ -30,8 +30,9 @@ export function AppHeader() {
   const otherLocale = locale === 'ru' ? 'en' : 'ru'
   const switchLocale = () => {
     localStorage.setItem('app-locale', otherLocale)
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const target = pathname.replace(`/${locale}`, `/${otherLocale}`)
-    window.location.href = `${target}${window.location.search}`
+    window.location.href = `${basePath}${target}${window.location.search}`
   }
 
   return (

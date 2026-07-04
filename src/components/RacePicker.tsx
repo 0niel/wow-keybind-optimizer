@@ -39,7 +39,7 @@ const PORTRAIT_SLUG_BY_RACE_SLUG: Record<string, string> = {
   vulpera: 'vulpera',
   'mag-har-orc': 'magharorc',
   dracthyr: 'dracthyr',
-  earthen: 'earthen',
+  earthen: 'earthendwarf',
   haranir: 'haranir',
 }
 
@@ -83,6 +83,7 @@ export function RacePicker({ races, selectedRaceId, onSelect, spellMeta, text, l
                   race={race}
                   locale={locale}
                   active={race.id === selectedRaceId}
+                  fallbackIcon={firstRacialIcon(race, spellMeta)}
                   onClick={() => onSelect(race.id === selectedRaceId ? null : race.id)}
                 />
               ))}
@@ -134,15 +135,25 @@ function dedupeByName(spellIds: number[], text: TextShard): number[] {
   return result
 }
 
+function firstRacialIcon(race: RaceRecord, spellMeta: SpellMetaShard): string | null {
+  for (const spellId of race.racialSpellIds) {
+    const icon = spellMeta[String(spellId)]?.icon
+    if (icon) return icon
+  }
+  return null
+}
+
 function RaceTile({
   race,
   locale,
   active,
+  fallbackIcon,
   onClick,
 }: {
   race: RaceRecord
   locale: string
   active: boolean
+  fallbackIcon: string | null
   onClick: () => void
 }) {
   const [imageFailed, setImageFailed] = useState(false)
@@ -173,9 +184,13 @@ function RaceTile({
       }}
     >
       {imageFailed ? (
-        <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-soft)' }}>
-          {name.slice(0, 1)}
-        </span>
+        fallbackIcon ? (
+          <img src={spellIconUrl(fallbackIcon)} alt={name} width={48} height={48} loading="lazy" />
+        ) : (
+          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-soft)' }}>
+            {name.slice(0, 1)}
+          </span>
+        )
       ) : (
         <img
           src={portraitUrl(race.slug)}

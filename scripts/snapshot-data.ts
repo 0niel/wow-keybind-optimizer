@@ -241,6 +241,11 @@ async function main() {
         if (!poolSpellIds.has(entry.spellId)) nameOnlySpellIds.add(entry.spellId)
       }
     }
+    for (const talent of specPvpTalents) {
+      const icon = universe.iconBySpellId.get(talent.spellId)
+      if (icon !== undefined) iconBySpellId[String(talent.spellId)] = icon
+      if (!poolSpellIds.has(talent.spellId)) nameOnlySpellIds.add(talent.spellId)
+    }
 
     specSnapshots.push({
       specId,
