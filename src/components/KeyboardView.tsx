@@ -176,12 +176,16 @@ export function KeyboardView({
           })
         }}
         onMouseLeave={() => setHover(null)}
-        onClick={() => {
+        onClick={(event) => {
           if (canToggle) {
+            event.stopPropagation()
             onToggleKeyBan?.(keyId)
             return
           }
-          if (!editMode && ability) onAbilityClick?.(ability.id)
+          if (!editMode && ability) {
+            event.stopPropagation()
+            onAbilityClick?.(ability.id)
+          }
         }}
         style={{ cursor: canToggle || (!editMode && ability) ? 'pointer' : 'default' }}
       >

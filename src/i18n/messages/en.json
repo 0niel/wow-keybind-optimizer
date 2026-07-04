@@ -114,10 +114,15 @@
   },
   "tree": {
     "title": "Talent tree",
-    "hint": "Click a bind to see which talent granted it; click a node to find its bind.",
+    "hint": "Click a bind to see which talent granted it; click a node to find its bind. Click empty space to clear the selection.",
     "classTree": "Class tree",
     "specTree": "Spec tree",
-    "heroTree": "Hero tree"
+    "heroTree": "Hero tree",
+    "section": {
+      "class": "Class talent",
+      "spec": "Spec talent",
+      "hero": "Hero talent"
+    }
   },
   "export": {
     "tabList": "Bind list",

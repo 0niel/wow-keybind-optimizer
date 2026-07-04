@@ -1,17 +1,18 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { NodeSelection } from '@/core/decoder'
-import type { Ability } from '@/core/model/ability'
 import type { SpecSnapshot, SpecTraitNodeRecord, SpellMetaShard } from '@/core/model/snapshot'
 import type { TextShard } from '@/lib/data'
 import { spellIconUrl } from '@/lib/data'
+import { formatSpellDescription } from '@/lib/format'
+import { SpellTooltip } from './SpellTooltip'
+import type { SpellTooltipInfo } from './SpellTooltip'
 
 interface Props {
   spec: SpecSnapshot
   selections: NodeSelection[]
-  abilities: Ability[]
   highlightNodeIds: Set<number> | null
   onNodeClick: (nodeId: number) => void
   spellMeta: SpellMetaShard
@@ -25,25 +26,17 @@ const ICON = 34
 export function TalentTreeView({
   spec,
   selections,
-  abilities,
   highlightNodeIds,
   onNodeClick,
   spellMeta,
   text,
 }: Props) {
   const t = useTranslations('tree')
+  const [hover, setHover] = useState<SpellTooltipInfo | null>(null)
   const selectedByNodeId = useMemo(
     () => new Map(selections.map((selection) => [selection.nodeId, selection])),
     [selections],
   )
-  const boundNodeIds = useMemo(() => {
-    const ids = new Set<number>()
-    for (const ability of abilities) {
-      for (const nodeId of ability.sourceNodeIds) ids.add(nodeId)
-    }
-    return ids
-  }, [abilities])
-
   const activeSubTreeId = useMemo(() => {
     for (const node of spec.nodes) {
       if (node.kind !== 'subtree-selection') continue
@@ -107,7 +100,6 @@ export function TalentTreeView({
           {visibleNodes.map((node) => {
             const selection = selectedByNodeId.get(node.id)
             const isSelected = selection !== undefined && selection.ranks > 0
-            const isBound = boundNodeIds.has(node.id)
             const isHighlighted = highlightNodeIds?.has(node.id) ?? false
             const dimmed = highlightNodeIds !== null && !isHighlighted
             const entry = nodeEntry(node)
@@ -118,27 +110,42 @@ export function TalentTreeView({
             const x = scaleX(node.posX)
             const y = scaleY(node.posY)
 
-            if (!isSelected) {
+            if (!isSelected || !icon) {
               return (
                 <circle
                   key={node.id}
                   cx={x}
                   cy={y}
-                  r={5}
-                  fill="var(--inset-strong)"
-                  opacity={dimmed ? 0.15 : 0.5}
-                >
-                  <title>{name}</title>
-                </circle>
+                  r={isSelected ? 6 : 5}
+                  fill={isSelected ? sectionColor(node) : 'var(--inset-strong)'}
+                  opacity={dimmed ? 0.15 : isSelected ? 0.9 : 0.5}
+                />
               )
+            }
+
+            const showHover = (event: { clientX: number; clientY: number }) => {
+              setHover({
+                name,
+                description: formatSpellDescription(text.spells[String(entry?.spellId)]?.description ?? ''),
+                icon,
+                accent: sectionColor(node),
+                subtitle: t(`section.${node.section}`),
+                x: event.clientX,
+                y: event.clientY,
+              })
             }
 
             return (
               <g
                 key={node.id}
                 transform={`translate(${x - ICON / 2}, ${y - ICON / 2})`}
-                onClick={() => onNodeClick(node.id)}
-                style={{ cursor: isBound ? 'pointer' : 'default' }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onNodeClick(node.id)
+                }}
+                onMouseMove={showHover}
+                onMouseLeave={() => setHover(null)}
+                style={{ cursor: 'pointer' }}
                 opacity={dimmed ? 0.25 : 1}
               >
                 {isHighlighted && (
@@ -161,25 +168,18 @@ export function TalentTreeView({
                   rx={8.5}
                   fill={sectionColor(node)}
                 />
-                {icon ? (
-                  <image
-                    href={spellIconUrl(icon)}
-                    width={ICON}
-                    height={ICON}
-                    style={{ clipPath: 'inset(0 round 6px)' }}
-                  >
-                    <title>{name}</title>
-                  </image>
-                ) : (
-                  <rect width={ICON} height={ICON} rx={6} fill="var(--inset)">
-                    <title>{name}</title>
-                  </rect>
-                )}
+                <image
+                  href={spellIconUrl(icon)}
+                  width={ICON}
+                  height={ICON}
+                  style={{ clipPath: 'inset(0 round 6px)' }}
+                />
               </g>
             )
           })}
         </svg>
       </div>
+      {hover && <SpellTooltip info={hover} />}
       <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>
         <LegendDot color="var(--cat-rotational-core)" label={t('classTree')} />
         <LegendDot color="var(--accent)" label={t('specTree')} />

@@ -183,6 +183,18 @@ export function OptimizerApp() {
     [outcome],
   )
 
+  const clearHighlight = useCallback(() => {
+    setHighlightAbilityIds(null)
+    setHighlightNodeIds(null)
+  }, [])
+
+  useEffect(() => {
+    if (highlightAbilityIds === null && highlightNodeIds === null) return
+    const onDocClick = () => clearHighlight()
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [highlightAbilityIds, highlightNodeIds, clearHighlight])
+
   if (error) {
     return (
       <div>
@@ -308,7 +320,6 @@ export function OptimizerApp() {
               <TalentTreeView
                 spec={spec}
                 selections={outcome.selections}
-                abilities={outcome.abilities}
                 highlightNodeIds={highlightNodeIds}
                 onNodeClick={handleNodeClick}
                 spellMeta={data.spellMeta}
