@@ -11,6 +11,7 @@ import {
   renderPlainList,
   renderAddonToc,
 } from '@/lib/exports'
+import { buildZipBlob } from '@/lib/zip'
 import { spellIconUrl } from '@/lib/data'
 import { SegmentedControl } from './controls'
 
@@ -49,14 +50,28 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const download = () => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const triggerDownload = (blob: Blob, fileName: string) => {
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = tab === 'lua' ? `${ADDON_NAME}.lua` : `keybinds-${tab}.txt`
+    anchor.download = fileName
     anchor.click()
     URL.revokeObjectURL(url)
+  }
+
+  const download = () => {
+    if (tab === 'lua') {
+      const zip = buildZipBlob([
+        { name: `${ADDON_NAME}/${ADDON_NAME}.toc`, content: renderAddonToc(ADDON_NAME, build) },
+        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(binds, ADDON_NAME) },
+      ])
+      triggerDownload(zip, `${ADDON_NAME}.zip`)
+      return
+    }
+    triggerDownload(
+      new Blob([content], { type: 'text/plain;charset=utf-8' }),
+      `keybinds-${tab}.txt`,
+    )
   }
 
   const shareUrl = () => {
@@ -81,8 +96,8 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
           <button className="action" onClick={copy}>
             {copied ? t('copied') : t('copy')}
           </button>
-          <button className="action" onClick={download}>
-            {t('download')}
+          <button className="action" data-primary={tab === 'lua'} onClick={download}>
+            {tab === 'lua' ? t('downloadAddon') : t('download')}
           </button>
           <button className="action" onClick={shareUrl}>
             {t('share')}

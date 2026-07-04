@@ -322,14 +322,16 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
   ].join('\n')
 }
 
+export function interfaceVersionFromBuild(gameBuild: string): string {
+  const [major = '1', minor = '0', patch = '0'] = gameBuild.split('.')
+  return `${major}${minor.padStart(2, '0')}${patch.padStart(2, '0')}`
+}
+
 export function renderAddonToc(addonName: string, gameBuild: string): string {
-  const interfaceVersion = gameBuild.split('.').slice(0, 3).map((part, index) =>
-    index === 0 ? part : part.padStart(2, '0'),
-  )
   return [
-    `## Interface: ${interfaceVersion.join('')}`,
-    `## Title: ${addonName}`,
-    `## Notes: Generated keybind layout`,
+    `## Interface: ${interfaceVersionFromBuild(gameBuild)}`,
+    `## Title: Keybind Optimizer`,
+    `## Notes: Applies a generated keybind layout`,
     `## Version: 1.0.0`,
     ``,
     `${addonName}.lua`,

@@ -13,6 +13,7 @@ import type { RaceRecord, SpecSnapshot, SpellMetaShard } from '@/core/model/snap
 import {
   buildExportBinds,
   buildLuaBindEntries,
+  interfaceVersionFromBuild,
   macroBody,
   macroName,
   renderAddonToc,
@@ -21,7 +22,36 @@ import {
   renderPlainList,
 } from '@/lib/exports'
 import type { ExportBind } from '@/lib/exports'
+import { buildZipBlob } from '@/lib/zip'
 import golden from './fixtures/decoder-golden.json'
+
+async function readStoredZip(blob: Blob): Promise<Record<string, string>> {
+  const arrayBuffer = await blob.arrayBuffer()
+  const buffer = new Uint8Array(arrayBuffer)
+  const view = new DataView(arrayBuffer)
+  const decoder = new TextDecoder()
+  let eocd = buffer.length - 22
+  while (eocd >= 0 && view.getUint32(eocd, true) !== 0x06054b50) eocd--
+  if (eocd < 0) throw new Error('no end-of-central-directory record')
+  const count = view.getUint16(eocd + 10, true)
+  let cursor = view.getUint32(eocd + 16, true)
+  const result: Record<string, string> = {}
+  for (let entry = 0; entry < count; entry++) {
+    if (view.getUint32(cursor, true) !== 0x02014b50) throw new Error('bad central header')
+    const nameLength = view.getUint16(cursor + 28, true)
+    const extraLength = view.getUint16(cursor + 30, true)
+    const commentLength = view.getUint16(cursor + 32, true)
+    const localOffset = view.getUint32(cursor + 42, true)
+    const name = decoder.decode(buffer.slice(cursor + 46, cursor + 46 + nameLength))
+    const localNameLength = view.getUint16(localOffset + 26, true)
+    const localExtraLength = view.getUint16(localOffset + 28, true)
+    const size = view.getUint32(localOffset + 18, true)
+    const dataStart = localOffset + 30 + localNameLength + localExtraLength
+    result[name] = decoder.decode(buffer.slice(dataStart, dataStart + size))
+    cursor += 46 + nameLength + extraLength + commentLength
+  }
+  return result
+}
 
 const BUILD = '12.0.7.68367'
 const DATA_ROOT = join(process.cwd(), 'public', 'data', 'retail', BUILD)
@@ -145,6 +175,28 @@ describe('lua addon generator', () => {
   it('renders a plain list and a toc with the right interface version', () => {
     const layout = solveLayout(262, 'mythic-plus', 'focus')
     expect(renderPlainList(layout.binds).split('\n').length).toBe(layout.binds.length)
+    expect(interfaceVersionFromBuild('12.0.7.68367')).toBe('120007')
     expect(renderAddonToc('KeybindOptimizer', BUILD)).toContain('## Interface: 120007')
+  })
+
+  it('packs a ZIP with the correct addon folder structure that round-trips', async () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const toc = renderAddonToc('KeybindOptimizer', BUILD)
+    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
+    const zip = buildZipBlob([
+      { name: 'KeybindOptimizer/KeybindOptimizer.toc', content: toc },
+      { name: 'KeybindOptimizer/KeybindOptimizer.lua', content: lua },
+    ])
+    const extracted = await readStoredZip(zip)
+    expect(Object.keys(extracted).sort()).toEqual([
+      'KeybindOptimizer/KeybindOptimizer.lua',
+      'KeybindOptimizer/KeybindOptimizer.toc',
+    ])
+    expect(extracted['KeybindOptimizer/KeybindOptimizer.toc']).toBe(toc)
+    expect(extracted['KeybindOptimizer/KeybindOptimizer.lua']).toBe(lua)
+    expect(() =>
+      parseLua(extracted['KeybindOptimizer/KeybindOptimizer.lua'] ?? '', { luaVersion: '5.1' }),
+    ).not.toThrow()
+    expect(extracted['KeybindOptimizer/KeybindOptimizer.toc']).toMatch(/^## Interface:/)
   })
 })
