@@ -21,6 +21,29 @@ function collapseScaling(input: string): string {
   return text
 }
 
+const VALUE_PLACEHOLDER = 'X'
+
+function stripGameVariables(text: string): string {
+  let out = text
+  for (let pass = 0; pass < 4; pass++) {
+    const before = out
+    out = out
+      .replace(/\$@[a-z]+\d*/gi, '')
+      .replace(/\$\?[a-z]?\d*\s*\[([^\]]*)\]\s*\[[^\]]*\]/gi, '$1')
+      .replace(/\$[lg]\s*([^:;$]*)(?::[^;$]*)+;/gi, '$1')
+      .replace(/\$\{[^}]*\}/g, VALUE_PLACEHOLDER)
+      .replace(/\$\d+[a-z]\d*/gi, VALUE_PLACEHOLDER)
+      .replace(/\$[a-z]\d+/gi, VALUE_PLACEHOLDER)
+      .replace(/\$[a-z](?![a-z0-9])/gi, VALUE_PLACEHOLDER)
+    if (out === before) break
+  }
+  return out
+    .replace(/\$\?[a-z]?\d*\s*\[[^\]]*\]/gi, '')
+    .replace(/\$\?[a-z]?\d*/gi, '')
+    .replace(/\$+/g, '')
+    .replace(/\bX\s*X\b/g, VALUE_PLACEHOLDER)
+}
+
 function dedupeParagraphs(text: string): string {
   const seen = new Set<string>()
   const blocks: string[] = []
@@ -37,7 +60,7 @@ function dedupeParagraphs(text: string): string {
 export function formatSpellDescription(input: string): string {
   if (!input) return ''
   return dedupeParagraphs(
-    collapseScaling(input)
+    stripGameVariables(collapseScaling(input))
       .replace(/\[\s*\]/g, '')
       .replace(/\(\s*\)/g, '')
       .replace(/\s*ед\.\s+урона/gi, ' урон')

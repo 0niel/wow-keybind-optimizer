@@ -36,6 +36,37 @@ describe('spell description formatter', () => {
     expect(formatted).toBe('Поражает цель молнией.')
   })
 
+  it('replaces Blizzard tooltip value variables with a placeholder', () => {
+    const raw =
+      'Сокращает время восстановления "Страж природы" на ${$s1/1000} сек. и увеличивает объём здоровья ещё на $s2% максимума.'
+    const formatted = formatSpellDescription(raw)
+    expect(formatted).not.toContain('$')
+    expect(formatted).not.toContain('{')
+    expect(formatted).toContain('на X сек.')
+    expect(formatted).toContain('ещё на X% максимума')
+  })
+
+  it('strips cross-spell references and dangling conditionals', () => {
+    const raw = 'Когда вы призываете предка, время восстановления $?a137040'
+    const formatted = formatSpellDescription(raw)
+    expect(formatted).not.toContain('$')
+    expect(formatted).toBe('Когда вы призываете предка, время восстановления')
+  })
+
+  it('keeps the first branch of a tooltip conditional', () => {
+    const raw = 'Наносит $?a12345[двойной][обычный] урон.'
+    expect(formatSpellDescription(raw)).toBe('Наносит двойной урон.')
+  })
+
+  it('removes self-referencing $@ tokens and resolves plurals', () => {
+    const raw = 'Дает $s1 $lзаряд:заряда:зарядов; эффекта $@spellname на цель.'
+    const formatted = formatSpellDescription(raw)
+    expect(formatted).not.toContain('$')
+    expect(formatted).not.toContain('@')
+    expect(formatted).toContain('заряд')
+    expect(formatted).not.toContain('spellname')
+  })
+
   it('leaves clean text untouched', () => {
     const raw = 'Прерывает текущее заклинание цели.'
     expect(formatSpellDescription(raw)).toBe('Прерывает текущее заклинание цели.')
