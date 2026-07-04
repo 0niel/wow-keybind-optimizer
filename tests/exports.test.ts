@@ -131,6 +131,51 @@ describe('lua addon generator', () => {
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 
+  it('colors buttons and adds tooltip notes when decor is supplied', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const decor = {
+      colorByCategory: {
+        'rotational-core': '74acff',
+        'rotational-proc': '97c8ff',
+        'cooldown-burst': 'ff8e63',
+        'defensive-major': '4bdb92',
+        'defensive-minor': '8ce8b6',
+        external: '4fdcc6',
+        'heal-utility': '63e6c0',
+        interrupt: 'ffd44f',
+        'cc-hard': 'c78bff',
+        'cc-soft': 'e0c2ff',
+        dispel: '6fdcfb',
+        mobility: 'ace76a',
+        utility: 'aab2c4',
+        trinket: 'ff9dc8',
+      },
+      labelByCategory: {
+        'rotational-core': 'Rotation',
+        'rotational-proc': 'Proc',
+        'cooldown-burst': 'Burst',
+        'defensive-major': 'Major defensive',
+        'defensive-minor': 'Minor defensive',
+        external: 'External',
+        'heal-utility': 'Healing',
+        interrupt: 'Interrupt',
+        'cc-hard': 'Hard CC',
+        'cc-soft': 'Soft CC',
+        dispel: 'Dispel',
+        mobility: 'Mobility',
+        utility: 'Utility',
+        trinket: 'Trinket',
+      },
+    }
+    const entries = buildLuaBindEntries(layout.binds, decor)
+    expect(entries.some((entry) => entry.color !== undefined && entry.note !== undefined)).toBe(true)
+    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer', decor)
+    expect(lua).toContain('decorateButton')
+    expect(lua).toContain('SetColorTexture')
+    expect(lua).toContain('MultiBarBottomLeftButton')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
   it('is locale-independent: no localized names inside the addon source', () => {
     const layout = solveLayout(262, 'mythic-plus', 'focus')
     const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')

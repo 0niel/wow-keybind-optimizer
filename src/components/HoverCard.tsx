@@ -1,8 +1,10 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Ability, BindAssignment, Slot } from '@/core/model/ability'
 import { spellIconUrl } from '@/lib/data'
+import { formatSpellDescription } from '@/lib/format'
 
 export interface HoverInfo {
   ability: Ability
@@ -19,6 +21,7 @@ export interface HoverInfo {
 export function HoverCard({ info }: { info: HoverInfo }) {
   const t = useTranslations('hover')
   const tCat = useTranslations('categories')
+  const description = useMemo(() => formatSpellDescription(info.description), [info.description])
   const tierLabel =
     info.slot.accessibility >= 0.75
       ? 'S'
@@ -77,18 +80,18 @@ export function HoverCard({ info }: { info: HoverInfo }) {
           </div>
         </div>
       </div>
-      {info.description && (
+      {description && (
         <p
           style={{
             fontSize: '0.82rem',
             color: 'var(--text-soft)',
             marginBottom: 10,
-            maxHeight: 96,
+            maxHeight: 110,
             overflow: 'hidden',
             whiteSpace: 'pre-line',
           }}
         >
-          {info.description}
+          {description}
         </p>
       )}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>

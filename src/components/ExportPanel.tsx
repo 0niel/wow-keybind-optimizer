@@ -11,8 +11,12 @@ import {
   renderPlainList,
   renderAddonToc,
 } from '@/lib/exports'
+import type { AddonDecor } from '@/lib/exports'
 import { buildZipBlob } from '@/lib/zip'
 import { spellIconUrl } from '@/lib/data'
+import { CATEGORY_HEX } from '@/core/model/category-colors'
+import { ALL_CATEGORIES } from '@/core/model/ability-category'
+import type { AbilityCategory } from '@/core/model/ability-category'
 import { SegmentedControl } from './controls'
 
 type ExportTab = 'list' | 'macros' | 'lua'
@@ -30,6 +34,7 @@ const ADDON_NAME = 'KeybindOptimizer'
 
 export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, build }: Props) {
   const t = useTranslations('export')
+  const tCat = useTranslations('categories')
   const [tab, setTab] = useState<ExportTab>('list')
   const [copied, setCopied] = useState(false)
 
@@ -38,11 +43,18 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     [assignments, abilities, slots, spells, t],
   )
 
+  const decor: AddonDecor = useMemo(() => {
+    const labelByCategory = Object.fromEntries(
+      ALL_CATEGORIES.map((category) => [category, tCat(category)]),
+    ) as Record<AbilityCategory, string>
+    return { colorByCategory: CATEGORY_HEX, labelByCategory }
+  }, [tCat])
+
   const content = useMemo(() => {
     if (tab === 'list') return renderPlainList(binds)
     if (tab === 'macros') return renderMacroList(binds)
-    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(binds, ADDON_NAME)}`
-  }, [tab, binds, build])
+    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(binds, ADDON_NAME, decor)}`
+  }, [tab, binds, build, decor])
 
   const copy = async () => {
     await navigator.clipboard.writeText(content)
@@ -63,7 +75,7 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     if (tab === 'lua') {
       const zip = buildZipBlob([
         { name: `${ADDON_NAME}/${ADDON_NAME}.toc`, content: renderAddonToc(ADDON_NAME, build) },
-        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(binds, ADDON_NAME) },
+        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(binds, ADDON_NAME, decor) },
       ])
       triggerDownload(zip, `${ADDON_NAME}.zip`)
       return

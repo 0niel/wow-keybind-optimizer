@@ -1,5 +1,11 @@
 import type { Ability, BindAssignment, Slot } from '@/core/model/ability'
+import type { AbilityCategory } from '@/core/model/ability-category'
 import type { SpellTextShard } from '@/core/model/snapshot'
+
+export interface AddonDecor {
+  colorByCategory: Record<AbilityCategory, string>
+  labelByCategory: Record<AbilityCategory, string>
+}
 
 const WOW_KEY_BY_KEY_ID: Record<string, string> = {
   Backquote: '`',
@@ -160,6 +166,8 @@ interface LuaBindEntry {
   mouseover?: boolean
   slot?: number
   command?: string
+  color?: string
+  note?: string
 }
 
 const PLACEMENT_BARS = [
@@ -169,7 +177,7 @@ const PLACEMENT_BARS = [
   { base: 36, command: 'MULTIACTIONBAR4BUTTON' },
 ]
 
-export function buildLuaBindEntries(binds: ExportBind[]): LuaBindEntry[] {
+export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): LuaBindEntry[] {
   const entries: LuaBindEntry[] = []
   let barIndex = 0
   let button = 0
@@ -200,6 +208,14 @@ export function buildLuaBindEntries(binds: ExportBind[]): LuaBindEntry[] {
       continue
     }
 
+    if (decor) {
+      entry.color = decor.colorByCategory[bind.ability.category]
+      const label = decor.labelByCategory[bind.ability.category]
+      const variantSuffix =
+        bind.ability.variantKind === 'base' ? '' : ` [@${variantTarget(bind.ability.variantKind)}]`
+      entry.note = `${label}${variantSuffix}`
+    }
+
     const bar = PLACEMENT_BARS[barIndex]
     if (bar) {
       button += 1
@@ -219,16 +235,69 @@ function luaBindLiteral(entry: LuaBindEntry): string {
   if (entry.mouseover) parts.push(`mouseover = true`)
   if (entry.slot !== undefined) parts.push(`slot = ${entry.slot}`)
   if (entry.command !== undefined) parts.push(`command = "${entry.command}"`)
+  if (entry.color !== undefined) parts.push(`color = "${entry.color}"`)
+  if (entry.note !== undefined) parts.push(`note = "${escapeLua(entry.note)}"`)
   return `  { ${parts.join(', ')} },`
 }
 
-export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
-  const entries = buildLuaBindEntries(binds)
+function escapeLua(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: AddonDecor): string {
+  const entries = buildLuaBindEntries(binds, decor)
   return [
     `local ADDON = "${addonName}"`,
     `local BINDS = {`,
     ...entries.map(luaBindLiteral),
     `}`,
+    ``,
+    `local BUTTON_FRAMES = {`,
+    `  MULTIACTIONBAR1BUTTON = "MultiBarBottomLeftButton",`,
+    `  MULTIACTIONBAR2BUTTON = "MultiBarBottomRightButton",`,
+    `  MULTIACTIONBAR3BUTTON = "MultiBarRightButton",`,
+    `  MULTIACTIONBAR4BUTTON = "MultiBarLeftButton",`,
+    `}`,
+    ``,
+    `local function hexColor(hex)`,
+    `  return tonumber(string.sub(hex, 1, 2), 16) / 255, tonumber(string.sub(hex, 3, 4), 16) / 255, tonumber(string.sub(hex, 5, 6), 16) / 255`,
+    `end`,
+    ``,
+    `local function buttonForCommand(command)`,
+    `  local prefix, number = string.match(command, "(MULTIACTIONBAR%dBUTTON)(%d+)")`,
+    `  if not prefix then return nil end`,
+    `  local base = BUTTON_FRAMES[prefix]`,
+    `  if not base then return nil end`,
+    `  return _G[base .. number]`,
+    `end`,
+    ``,
+    `local function decorateButton(bind)`,
+    `  if not bind.command or not bind.color then return end`,
+    `  local button = buttonForCommand(bind.command)`,
+    `  if not button then return end`,
+    `  local r, g, b = hexColor(bind.color)`,
+    `  local bar = button.koCategoryBar`,
+    `  if not bar then`,
+    `    bar = button:CreateTexture(nil, "OVERLAY")`,
+    `    button.koCategoryBar = bar`,
+    `  end`,
+    `  bar:ClearAllPoints()`,
+    `  bar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 2, 1)`,
+    `  bar:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 1)`,
+    `  bar:SetHeight(4)`,
+    `  bar:SetColorTexture(r, g, b, 1)`,
+    `  button.koNote = bind.note`,
+    `  button.koR, button.koG, button.koB = r, g, b`,
+    `  if not button.koHooked then`,
+    `    button.koHooked = true`,
+    `    button:HookScript("OnEnter", function(self)`,
+    `      if self.koNote then`,
+    `        GameTooltip:AddLine(self.koNote, self.koR, self.koG, self.koB)`,
+    `        GameTooltip:Show()`,
+    `      end`,
+    `    end)`,
+    `  end`,
+    `end`,
     ``,
     `local function resolveSpellName(spellId)`,
     `  if C_Spell and C_Spell.GetSpellName then`,
@@ -344,6 +413,7 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
     `    else`,
     `      table.insert(skipped, name or ("spell:" .. tostring(bind.spell)))`,
     `    end`,
+    `    decorateButton(bind)`,
     `  end`,
     `  SaveBindings(GetCurrentBindingSet())`,
     `  print(string.format("|cff7c78ff%s|r: %d keys bound, %d abilities placed on bars 2-5", ADDON, bound, placed))`,
