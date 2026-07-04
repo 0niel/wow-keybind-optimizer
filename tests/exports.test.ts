@@ -180,7 +180,7 @@ describe('lua addon generator', () => {
     expect(lua).toContain('decorateButton')
     expect(lua).toContain('SetColorTexture')
     expect(lua).toContain('MultiBarBottomLeftButton')
-    expect(lua).toContain('wipeManagedBars')
+    expect(lua).toContain('wipeTargets')
     expect(lua).toContain('GetBindingKey')
     expect(lua).toContain('HasAction')
     expect(lua).toContain('KeybindOptimizerDB')
@@ -224,32 +224,34 @@ describe('lua addon generator', () => {
     }
   })
 
-  it('packs slots densely: bars fill completely and in order', () => {
+  it('emits binds in modifier-then-key order for sequential runtime placement', () => {
     const layout = solveLayout(263, 'arena', 'focus')
     const entries = buildLuaBindEntries(layout.binds)
-    const barOrder = [
-      'MULTIACTIONBAR1BUTTON',
-      'MULTIACTIONBAR2BUTTON',
-      'MULTIACTIONBAR3BUTTON',
-      'MULTIACTIONBAR4BUTTON',
-    ]
-    const usedSlots = new Set<number>()
-    let placementIndex = 0
+    const rank: Record<string, number> = { none: 0, shift: 1, ctrl: 2, alt: 3 }
+    const modifierOf = (key: string) => {
+      if (key.startsWith('SHIFT-')) return 'shift'
+      if (key.startsWith('CTRL-')) return 'ctrl'
+      if (key.startsWith('ALT-')) return 'alt'
+      return 'none'
+    }
+    let previous = -1
     for (const entry of entries) {
-      if (entry.command === undefined || entry.slot === undefined) continue
-      expect(usedSlots.has(entry.slot)).toBe(false)
-      usedSlots.add(entry.slot)
-      const expectedBar = barOrder[Math.floor(placementIndex / 12)]
-      const expectedButton = (placementIndex % 12) + 1
-      expect(entry.command).toBe(`${expectedBar}${expectedButton}`)
-      placementIndex += 1
+      const current = rank[modifierOf(entry.key)] ?? 9
+      expect(current).toBeGreaterThanOrEqual(previous)
+      previous = current
     }
-    expect(placementIndex).toBe(Math.min(entries.length, 48))
-    if (entries.length >= 24) {
-      const firstTwoBars = entries.slice(0, 24).map((entry) => entry.command)
-      expect(firstTwoBars.filter((command) => command?.startsWith('MULTIACTIONBAR1'))).toHaveLength(12)
-      expect(firstTwoBars.filter((command) => command?.startsWith('MULTIACTIONBAR2'))).toHaveLength(12)
-    }
+    expect(entries.length).toBeGreaterThan(20)
+  })
+
+  it('generates the main bar plus four multibars for runtime placement', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
+    expect(lua).toContain('command = "ACTIONBUTTON"')
+    expect(lua).toContain('command = "MULTIACTIONBAR1BUTTON"')
+    expect(lua).toContain('mainBarPages')
+    expect(lua).toContain('buildTargets')
+    expect(lua).toMatch(/class == "DRUID" or class == "ROGUE"/)
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 
   it('marks focus, arena, and mouseover binds for macro generation', () => {

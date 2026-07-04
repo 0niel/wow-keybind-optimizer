@@ -171,22 +171,12 @@ interface LuaBindEntry {
   item?: number
   target?: string
   mouseover?: boolean
-  slot?: number
-  command?: string
   color?: string
   note?: string
 }
 
-const PLACEMENT_BARS = [
-  { base: 60, command: 'MULTIACTIONBAR1BUTTON' },
-  { base: 48, command: 'MULTIACTIONBAR2BUTTON' },
-  { base: 24, command: 'MULTIACTIONBAR3BUTTON' },
-  { base: 36, command: 'MULTIACTIONBAR4BUTTON' },
-]
-
 export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): LuaBindEntry[] {
   const entries: LuaBindEntry[] = []
-  let placementIndex = 0
 
   for (const bind of binds) {
     const entry: LuaBindEntry = { key: bind.wowKey }
@@ -211,13 +201,6 @@ export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): Lu
       entry.note = `${label}${variantSuffix}`
     }
 
-    const bar = PLACEMENT_BARS[Math.floor(placementIndex / 12)]
-    if (bar) {
-      const button = (placementIndex % 12) + 1
-      entry.slot = bar.base + button
-      entry.command = `${bar.command}${button}`
-      placementIndex += 1
-    }
     entries.push(entry)
   }
   return entries
@@ -229,8 +212,6 @@ function luaBindLiteral(entry: LuaBindEntry): string {
   if (entry.item !== undefined) parts.push(`item = ${entry.item}`)
   if (entry.target !== undefined) parts.push(`target = "${entry.target}"`)
   if (entry.mouseover) parts.push(`mouseover = true`)
-  if (entry.slot !== undefined) parts.push(`slot = ${entry.slot}`)
-  if (entry.command !== undefined) parts.push(`command = "${entry.command}"`)
   if (entry.color !== undefined) parts.push(`color = "${entry.color}"`)
   if (entry.note !== undefined) parts.push(`note = "${escapeLua(entry.note)}"`)
   return `  { ${parts.join(', ')} },`
@@ -279,30 +260,16 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     ...legend.map(([color, label]) => `  { color = "${color}", label = "${escapeLua(label)}" },`),
     `}`,
     ``,
-    `local MANAGED_SLOTS = {}`,
-    `for _, base in ipairs({ 60, 48, 24, 36 }) do`,
-    `  for i = 1, 12 do`,
-    `    table.insert(MANAGED_SLOTS, base + i)`,
-    `  end`,
-    `end`,
-    ``,
-    `local BUTTON_FRAMES = {`,
-    `  MULTIACTIONBAR1BUTTON = "MultiBarBottomLeftButton",`,
-    `  MULTIACTIONBAR2BUTTON = "MultiBarBottomRightButton",`,
-    `  MULTIACTIONBAR3BUTTON = "MultiBarRightButton",`,
-    `  MULTIACTIONBAR4BUTTON = "MultiBarLeftButton",`,
+    `local BARS = {`,
+    `  { base = 0, command = "ACTIONBUTTON", frame = "ActionButton", main = true },`,
+    `  { base = 60, command = "MULTIACTIONBAR1BUTTON", frame = "MultiBarBottomLeftButton", toggle = 1 },`,
+    `  { base = 48, command = "MULTIACTIONBAR2BUTTON", frame = "MultiBarBottomRightButton", toggle = 2 },`,
+    `  { base = 24, command = "MULTIACTIONBAR3BUTTON", frame = "MultiBarRightButton", toggle = 3 },`,
+    `  { base = 36, command = "MULTIACTIONBAR4BUTTON", frame = "MultiBarLeftButton", toggle = 4 },`,
     `}`,
     ``,
     `local function hexColor(hex)`,
     `  return tonumber(string.sub(hex, 1, 2), 16) / 255, tonumber(string.sub(hex, 3, 4), 16) / 255, tonumber(string.sub(hex, 5, 6), 16) / 255`,
-    `end`,
-    ``,
-    `local function buttonForCommand(command)`,
-    `  local prefix, number = string.match(command, "(MULTIACTIONBAR%dBUTTON)(%d+)")`,
-    `  if not prefix then return nil end`,
-    `  local base = BUTTON_FRAMES[prefix]`,
-    `  if not base then return nil end`,
-    `  return _G[base .. number]`,
     `end`,
     ``,
     `local decoratedButtons = {}`,
@@ -311,14 +278,39 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  KeybindOptimizerDB = KeybindOptimizerDB or {}`,
     `  if KeybindOptimizerDB.decor == nil then KeybindOptimizerDB.decor = true end`,
     `  if KeybindOptimizerDB.legend == nil then KeybindOptimizerDB.legend = true end`,
+    `  if KeybindOptimizerDB.mainbar == nil then KeybindOptimizerDB.mainbar = true end`,
     `  return KeybindOptimizerDB`,
     `end`,
     ``,
-    `local function decorateButton(bind)`,
-    `  if not bind.command or not bind.color then return end`,
-    `  local button = buttonForCommand(bind.command)`,
-    `  if not button then return end`,
-    `  local r, g, b = hexColor(bind.color)`,
+    `local function mainBarPages()`,
+    `  local _, class = UnitClass("player")`,
+    `  return class == "DRUID" or class == "ROGUE"`,
+    `end`,
+    ``,
+    `local function usableBars()`,
+    `  local bars = {}`,
+    `  local useMain = db().mainbar and not mainBarPages()`,
+    `  for _, bar in ipairs(BARS) do`,
+    `    if not bar.main or useMain then`,
+    `      table.insert(bars, bar)`,
+    `    end`,
+    `  end`,
+    `  return bars`,
+    `end`,
+    ``,
+    `local function buildTargets()`,
+    `  local targets = {}`,
+    `  for _, bar in ipairs(usableBars()) do`,
+    `    for i = 1, 12 do`,
+    `      table.insert(targets, { slot = bar.base + i, command = bar.command .. i, frame = _G[bar.frame .. i], toggle = bar.toggle })`,
+    `    end`,
+    `  end`,
+    `  return targets`,
+    `end`,
+    ``,
+    `local function decorateButton(button, color, note)`,
+    `  if not button or not color then return end`,
+    `  local r, g, b = hexColor(color)`,
     `  local bar = button.koCategoryBar`,
     `  if not bar then`,
     `    bar = button:CreateTexture(nil, "OVERLAY", nil, 7)`,
@@ -330,7 +322,7 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  bar:SetHeight(5)`,
     `  bar:SetColorTexture(r, g, b, 1)`,
     `  bar:SetShown(db().decor)`,
-    `  button.koNote = bind.note`,
+    `  button.koNote = note`,
     `  button.koR, button.koG, button.koB = r, g, b`,
     `  decoratedButtons[button] = true`,
     `  if not button.koHooked then`,
@@ -505,10 +497,10 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  return nil`,
     `end`,
     ``,
-    `local function wipeManagedBars()`,
-    `  for _, slot in ipairs(MANAGED_SLOTS) do`,
-    `    if HasAction(slot) then`,
-    `      PickupAction(slot)`,
+    `local function wipeTargets(targets)`,
+    `  for _, target in ipairs(targets) do`,
+    `    if HasAction(target.slot) then`,
+    `      PickupAction(target.slot)`,
     `      ClearCursor()`,
     `    end`,
     `  end`,
@@ -532,10 +524,11 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `    print("|cff7c78ff" .. ADDON .. "|r: leave combat first, then /kbo")`,
     `    return`,
     `  end`,
-    `  wipeManagedBars()`,
-    `  local bound, placed = 0, 0`,
+    `  local targets = buildTargets()`,
+    `  wipeTargets(targets)`,
+    `  local bound, placed, cursor = 0, 0, 0`,
     `  local skipped = {}`,
-    `  local usedBars = {}`,
+    `  local usedToggles = {}`,
     `  for index, bind in ipairs(BINDS) do`,
     `    local name = nil`,
     `    local known = true`,
@@ -546,21 +539,23 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `      known = GetInventoryItemID("player", bind.item) ~= nil`,
     `    end`,
     `    if known then`,
+    `      local target = targets[cursor + 1]`,
     `      local body = buildMacroBody(bind, name)`,
     `      if body then`,
     `        local label = string.format("KO%02d", index)`,
     `        if makeMacro(label, body) then`,
     `          local onBar = false`,
-    `          if bind.slot then`,
+    `          if target then`,
     `            ClearCursor()`,
     `            PickupMacro(label)`,
-    `            onBar = placeVerified(bind.slot)`,
+    `            onBar = placeVerified(target.slot)`,
     `          end`,
     `          if onBar then`,
+    `            cursor = cursor + 1`,
     `            placed = placed + 1`,
-    `            bindKeyToCommand(bind.key, bind.command)`,
-    `            usedBars[tonumber(string.match(bind.command, "MULTIACTIONBAR(%d)"))] = true`,
-    `            decorateButton(bind)`,
+    `            bindKeyToCommand(bind.key, target.command)`,
+    `            if target.toggle then usedToggles[target.toggle] = true end`,
+    `            decorateButton(target.frame, bind.color, bind.note)`,
     `          else`,
     `            SetBindingMacro(bind.key, label)`,
     `          end`,
@@ -570,16 +565,17 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `        end`,
     `      elseif bind.spell then`,
     `        local onBar = false`,
-    `        if bind.slot then`,
+    `        if target then`,
     `          ClearCursor()`,
     `          pickupSpell(bind.spell)`,
-    `          onBar = placeVerified(bind.slot)`,
+    `          onBar = placeVerified(target.slot)`,
     `        end`,
     `        if onBar then`,
+    `          cursor = cursor + 1`,
     `          placed = placed + 1`,
-    `          bindKeyToCommand(bind.key, bind.command)`,
-    `          usedBars[tonumber(string.match(bind.command, "MULTIACTIONBAR(%d)"))] = true`,
-    `          decorateButton(bind)`,
+    `          bindKeyToCommand(bind.key, target.command)`,
+    `          if target.toggle then usedToggles[target.toggle] = true end`,
+    `          decorateButton(target.frame, bind.color, bind.note)`,
     `        else`,
     `          SetBindingSpell(bind.key, name)`,
     `        end`,
@@ -591,15 +587,14 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  end`,
     `  SaveBindings(GetCurrentBindingSet())`,
     `  updateLegend()`,
-    `  print(string.format("|cff7c78ff%s|r: %d keys bound, %d abilities placed on bars 2-5", ADDON, bound, placed))`,
+    `  print(string.format("|cff7c78ff%s|r: %d keys bound, %d abilities placed", ADDON, bound, placed))`,
     `  if #skipped > 0 then`,
     `    print("|cff7c78ff" .. ADDON .. "|r: skipped (not known by this character): " .. table.concat(skipped, ", "))`,
     `  end`,
-    `  if GetActionBarToggles and placed > 0 then`,
-    `    local bar1, bar2, bar3, bar4 = GetActionBarToggles()`,
-    `    local toggles = { bar1, bar2, bar3, bar4 }`,
+    `  if GetActionBarToggles then`,
+    `    local toggles = { GetActionBarToggles() }`,
     `    for barNumber = 1, 4 do`,
-    `      if usedBars[barNumber] and not toggles[barNumber] then`,
+    `      if usedToggles[barNumber] and not toggles[barNumber] then`,
     `        print("|cff7c78ff" .. ADDON .. "|r: enable Action Bar " .. (barNumber + 1) .. " in Edit Mode to see the placed abilities")`,
     `      end`,
     `    end`,
@@ -635,8 +630,11 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `    print("|cff7c78ff" .. ADDON .. "|r: legend " .. (db().legend and "ON" or "OFF"))`,
     `  elseif command == "clearmain" then`,
     `    clearMainBar()`,
+    `  elseif command == "mainbar" then`,
+    `    db().mainbar = not db().mainbar`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: main bar usage " .. (db().mainbar and "ON" or "OFF") .. " — run /kbo to re-apply")`,
     `  elseif command == "help" then`,
-    `    print("|cff7c78ff" .. ADDON .. "|r: /kbo — apply layout, /kbo colors — toggle category colors, /kbo legend — toggle legend, /kbo clearmain — clear the main action bar")`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: /kbo — apply layout, /kbo colors — toggle category colors, /kbo legend — toggle legend, /kbo mainbar — use the main bar too, /kbo clearmain — clear the main action bar")`,
     `  else`,
     `    apply()`,
     `  end`,
