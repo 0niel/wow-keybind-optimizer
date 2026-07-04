@@ -179,21 +179,9 @@ const PLACEMENT_BARS = [
 
 export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): LuaBindEntry[] {
   const entries: LuaBindEntry[] = []
-  let barIndex = 0
-  let button = 0
-  let previousModifier: string | null = null
+  let placementIndex = 0
 
   for (const bind of binds) {
-    const modifier = bind.slot.modifier
-    if (previousModifier !== null && modifier !== previousModifier) {
-      barIndex += 1
-      button = 0
-    } else if (button >= 12) {
-      barIndex += 1
-      button = 0
-    }
-    previousModifier = modifier
-
     const entry: LuaBindEntry = { key: bind.wowKey }
     if (bind.ability.id === 'trinket:1') {
       entry.item = 13
@@ -216,11 +204,12 @@ export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): Lu
       entry.note = `${label}${variantSuffix}`
     }
 
-    const bar = PLACEMENT_BARS[barIndex]
+    const bar = PLACEMENT_BARS[Math.floor(placementIndex / 12)]
     if (bar) {
-      button += 1
+      const button = (placementIndex % 12) + 1
       entry.slot = bar.base + button
       entry.command = `${bar.command}${button}`
+      placementIndex += 1
     }
     entries.push(entry)
   }
@@ -311,13 +300,13 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  local r, g, b = hexColor(bind.color)`,
     `  local bar = button.koCategoryBar`,
     `  if not bar then`,
-    `    bar = button:CreateTexture(nil, "OVERLAY")`,
+    `    bar = button:CreateTexture(nil, "OVERLAY", nil, 7)`,
     `    button.koCategoryBar = bar`,
     `  end`,
     `  bar:ClearAllPoints()`,
-    `  bar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 2, 1)`,
-    `  bar:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 1)`,
-    `  bar:SetHeight(4)`,
+    `  bar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 1, 1)`,
+    `  bar:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)`,
+    `  bar:SetHeight(5)`,
     `  bar:SetColorTexture(r, g, b, 1)`,
     `  bar:SetShown(db().decor)`,
     `  button.koNote = bind.note`,
@@ -541,6 +530,20 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  end`,
     `end`,
     ``,
+    `local function clearMainBar()`,
+    `  if InCombatLockdown() then`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: leave combat first")`,
+    `    return`,
+    `  end`,
+    `  for slot = 1, 12 do`,
+    `    if HasAction(slot) then`,
+    `      PickupAction(slot)`,
+    `      ClearCursor()`,
+    `    end`,
+    `  end`,
+    `  print("|cff7c78ff" .. ADDON .. "|r: main action bar cleared")`,
+    `end`,
+    ``,
     `local function handleCommand(message)`,
     `  local command = string.lower(string.gsub(message or "", "%s+", ""))`,
     `  if command == "colors" then`,
@@ -552,8 +555,10 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `    db().legend = not db().legend`,
     `    updateLegend()`,
     `    print("|cff7c78ff" .. ADDON .. "|r: legend " .. (db().legend and "ON" or "OFF"))`,
+    `  elseif command == "clearmain" then`,
+    `    clearMainBar()`,
     `  elseif command == "help" then`,
-    `    print("|cff7c78ff" .. ADDON .. "|r: /kbo — apply layout, /kbo colors — toggle category colors, /kbo legend — toggle legend")`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: /kbo — apply layout, /kbo colors — toggle category colors, /kbo legend — toggle legend, /kbo clearmain — clear the main action bar")`,
     `  else`,
     `    apply()`,
     `  end`,

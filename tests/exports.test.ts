@@ -213,31 +213,31 @@ describe('lua addon generator', () => {
     }
   })
 
-  it('places each modifier layer on its own action bar', () => {
+  it('packs slots densely: bars fill completely and in order', () => {
     const layout = solveLayout(263, 'arena', 'focus')
     const entries = buildLuaBindEntries(layout.binds)
-    const barsByModifier = new Map<string, Set<number>>()
+    const barOrder = [
+      'MULTIACTIONBAR1BUTTON',
+      'MULTIACTIONBAR2BUTTON',
+      'MULTIACTIONBAR3BUTTON',
+      'MULTIACTIONBAR4BUTTON',
+    ]
     const usedSlots = new Set<number>()
-    entries.forEach((entry, index) => {
-      if (entry.command === undefined || entry.slot === undefined) return
+    let placementIndex = 0
+    for (const entry of entries) {
+      if (entry.command === undefined || entry.slot === undefined) continue
       expect(usedSlots.has(entry.slot)).toBe(false)
       usedSlots.add(entry.slot)
-      const modifier = layout.binds[index]?.slot.modifier ?? 'none'
-      const barMatch = entry.command.match(/MULTIACTIONBAR(\d)BUTTON/)
-      expect(barMatch).not.toBeNull()
-      const barNumber = Number(barMatch?.[1])
-      const set = barsByModifier.get(modifier) ?? new Set<number>()
-      set.add(barNumber)
-      barsByModifier.set(modifier, set)
-    })
-    const allBars = [...barsByModifier.values()]
-    for (let i = 0; i < allBars.length; i++) {
-      for (let j = i + 1; j < allBars.length; j++) {
-        const a = allBars[i]
-        const b = allBars[j]
-        if (!a || !b) continue
-        for (const bar of a) expect(b.has(bar)).toBe(false)
-      }
+      const expectedBar = barOrder[Math.floor(placementIndex / 12)]
+      const expectedButton = (placementIndex % 12) + 1
+      expect(entry.command).toBe(`${expectedBar}${expectedButton}`)
+      placementIndex += 1
+    }
+    expect(placementIndex).toBe(entries.length)
+    if (entries.length >= 24) {
+      const firstTwoBars = entries.slice(0, 24).map((entry) => entry.command)
+      expect(firstTwoBars.filter((command) => command?.startsWith('MULTIACTIONBAR1'))).toHaveLength(12)
+      expect(firstTwoBars.filter((command) => command?.startsWith('MULTIACTIONBAR2'))).toHaveLength(12)
     }
   })
 

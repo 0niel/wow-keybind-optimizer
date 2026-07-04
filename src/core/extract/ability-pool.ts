@@ -22,6 +22,18 @@ const PVP_MODES: GameMode[] = ['arena', 'rbg', 'battleground']
 const CPM_CAP = 10
 const APL_RANK_BEST = 0.9
 const APL_RANK_WORST = 0.15
+const SITUATIONAL_FALLBACK_CAP = 0.5
+
+const SITUATIONAL_CATEGORIES = new Set([
+  'utility',
+  'cc-hard',
+  'cc-soft',
+  'dispel',
+  'mobility',
+  'heal-utility',
+  'external',
+  'defensive-minor',
+])
 
 export function extractAbilityPool(input: ExtractionInput): Ability[] {
   const { spec, spellMeta, selections, race, pvpTalentIds, mode } = input
@@ -180,10 +192,13 @@ function resolveFrequency(spellId: number, meta: SpellMetaRecord, spec: SpecSnap
     const maxRank = Math.max(1, ...ranks)
     return APL_RANK_BEST - (APL_RANK_BEST - APL_RANK_WORST) * (record.aplRank / maxRank)
   }
+  const situationalCap = SITUATIONAL_CATEGORIES.has(meta.category)
+    ? SITUATIONAL_FALLBACK_CAP
+    : 1
   if (meta.cooldownMs > 0) {
-    return Math.min(1, 60000 / meta.cooldownMs) * 0.8
+    return Math.min(situationalCap, Math.min(1, 60000 / meta.cooldownMs) * 0.8)
   }
-  return 0.3
+  return Math.min(situationalCap, 0.3)
 }
 
 function spawnsTargetVariants(ability: Ability): boolean {
