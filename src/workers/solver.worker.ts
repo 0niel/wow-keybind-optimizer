@@ -31,10 +31,15 @@ export interface SolverRequest {
   strategyId: SolverStrategyId
 }
 
+export interface LayoutVariant {
+  seed: number
+  result: SolveResult
+}
+
 export interface SolverSuccess {
   requestId: number
   status: 'done'
-  result: SolveResult
+  variants: LayoutVariant[]
   baseline: SolveResult
   abilities: Ability[]
   slots: Slot[]
@@ -75,22 +80,35 @@ self.onmessage = (event: MessageEvent<SolverRequest>) => {
       arenaTargetScheme: request.arenaTargetScheme,
       constraints: request.constraints,
     })
-    const result = solveAssignment(problem, {
-      strategyId: request.strategyId,
-      seed: request.seed,
-      moveBudget: DEFAULT_MOVE_BUDGET,
-      hardware: request.hardware,
-    })
+    const variantSeeds = [1, 2, 3, 4]
+    const variants: LayoutVariant[] = []
+    const seenSignatures = new Set<string>()
+    for (const seed of variantSeeds) {
+      const result = solveAssignment(problem, {
+        strategyId: request.strategyId,
+        seed,
+        moveBudget: DEFAULT_MOVE_BUDGET,
+        hardware: request.hardware,
+      })
+      const signature = result.assignments
+        .map((bind) => `${bind.abilityId}=${bind.slotId}`)
+        .sort()
+        .join('|')
+      if (seenSignatures.has(signature)) continue
+      seenSignatures.add(signature)
+      variants.push({ seed, result })
+    }
+    variants.sort((a, b) => b.result.objective - a.result.objective)
     const baseline = solveAssignment(problem, {
       strategyId: 'greedy',
-      seed: request.seed,
+      seed: 1,
       moveBudget: 0,
       hardware: request.hardware,
     })
     const response: SolverSuccess = {
       requestId: request.requestId,
       status: 'done',
-      result,
+      variants,
       baseline,
       abilities: problem.abilities,
       slots: problem.slots,

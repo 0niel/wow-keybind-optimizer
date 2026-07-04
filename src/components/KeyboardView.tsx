@@ -26,6 +26,7 @@ interface Props {
   text: TextShard
   highlightAbilityIds: Set<string> | null
   onAbilityClick?: (abilityId: string) => void
+  onToggleKeyBan?: (keyId: string) => void
 }
 
 const KEY_UNIT = 58
@@ -42,12 +43,15 @@ export function KeyboardView({
   text,
   highlightAbilityIds,
   onAbilityClick,
+  onToggleKeyBan,
 }: Props) {
   const t = useTranslations('results')
   const tCat = useTranslations('categories')
   const [layer, setLayer] = useState<Modifier>('none')
   const [heatmap, setHeatmap] = useState<HeatmapMode>('none')
   const [hover, setHover] = useState<HoverInfo | null>(null)
+  const [editMode, setEditMode] = useState(false)
+  const bannedKeys = new Set(hardware.bannedKeyIds)
 
   const geometry = useMemo(
     () => buildKeyboardGeometry(hardware.formFactor, hardware.layout),
@@ -120,7 +124,8 @@ export function KeyboardView({
     _isMouse: boolean,
   ) => {
     const slotId = slotIdFor(keyId)
-    const bind = bindBySlotId.get(slotId)
+    const isBanned = bannedKeys.has(keyId)
+    const bind = isBanned ? undefined : bindBySlotId.get(slotId)
     const ability = bind ? abilityById.get(bind.abilityId) : undefined
     const slot = slotById.get(slotId)
     const isMovement = movementKeys.has(keyId)
@@ -131,7 +136,7 @@ export function KeyboardView({
       highlightAbilityIds !== null && ability !== undefined && !highlightAbilityIds.has(ability.id)
 
     let fill = 'var(--inset)'
-    let opacity = 1
+    let opacity = isBanned ? 0.45 : 1
     if (heatmap === 'accessibility') {
       const value = accessibilityByKey.get(keyId) ?? 0
       fill = `color-mix(in srgb, var(--accent) ${Math.round(value * 85)}%, var(--inset))`
@@ -150,12 +155,13 @@ export function KeyboardView({
           : t('trinket')
         : spellText?.name
 
+    const canToggle = editMode && !isMovement
     return (
       <g
         key={keyId}
         transform={`translate(${(x - minX) * KEY_UNIT + 10}, ${(y - minY) * KEY_UNIT + 10})`}
         onMouseEnter={(event) => {
-          if (!ability || !bind || !slot) return
+          if (editMode || !ability || !bind || !slot) return
           setHover({
             ability,
             bind,
@@ -169,8 +175,14 @@ export function KeyboardView({
           })
         }}
         onMouseLeave={() => setHover(null)}
-        onClick={() => ability && onAbilityClick?.(ability.id)}
-        style={{ cursor: ability ? 'pointer' : 'default' }}
+        onClick={() => {
+          if (canToggle) {
+            onToggleKeyBan?.(keyId)
+            return
+          }
+          if (!editMode && ability) onAbilityClick?.(ability.id)
+        }}
+        style={{ cursor: canToggle || (!editMode && ability) ? 'pointer' : 'default' }}
       >
         <rect
           width={w * KEY_UNIT - GAP}
@@ -180,6 +192,32 @@ export function KeyboardView({
           opacity={opacity}
           style={{ transition: 'fill 0.25s ease-out, opacity 0.2s ease-out' }}
         />
+        {canToggle && (
+          <rect
+            x={1}
+            y={1}
+            width={w * KEY_UNIT - GAP - 2}
+            height={h * KEY_UNIT - GAP - 2}
+            rx={9}
+            fill="none"
+            stroke={isBanned ? 'var(--danger)' : 'var(--accent)'}
+            strokeWidth={1.5}
+            strokeDasharray="5 4"
+            opacity={0.7}
+          />
+        )}
+        {isBanned && heatmap === 'none' && (
+          <line
+            x1={7}
+            y1={h * KEY_UNIT - GAP - 7}
+            x2={w * KEY_UNIT - GAP - 7}
+            y2={7}
+            stroke="var(--danger)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            opacity={0.6}
+          />
+        )}
         {ability && heatmap === 'none' && (
           <>
             {meta ? (
@@ -282,16 +320,36 @@ export function KeyboardView({
           value={layer}
           onChange={setLayer}
         />
-        <SegmentedControl<HeatmapMode>
-          options={[
-            { value: 'none', label: t('heatmapNone') },
-            { value: 'accessibility', label: t('heatmapAccessibility') },
-            { value: 'frequency', label: t('heatmapFrequency') },
-          ]}
-          value={heatmap}
-          onChange={setHeatmap}
-        />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <SegmentedControl<HeatmapMode>
+            options={[
+              { value: 'none', label: t('heatmapNone') },
+              { value: 'accessibility', label: t('heatmapAccessibility') },
+              { value: 'frequency', label: t('heatmapFrequency') },
+            ]}
+            value={heatmap}
+            onChange={setHeatmap}
+          />
+          <button
+            className="pill"
+            data-active={editMode}
+            onClick={() => {
+              setEditMode((value) => !value)
+              setHover(null)
+            }}
+          >
+            ⚙ {t('editKeys')}
+          </button>
+        </div>
       </div>
+      {editMode && (
+        <p
+          className="fade-in"
+          style={{ fontSize: '0.85rem', color: 'var(--text-soft)', margin: '0 0 12px' }}
+        >
+          {t('editKeysHint')}
+        </p>
+      )}
       <div style={{ overflowX: 'auto' }}>
         <svg
           viewBox={`0 0 ${width} ${height}`}

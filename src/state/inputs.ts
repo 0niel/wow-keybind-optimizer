@@ -7,7 +7,7 @@ import type {
   MovementSchemeId,
   PhysicalLayout,
 } from '@/core/model/hardware'
-import { DEFAULT_HARDWARE_CONFIG } from '@/core/model/hardware'
+import { DEFAULT_BANNED_KEY_IDS, DEFAULT_HARDWARE_CONFIG } from '@/core/model/hardware'
 
 export interface OptimizerInputs {
   importString: string
@@ -47,7 +47,13 @@ export function serializeInputs(inputs: OptimizerInputs): URLSearchParams {
   params.set('kb', `${h.formFactor}.${h.layout}.${h.mouse}.${h.movementScheme}`)
   params.set('mods', h.enabledModifiers.filter((m) => m !== 'none').join('.') || 'none-only')
   if (h.includeMouseWheel) params.set('wheel', '1')
-  if (h.bannedKeyIds.length > 0) params.set('ban', h.bannedKeyIds.join('.'))
+  const sortedBanned = [...h.bannedKeyIds].sort()
+  const isDefaultBan =
+    sortedBanned.length === DEFAULT_BANNED_KEY_IDS.length &&
+    sortedBanned.every((keyId, index) => keyId === [...DEFAULT_BANNED_KEY_IDS].sort()[index])
+  if (!isDefaultBan) {
+    params.set('ban', h.bannedKeyIds.length === 0 ? 'none' : h.bannedKeyIds.join('.'))
+  }
   if (inputs.seed !== 1) params.set('seed', String(inputs.seed))
   return params
 }
@@ -68,6 +74,14 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
     enabledModifiers = ['none', ...parsed]
   }
 
+  const banRaw = params.get('ban')
+  const bannedKeyIds =
+    banRaw === null
+      ? DEFAULT_BANNED_KEY_IDS
+      : banRaw === 'none'
+        ? []
+        : banRaw.split('.').filter(Boolean)
+
   const hardware: HardwareConfig = {
     ...DEFAULT_HARDWARE_CONFIG,
     formFactor,
@@ -76,7 +90,7 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
     movementScheme,
     enabledModifiers,
     includeMouseWheel: params.get('wheel') === '1',
-    bannedKeyIds: (params.get('ban') ?? '').split('.').filter(Boolean),
+    bannedKeyIds,
   }
 
   const mode = GAME_MODES.find((value) => value === params.get('mode')) ?? DEFAULT_INPUTS.mode

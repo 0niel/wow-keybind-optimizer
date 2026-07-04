@@ -17,7 +17,7 @@ const WASD_TIERS: Record<string, number> = {
   KeyZ: 0.82,
   KeyB: 0.82,
   Tab: 0.82,
-  CapsLock: 0.82,
+  CapsLock: 0.5,
   Digit5: 0.55,
   Backquote: 0.55,
   KeyY: 0.55,

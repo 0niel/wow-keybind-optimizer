@@ -41,6 +41,8 @@ export interface HardwareConfig {
   bannedKeyIds: string[]
 }
 
+export const DEFAULT_BANNED_KEY_IDS = ['Tab']
+
 export const DEFAULT_HARDWARE_CONFIG: HardwareConfig = {
   formFactor: 'tkl',
   layout: 'ansi',
@@ -49,5 +51,5 @@ export const DEFAULT_HARDWARE_CONFIG: HardwareConfig = {
   modifierFactors: { none: 1, shift: 0.85, ctrl: 0.72, alt: 0.6 },
   enabledModifiers: ['none', 'shift', 'ctrl', 'alt'],
   includeMouseWheel: false,
-  bannedKeyIds: [],
+  bannedKeyIds: DEFAULT_BANNED_KEY_IDS,
 }

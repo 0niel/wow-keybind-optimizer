@@ -69,13 +69,18 @@ export function OptimizerApp() {
 
   const outcome = solverState.outcome
 
+  const selectedVariant = useMemo(() => {
+    if (!outcome || outcome.variants.length === 0) return null
+    return outcome.variants.find((variant) => variant.seed === inputs.seed) ?? outcome.variants[0] ?? null
+  }, [outcome, inputs.seed])
+
   const synergyPartnersByAbility = useMemo(() => {
     const map = new Map<string, Array<{ name: string; slotLabel: string; icon: string | null }>>()
-    if (!outcome || !data) return map
+    if (!outcome || !data || !selectedVariant) return map
     const abilityById = new Map(outcome.abilities.map((ability) => [ability.id, ability]))
     const slotById = new Map(outcome.slots.map((slot) => [slot.id, slot]))
     const slotByAbility = new Map(
-      outcome.result.assignments.map((assignment) => [assignment.abilityId, assignment.slotId]),
+      selectedVariant.result.assignments.map((assignment) => [assignment.abilityId, assignment.slotId]),
     )
     const nameOf = (abilityId: string): string => {
       const ability = abilityById.get(abilityId)
@@ -107,7 +112,23 @@ export function OptimizerApp() {
       }
     }
     return map
-  }, [outcome, data, t])
+  }, [outcome, data, t, selectedVariant])
+
+  const toggleKeyBan = useCallback(
+    (keyId: string) => {
+      const banned = inputs.hardware.bannedKeyIds.includes(keyId)
+      updateInputs({
+        ...inputs,
+        hardware: {
+          ...inputs.hardware,
+          bannedKeyIds: banned
+            ? inputs.hardware.bannedKeyIds.filter((id) => id !== keyId)
+            : [...inputs.hardware.bannedKeyIds, keyId],
+        },
+      })
+    },
+    [inputs, updateInputs],
+  )
 
   const handleAbilityClick = useCallback(
     (abilityId: string) => {
@@ -209,26 +230,50 @@ export function OptimizerApp() {
           </div>
         )}
 
-        {spec && data && outcome && (
+        {spec && data && outcome && selectedVariant && (
           <>
             <section
               className="panel fade-in"
               style={{ opacity: solverState.status === 'solving' ? 0.55 : 1, transition: 'opacity 0.2s' }}
             >
+              {outcome.variants.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                  <span className="label" style={{ marginBottom: 0 }}>
+                    {t('variants')}
+                  </span>
+                  {outcome.variants.map((variant, index) => {
+                    const best = outcome.variants[0]?.result.objective ?? 0
+                    const diff = best > 0 ? ((variant.result.objective - best) / best) * 100 : 0
+                    const active = variant.seed === selectedVariant.seed
+                    return (
+                      <button
+                        key={variant.seed}
+                        className="pill"
+                        data-active={active}
+                        onClick={() => updateInputs({ ...inputs, seed: variant.seed })}
+                      >
+                        {index + 1}
+                        {index === 0 ? ` · ${t('variantBest')}` : ` · ${diff.toFixed(1)}%`}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
               <KeyboardView
                 hardware={inputs.hardware}
                 slots={outcome.slots}
                 abilities={outcome.abilities}
-                assignments={outcome.result.assignments}
+                assignments={selectedVariant.result.assignments}
                 synergyPartnersByAbility={synergyPartnersByAbility}
                 spellMeta={data.spellMeta}
                 text={data.text}
                 highlightAbilityIds={highlightAbilityIds}
                 onAbilityClick={handleAbilityClick}
+                onToggleKeyBan={toggleKeyBan}
               />
             </section>
             <ScorePanel
-              result={outcome.result}
+              result={selectedVariant.result}
               baseline={outcome.baseline}
               abilities={outcome.abilities}
               slots={outcome.slots}
@@ -245,7 +290,7 @@ export function OptimizerApp() {
                 text={data.text}
               />
               <ExportPanel
-                assignments={outcome.result.assignments}
+                assignments={selectedVariant.result.assignments}
                 abilities={outcome.abilities}
                 slots={outcome.slots}
                 spells={data.text.spells}

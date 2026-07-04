@@ -6,7 +6,9 @@
     "solveError": "Optimization failed",
     "dataError": "Failed to load game data",
     "trinket": "Trinket",
-    "theme": "Theme"
+    "theme": "Theme",
+    "variants": "Layout variants",
+    "variantBest": "best"
   },
   "hero": {
     "title": "Keybinds your fingers will thank you for",
@@ -58,7 +60,9 @@
     "heatmapFrequency": "Press frequency",
     "movement": "move",
     "trinket": "Trinket",
-    "pvpTrinket": "PvP Trinket"
+    "pvpTrinket": "PvP Trinket",
+    "editKeys": "Edit keys",
+    "editKeysHint": "Click keys to exclude them from the layout or bring them back. Tab is excluded by default — it usually targets enemies. The layout re-solves automatically."
   },
   "hover": {
     "keyTier": "{tier}-tier key",
