@@ -149,6 +149,45 @@ describe('lua addon generator', () => {
     }
   })
 
+  it('orders binds by modifier layer then key position', () => {
+    const layout = solveLayout(263, 'arena', 'arena123')
+    const rank: Record<string, number> = { none: 0, shift: 1, ctrl: 2, alt: 3 }
+    let previous = -1
+    for (const bind of layout.binds) {
+      const current = rank[bind.slot.modifier] ?? 9
+      expect(current).toBeGreaterThanOrEqual(previous)
+      previous = current
+    }
+  })
+
+  it('places each modifier layer on its own action bar', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const entries = buildLuaBindEntries(layout.binds)
+    const barsByModifier = new Map<string, Set<number>>()
+    const usedSlots = new Set<number>()
+    entries.forEach((entry, index) => {
+      if (entry.command === undefined || entry.slot === undefined) return
+      expect(usedSlots.has(entry.slot)).toBe(false)
+      usedSlots.add(entry.slot)
+      const modifier = layout.binds[index]?.slot.modifier ?? 'none'
+      const barMatch = entry.command.match(/MULTIACTIONBAR(\d)BUTTON/)
+      expect(barMatch).not.toBeNull()
+      const barNumber = Number(barMatch?.[1])
+      const set = barsByModifier.get(modifier) ?? new Set<number>()
+      set.add(barNumber)
+      barsByModifier.set(modifier, set)
+    })
+    const allBars = [...barsByModifier.values()]
+    for (let i = 0; i < allBars.length; i++) {
+      for (let j = i + 1; j < allBars.length; j++) {
+        const a = allBars[i]
+        const b = allBars[j]
+        if (!a || !b) continue
+        for (const bar of a) expect(b.has(bar)).toBe(false)
+      }
+    }
+  })
+
   it('marks focus, arena, and mouseover binds for macro generation', () => {
     const layout = solveLayout(263, 'arena', 'arena123')
     const entries = buildLuaBindEntries(layout.binds)

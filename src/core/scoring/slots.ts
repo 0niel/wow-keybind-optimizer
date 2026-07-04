@@ -71,10 +71,12 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
     ...MOUSE_BUTTONS[config.mouse],
     ...(config.includeMouseWheel ? WHEEL_BUTTONS : []),
   ]
+  const mouseModifierPenalty: Record<string, number> = { none: 1, shift: 0.75, ctrl: 0.4, alt: 0.32 }
   for (const button of mouseButtons) {
     if (banned.has(button.id)) continue
     for (const modifier of config.enabledModifiers) {
-      const accessibility = button.reach * (config.modifierFactors[modifier] ?? 1)
+      const accessibility =
+        button.reach * (config.modifierFactors[modifier] ?? 1) * (mouseModifierPenalty[modifier] ?? 1)
       slots.push({
         id: slotId(button.id, modifier),
         keyId: button.id,

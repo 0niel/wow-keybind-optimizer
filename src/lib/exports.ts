@@ -47,6 +47,36 @@ export interface ExportBind {
   wowKey: string
 }
 
+const MODIFIER_RANK: Record<string, number> = { none: 0, shift: 1, ctrl: 2, alt: 3 }
+
+const KEY_POSITION_ORDER = [
+  'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0',
+  'Minus', 'Equal',
+  'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight',
+  'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote',
+  'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash',
+  'Backquote', 'Tab', 'CapsLock', 'Space',
+  'Mouse4', 'Mouse5',
+  'MouseG1', 'MouseG2', 'MouseG3', 'MouseG4', 'MouseG5', 'MouseG6',
+  'MouseG7', 'MouseG8', 'MouseG9', 'MouseG10', 'MouseG11', 'MouseG12',
+  'WheelUp', 'WheelDown',
+]
+
+const KEY_POSITION_INDEX = new Map(KEY_POSITION_ORDER.map((keyId, index) => [keyId, index]))
+
+function bindOrder(bind: ExportBind): [number, number] {
+  return [
+    MODIFIER_RANK[bind.slot.modifier] ?? 9,
+    KEY_POSITION_INDEX.get(bind.slot.keyId) ?? 999,
+  ]
+}
+
+function compareBinds(a: ExportBind, b: ExportBind): number {
+  const [modA, keyA] = bindOrder(a)
+  const [modB, keyB] = bindOrder(b)
+  return modA - modB || keyA - keyB
+}
+
 export function buildExportBinds(
   assignments: BindAssignment[],
   abilities: Ability[],
@@ -70,7 +100,7 @@ export function buildExportBinds(
         : (spells[String(ability.spellId)]?.name ?? `#${ability.spellId}`)
     binds.push({ ability, slot, name, wowKey: wowKeyName(slot) })
   }
-  return binds.sort((a, b) => a.wowKey.localeCompare(b.wowKey))
+  return binds.sort(compareBinds)
 }
 
 export function renderPlainList(binds: ExportBind[]): string {
@@ -128,24 +158,54 @@ interface LuaBindEntry {
   item?: number
   target?: string
   mouseover?: boolean
+  slot?: number
+  command?: string
 }
+
+const PLACEMENT_BARS = [
+  { base: 60, command: 'MULTIACTIONBAR1BUTTON' },
+  { base: 48, command: 'MULTIACTIONBAR2BUTTON' },
+  { base: 24, command: 'MULTIACTIONBAR3BUTTON' },
+  { base: 36, command: 'MULTIACTIONBAR4BUTTON' },
+]
 
 export function buildLuaBindEntries(binds: ExportBind[]): LuaBindEntry[] {
   const entries: LuaBindEntry[] = []
+  let barIndex = 0
+  let button = 0
+  let previousModifier: string | null = null
+
   for (const bind of binds) {
+    const modifier = bind.slot.modifier
+    if (previousModifier !== null && modifier !== previousModifier) {
+      barIndex += 1
+      button = 0
+    } else if (button >= 12) {
+      barIndex += 1
+      button = 0
+    }
+    previousModifier = modifier
+
+    const entry: LuaBindEntry = { key: bind.wowKey }
     if (bind.ability.id === 'trinket:1') {
-      entries.push({ key: bind.wowKey, item: 13 })
+      entry.item = 13
+    } else if (bind.ability.id === 'trinket:pvp') {
+      entry.item = 14
+    } else if (bind.ability.spellId > 0) {
+      entry.spell = bind.ability.spellId
+      if (bind.ability.variantKind === 'focus') entry.target = 'focus'
+      else if (bind.ability.variantKind.startsWith('arena')) entry.target = bind.ability.variantKind
+      else if (bind.ability.targeting === 'ally') entry.mouseover = true
+    } else {
       continue
     }
-    if (bind.ability.id === 'trinket:pvp') {
-      entries.push({ key: bind.wowKey, item: 14 })
-      continue
+
+    const bar = PLACEMENT_BARS[barIndex]
+    if (bar) {
+      button += 1
+      entry.slot = bar.base + button
+      entry.command = `${bar.command}${button}`
     }
-    if (bind.ability.spellId <= 0) continue
-    const entry: LuaBindEntry = { key: bind.wowKey, spell: bind.ability.spellId }
-    if (bind.ability.variantKind === 'focus') entry.target = 'focus'
-    if (bind.ability.variantKind.startsWith('arena')) entry.target = bind.ability.variantKind
-    if (entry.target === undefined && bind.ability.targeting === 'ally') entry.mouseover = true
     entries.push(entry)
   }
   return entries
@@ -157,6 +217,8 @@ function luaBindLiteral(entry: LuaBindEntry): string {
   if (entry.item !== undefined) parts.push(`item = ${entry.item}`)
   if (entry.target !== undefined) parts.push(`target = "${entry.target}"`)
   if (entry.mouseover) parts.push(`mouseover = true`)
+  if (entry.slot !== undefined) parts.push(`slot = ${entry.slot}`)
+  if (entry.command !== undefined) parts.push(`command = "${entry.command}"`)
   return `  { ${parts.join(', ')} },`
 }
 
@@ -167,16 +229,6 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
     `local BINDS = {`,
     ...entries.map(luaBindLiteral),
     `}`,
-    ``,
-    `local SLOTS = {}`,
-    `local COMMANDS = {}`,
-    `local BARS = { { 60, "MULTIACTIONBAR1BUTTON" }, { 48, "MULTIACTIONBAR2BUTTON" }, { 24, "MULTIACTIONBAR3BUTTON" }, { 36, "MULTIACTIONBAR4BUTTON" } }`,
-    `for _, bar in ipairs(BARS) do`,
-    `  for i = 1, 12 do`,
-    `    table.insert(SLOTS, bar[1] + i)`,
-    `    table.insert(COMMANDS, bar[2] .. i)`,
-    `  end`,
-    `end`,
     ``,
     `local function resolveSpellName(spellId)`,
     `  if C_Spell and C_Spell.GetSpellName then`,
@@ -247,7 +299,7 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
     `  end`,
     `  local bound, placed = 0, 0`,
     `  local skipped = {}`,
-    `  local slotIndex = 0`,
+    `  local usedBars = {}`,
     `  for index, bind in ipairs(BINDS) do`,
     `    local name = nil`,
     `    local known = true`,
@@ -256,20 +308,18 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
     `      known = name ~= nil and knowsSpell(bind.spell)`,
     `    end`,
     `    if known then`,
-    `      slotIndex = slotIndex + 1`,
-    `      local slot = SLOTS[slotIndex]`,
-    `      local command = COMMANDS[slotIndex]`,
     `      local body = buildMacroBody(bind, name)`,
     `      if body then`,
     `        local label = string.format("KO%02d", index)`,
     `        if makeMacro(label, body) then`,
-    `          if slot then`,
+    `          if bind.slot then`,
     `            ClearCursor()`,
     `            PickupMacro(label)`,
-    `            PlaceAction(slot)`,
+    `            PlaceAction(bind.slot)`,
     `            ClearCursor()`,
     `            placed = placed + 1`,
-    `            SetBinding(bind.key, command)`,
+    `            SetBinding(bind.key, bind.command)`,
+    `            usedBars[tonumber(string.match(bind.command, "MULTIACTIONBAR(%d)"))] = true`,
     `          else`,
     `            SetBindingMacro(bind.key, label)`,
     `          end`,
@@ -278,13 +328,14 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
     `          table.insert(skipped, label)`,
     `        end`,
     `      elseif bind.spell then`,
-    `        if slot then`,
+    `        if bind.slot then`,
     `          ClearCursor()`,
     `          pickupSpell(bind.spell)`,
-    `          PlaceAction(slot)`,
+    `          PlaceAction(bind.slot)`,
     `          ClearCursor()`,
     `          placed = placed + 1`,
-    `          SetBinding(bind.key, command)`,
+    `          SetBinding(bind.key, bind.command)`,
+    `          usedBars[tonumber(string.match(bind.command, "MULTIACTIONBAR(%d)"))] = true`,
     `        else`,
     `          SetBindingSpell(bind.key, name)`,
     `        end`,
@@ -302,10 +353,9 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string): string {
     `  if GetActionBarToggles and placed > 0 then`,
     `    local bar1, bar2, bar3, bar4 = GetActionBarToggles()`,
     `    local toggles = { bar1, bar2, bar3, bar4 }`,
-    `    local barsUsed = math.ceil(placed / 12)`,
-    `    for barIndex = 1, math.min(barsUsed, 4) do`,
-    `      if not toggles[barIndex] then`,
-    `        print("|cff7c78ff" .. ADDON .. "|r: enable action bar " .. (barIndex + 1) .. " in Edit Mode to see the placed abilities")`,
+    `    for barNumber = 1, 4 do`,
+    `      if usedBars[barNumber] and not toggles[barNumber] then`,
+    `        print("|cff7c78ff" .. ADDON .. "|r: enable Action Bar " .. (barNumber + 1) .. " in Edit Mode to see the placed abilities")`,
     `      end`,
     `    end`,
     `  end`,
