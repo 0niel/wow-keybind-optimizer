@@ -43,16 +43,13 @@ export function HoverCard({ info }: { info: HoverInfo }) {
 
   return (
     <div
+      className="overlay-card"
       style={{
         position: 'fixed',
         left,
         top,
         width: 320,
         zIndex: 50,
-        background: 'var(--surface-1)',
-        borderRadius: 16,
-        boxShadow: 'var(--shadow-2)',
-        padding: 16,
         pointerEvents: 'none',
       }}
     >
@@ -77,7 +74,7 @@ export function HoverCard({ info }: { info: HoverInfo }) {
         <p
           style={{
             fontSize: '0.82rem',
-            color: 'var(--text-secondary)',
+            color: 'var(--text-soft)',
             marginBottom: 10,
             maxHeight: 96,
             overflow: 'hidden',
@@ -88,20 +85,20 @@ export function HoverCard({ info }: { info: HoverInfo }) {
         </p>
       )}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-        <span className="chip">{t('keyTier', { tier: tierLabel })}</span>
-        <span className="chip">
+        <span className="pill">{t('keyTier', { tier: tierLabel })}</span>
+        <span className="pill">
           {t('marginal', { value: (info.bind.linearScore + info.bind.synergyScore).toFixed(2) })}
         </span>
       </div>
       {reasons.length > 0 && (
-        <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', paddingLeft: 18 }}>
+        <ul style={{ fontSize: '0.8rem', color: 'var(--text-soft)', paddingLeft: 18 }}>
           {reasons.map((reason) => (
             <li key={reason}>{reason}</li>
           ))}
         </ul>
       )}
       {info.partners.length > 0 && (
-        <div style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+        <div style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text-faint)' }}>
           {t('partners')}: {info.partners.map((p) => `${p.name} (${p.slotLabel})`).join(', ')}
         </div>
       )}

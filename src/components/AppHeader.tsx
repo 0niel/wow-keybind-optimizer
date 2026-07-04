@@ -12,10 +12,7 @@ export function AppHeader() {
 
   useEffect(() => {
     const stored = localStorage.getItem('app-theme')
-    if (stored === 'light' || stored === 'dark') {
-      setTheme(stored)
-      document.documentElement.dataset['theme'] = stored
-    }
+    if (stored === 'light' || stored === 'dark') setTheme(stored)
   }, [])
 
   const cycleTheme = () => {
@@ -43,23 +40,39 @@ export function AppHeader() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '20px clamp(16px, 3vw, 40px)',
-        maxWidth: 1440,
+        padding: '22px clamp(20px, 4vw, 56px)',
+        maxWidth: 1400,
         margin: '0 auto',
         width: '100%',
       }}
     >
-      <div>
-        <div style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span
+          aria-hidden
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 11,
+            background: 'var(--accent)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--on-accent)',
+            fontWeight: 800,
+            fontSize: '1rem',
+          }}
+        >
+          ⌘
+        </span>
+        <span style={{ fontWeight: 750, fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
           {t('title')}
-        </div>
-        <div style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)' }}>{t('tagline')}</div>
+        </span>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button className="ghost-button" onClick={cycleTheme} title={t('theme')}>
+        <button className="pill" onClick={cycleTheme} title={t('theme')}>
           {theme === 'auto' ? '🌗' : theme === 'dark' ? '🌙' : '☀️'}
         </button>
-        <button className="ghost-button" onClick={switchLocale}>
+        <button className="pill" onClick={switchLocale}>
           {otherLocale.toUpperCase()}
         </button>
       </div>

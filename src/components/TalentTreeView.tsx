@@ -82,9 +82,9 @@ export function TalentTreeView({ spec, selections, abilities, highlightNodeIds, 
   }
 
   return (
-    <div className="card">
-      <div className="section-label">{t('title')}</div>
-      <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginBottom: 10 }}>
+    <div className="panel">
+      <div className="label">{t('title')}</div>
+      <div style={{ fontSize: '0.8rem', color: 'var(--text-faint)', marginBottom: 10 }}>
         {t('hint')}
       </div>
       <div style={{ overflowX: 'auto' }}>
@@ -97,7 +97,7 @@ export function TalentTreeView({ spec, selections, abilities, highlightNodeIds, 
             const dimmed = highlightNodeIds !== null && !isHighlighted
             const radius = node.kind === 'subtree-selection' ? 11 : node.kind === 'choice' ? 9 : 7
             const fill = !isSelected
-              ? 'var(--surface-3)'
+              ? 'var(--inset-strong)'
               : node.section === 'hero'
                 ? 'var(--cat-cc-hard)'
                 : node.section === 'class'
@@ -117,7 +117,7 @@ export function TalentTreeView({ spec, selections, abilities, highlightNodeIds, 
                   r={radius}
                   fill={fill}
                   opacity={dimmed ? 0.25 : isSelected ? 1 : 0.45}
-                  stroke={isBound && isSelected ? 'var(--text-primary)' : 'none'}
+                  stroke={isBound && isSelected ? 'var(--text)' : 'none'}
                   strokeWidth={1.5}
                   style={{ transition: 'opacity 0.2s ease-out' }}
                 >
@@ -128,7 +128,7 @@ export function TalentTreeView({ spec, selections, abilities, highlightNodeIds, 
           })}
         </svg>
       </div>
-      <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+      <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: '0.78rem', color: 'var(--text-faint)' }}>
         <LegendDot color="var(--cat-rotational-core)" label={t('classTree')} />
         <LegendDot color="var(--accent)" label={t('specTree')} />
         <LegendDot color="var(--cat-cc-hard)" label={t('heroTree')} />

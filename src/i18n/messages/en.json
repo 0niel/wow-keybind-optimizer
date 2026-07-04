@@ -1,22 +1,28 @@
 {
   "app": {
     "title": "WoW Keybind Optimizer",
-    "tagline": "Provably good keybind layouts for your spec, hardware, and game mode",
     "loadingData": "Loading game data…",
     "solving": "Optimizing layout…",
     "solveError": "Optimization failed",
     "dataError": "Failed to load game data",
-    "emptyTitle": "Paste your talent export string",
-    "emptyHint": "Open the talent frame in game, click the share button, and copy the export string. The optimizer detects your class and spec automatically.",
-    "layoutTitle": "Keybind layout",
     "trinket": "Trinket",
     "theme": "Theme"
+  },
+  "hero": {
+    "title": "Keybinds your fingers will thank you for",
+    "subtitle": "Paste the talent export string from the game — the optimizer reads your build, weighs every ability against real cast data, and solves the layout for your keyboard, mouse, and game mode."
   },
   "input": {
     "importString": "Talent export string",
     "importPlaceholder": "CcQAAAAAAAAAAAAAAAAAAAAAA…",
-    "importHint": "Paste the export string from the in-game talent frame",
+    "importHint": "Open the talent frame in game → share button → Copy Export String",
     "invalidString": "Not a valid export string",
+    "racePlaceholder": "Choose a race (optional)",
+    "factions": {
+      "alliance": "Alliance",
+      "horde": "Horde",
+      "neutral": "Neutral"
+    },
     "mode": "Game mode",
     "modes": {
       "raid": "Raid",
@@ -31,7 +37,6 @@
     },
     "race": "Race",
     "pvpTalents": "PvP talents",
-    "pvpTalentsHint": "{count} of 3 selected",
     "hardware": "Hardware",
     "keyboard": {
       "full": "Full-size",

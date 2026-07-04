@@ -119,19 +119,19 @@ export function KeyboardView({
     const dimmed =
       highlightAbilityIds !== null && ability !== undefined && !highlightAbilityIds.has(ability.id)
 
-    let fill = 'var(--surface-2)'
+    let fill = 'var(--inset)'
     let opacity = 1
     if (heatmap === 'accessibility') {
       const value = accessibilityByKey.get(keyId) ?? 0
-      fill = `color-mix(in srgb, var(--accent) ${Math.round(value * 85)}%, var(--surface-2))`
+      fill = `color-mix(in srgb, var(--accent) ${Math.round(value * 85)}%, var(--inset))`
     } else if (heatmap === 'frequency') {
       const value = Math.min(1, (frequencyByKey.get(keyId) ?? 0) / 1.2)
-      fill = `color-mix(in srgb, var(--cat-cooldown-burst) ${Math.round(value * 90)}%, var(--surface-2))`
+      fill = `color-mix(in srgb, var(--cat-cooldown-burst) ${Math.round(value * 90)}%, var(--inset))`
     } else if (ability) {
       fill = `var(--cat-${ability.category})`
       opacity = dimmed ? 0.25 : 1
     } else if (isMovement) {
-      fill = 'var(--surface-3)'
+      fill = 'var(--inset-strong)'
     }
 
     const abilityName =
@@ -187,7 +187,7 @@ export function KeyboardView({
           y={17}
           fontSize={12}
           fontWeight={600}
-          fill={ability && heatmap === 'none' ? '#ffffff' : 'var(--text-secondary)'}
+          fill={ability && heatmap === 'none' ? '#ffffff' : 'var(--text-soft)'}
           style={{ userSelect: 'none' }}
         >
           {label}
@@ -198,7 +198,7 @@ export function KeyboardView({
           </text>
         )}
         {isMovement && !ability && heatmap === 'none' && (
-          <text x={7} y={h * KEY_UNIT - GAP - 8} fontSize={8} fill="var(--text-tertiary)">
+          <text x={7} y={h * KEY_UNIT - GAP - 8} fontSize={8} fill="var(--text-faint)">
             {t('movement')}
           </text>
         )}

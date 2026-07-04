@@ -6,7 +6,7 @@ import { useGameData, useSpecSnapshot } from '@/hooks/useGameData'
 import { useSolver } from '@/hooks/useSolver'
 import { DEFAULT_INPUTS, deserializeInputs, serializeInputs } from '@/state/inputs'
 import type { OptimizerInputs } from '@/state/inputs'
-import { InputPanel, detectSpecId } from './InputPanel'
+import { HeroInput, SettingsPanel, detectSpecId } from './InputPanel'
 import { KeyboardView } from './KeyboardView'
 import { ScorePanel } from './ScorePanel'
 import { TalentTreeView } from './TalentTreeView'
@@ -136,98 +136,100 @@ export function OptimizerApp() {
     [outcome],
   )
 
-  const clearHighlight = useCallback(() => {
-    setHighlightAbilityIds(null)
-    setHighlightNodeIds(null)
-  }, [])
-
   if (error) {
     return (
-      <main style={{ maxWidth: 640, margin: '80px auto', padding: 24 }}>
-        <div className="card">
-          <h1 style={{ marginBottom: 12 }}>{t('title')}</h1>
-          <p style={{ color: 'var(--danger)' }}>{t('dataError')}: {error}</p>
-        </div>
-      </main>
+      <div>
+        <AppHeader />
+        <main style={{ maxWidth: 640, margin: '60px auto', padding: 24 }}>
+          <div className="panel">
+            <p style={{ color: 'var(--danger)' }}>
+              {t('dataError')}: {error}
+            </p>
+          </div>
+        </main>
+      </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh' }}>
       <AppHeader />
       <main
         style={{
           width: '100%',
-          maxWidth: 1440,
+          maxWidth: 1400,
           margin: '0 auto',
-          padding: '24px clamp(16px, 3vw, 40px) 80px',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(320px, 400px) 1fr',
-          gap: 24,
-          alignItems: 'start',
-        }}
-        className="app-grid"
-        onClick={(event) => {
-          if ((event.target as HTMLElement).tagName === 'MAIN') clearHighlight()
+          padding: '0 clamp(20px, 4vw, 56px) 96px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 20,
         }}
       >
-        <div className="card" style={{ position: 'sticky', top: 24 }}>
-          {data ? (
-            <InputPanel
-              inputs={inputs}
-              onChange={updateInputs}
-              classes={data.classes}
-              races={data.races}
-              spec={spec}
-              text={data.text}
-              locale={locale}
-            />
-          ) : (
-            <LoadingBlock label={t('loadingData')} />
-          )}
-          {specError && (
-            <p style={{ marginTop: 12, color: 'var(--danger)', fontSize: '0.85rem' }}>{specError}</p>
-          )}
-        </div>
+        <HeroInput
+          inputs={inputs}
+          onChange={updateInputs}
+          classes={data?.classes ?? []}
+          spec={spec}
+          locale={locale}
+        />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {!spec && (
-            <div className="card" style={{ textAlign: 'center', padding: 60 }}>
-              <div style={{ fontSize: '2.4rem', marginBottom: 16 }}>⌨️</div>
-              <h2 style={{ marginBottom: 8 }}>{t('emptyTitle')}</h2>
-              <p style={{ color: 'var(--text-secondary)' }}>{t('emptyHint')}</p>
-            </div>
-          )}
-          {spec && solverState.status === 'error' && (
-            <div className="card">
-              <p style={{ color: 'var(--danger)' }}>
-                {t('solveError')}: {solverState.errorMessage}
-              </p>
-            </div>
-          )}
-          {spec && data && outcome && (
-            <>
-              <div className="card" style={{ opacity: solverState.status === 'solving' ? 0.6 : 1, transition: 'opacity 0.2s' }}>
-                <div className="section-label">{t('layoutTitle')}</div>
-                <KeyboardView
-                  hardware={inputs.hardware}
-                  slots={outcome.slots}
-                  abilities={outcome.abilities}
-                  assignments={outcome.result.assignments}
-                  synergyPartnersByAbility={synergyPartnersByAbility}
-                  spellMeta={data.spellMeta}
-                  text={data.text}
-                  highlightAbilityIds={highlightAbilityIds}
-                  onAbilityClick={handleAbilityClick}
-                />
-              </div>
-              <ScorePanel
-                result={outcome.result}
-                baseline={outcome.baseline}
-                abilities={outcome.abilities}
+        {!data && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+            <LoadingBlock label={t('loadingData')} />
+          </div>
+        )}
+
+        {data && (
+          <SettingsPanel
+            inputs={inputs}
+            onChange={updateInputs}
+            races={data.races}
+            spec={spec}
+            spellMeta={data.spellMeta}
+            text={data.text}
+            locale={locale}
+          />
+        )}
+
+        {specError && (
+          <div className="panel">
+            <p style={{ color: 'var(--danger)' }}>{specError}</p>
+          </div>
+        )}
+        {spec && solverState.status === 'error' && (
+          <div className="panel">
+            <p style={{ color: 'var(--danger)' }}>
+              {t('solveError')}: {solverState.errorMessage}
+            </p>
+          </div>
+        )}
+
+        {spec && data && outcome && (
+          <>
+            <section
+              className="panel fade-in"
+              style={{ opacity: solverState.status === 'solving' ? 0.55 : 1, transition: 'opacity 0.2s' }}
+            >
+              <KeyboardView
+                hardware={inputs.hardware}
                 slots={outcome.slots}
-                elapsedMs={solverState.elapsedMs}
+                abilities={outcome.abilities}
+                assignments={outcome.result.assignments}
+                synergyPartnersByAbility={synergyPartnersByAbility}
+                spellMeta={data.spellMeta}
+                text={data.text}
+                highlightAbilityIds={highlightAbilityIds}
+                onAbilityClick={handleAbilityClick}
               />
+            </section>
+            <ScorePanel
+              result={outcome.result}
+              baseline={outcome.baseline}
+              abilities={outcome.abilities}
+              slots={outcome.slots}
+              elapsedMs={solverState.elapsedMs}
+            />
+            <div className="two-col">
               <TalentTreeView
                 spec={spec}
                 selections={outcome.selections}
@@ -243,14 +245,15 @@ export function OptimizerApp() {
                 spells={data.text.spells}
                 build={data.build}
               />
-            </>
-          )}
-          {spec && solverState.status === 'solving' && !outcome && (
-            <div className="card">
-              <LoadingBlock label={t('solving')} />
             </div>
-          )}
-        </div>
+          </>
+        )}
+
+        {spec && data && !outcome && solverState.status === 'solving' && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+            <LoadingBlock label={t('solving')} />
+          </div>
+        )}
       </main>
     </div>
   )
@@ -258,17 +261,8 @@ export function OptimizerApp() {
 
 function LoadingBlock({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 20, color: 'var(--text-secondary)' }}>
-      <span
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: '50%',
-          border: '3px solid var(--surface-3)',
-          borderTopColor: 'var(--accent)',
-          animation: 'spin 0.8s linear infinite',
-        }}
-      />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-soft)' }}>
+      <span className="spinner" />
       {label}
     </div>
   )

@@ -64,7 +64,7 @@ export function ExportPanel({ assignments, abilities, slots, spells, build }: Pr
   }
 
   return (
-    <div className="card">
+    <div className="panel">
       <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
         <SegmentedControl<ExportTab>
           options={[
@@ -76,21 +76,21 @@ export function ExportPanel({ assignments, abilities, slots, spells, build }: Pr
           onChange={setTab}
         />
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="ghost-button" onClick={copy}>
+          <button className="action" onClick={copy}>
             {copied ? t('copied') : t('copy')}
           </button>
-          <button className="ghost-button" onClick={download}>
+          <button className="action" onClick={download}>
             {t('download')}
           </button>
-          <button className="ghost-button" onClick={shareUrl}>
+          <button className="action" onClick={shareUrl}>
             {t('share')}
           </button>
         </div>
       </div>
       <pre
         style={{
-          background: 'var(--surface-2)',
-          borderRadius: 'var(--radius-control)',
+          background: 'var(--inset)',
+          borderRadius: 'var(--r-control)',
           padding: 16,
           fontSize: '0.78rem',
           lineHeight: 1.6,
@@ -102,10 +102,10 @@ export function ExportPanel({ assignments, abilities, slots, spells, build }: Pr
         {content}
       </pre>
       {tab === 'macros' && (
-        <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{t('macrosHint')}</p>
+        <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('macrosHint')}</p>
       )}
       {tab === 'lua' && (
-        <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{t('luaHint')}</p>
+        <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('luaHint')}</p>
       )}
     </div>
   )

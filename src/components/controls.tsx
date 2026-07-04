@@ -17,30 +17,13 @@ export function SegmentedControl<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div
-      style={{
-        display: 'inline-flex',
-        gap: 4,
-        background: 'var(--surface-2)',
-        borderRadius: 'var(--radius-control)',
-        padding: 4,
-        flexWrap: 'wrap',
-      }}
-    >
+    <div className="seg">
       {options.map((option) => (
         <button
           key={option.value}
+          className="seg-item"
+          data-active={option.value === value}
           onClick={() => onChange(option.value)}
-          style={{
-            padding: '8px 16px',
-            borderRadius: 9,
-            fontSize: '0.88rem',
-            fontWeight: 500,
-            background: option.value === value ? 'var(--surface-1)' : 'transparent',
-            color: option.value === value ? 'var(--text-primary)' : 'var(--text-secondary)',
-            boxShadow: option.value === value ? 'var(--shadow-1)' : 'none',
-            transition: 'all 0.15s ease-out',
-          }}
         >
           {option.label}
         </button>
@@ -61,7 +44,7 @@ export function ChipToggle({
   title?: string
 }) {
   return (
-    <button className="chip" data-active={active} onClick={onClick} title={title}>
+    <button className="pill" data-active={active} onClick={onClick} title={title}>
       {children}
     </button>
   )

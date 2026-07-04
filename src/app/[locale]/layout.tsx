@@ -3,14 +3,10 @@ import { notFound } from 'next/navigation'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { setRequestLocale } from 'next-intl/server'
 import { locales } from '@/i18n/locales'
-import '../globals.css'
+import { DocumentLanguage } from '@/components/DocumentLanguage'
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
-}
-
-export const metadata = {
-  title: 'WoW Keybind Optimizer',
 }
 
 interface Props {
@@ -24,12 +20,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale)
   const messages = (await import(`@/i18n/messages/${locale}.json`)).default
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <DocumentLanguage locale={locale} />
+      {children}
+    </NextIntlClientProvider>
   )
 }

@@ -41,40 +41,52 @@ export function ScorePanel({ result, baseline, abilities, slots, elapsedMs }: Pr
   }, [result.assignments, abilities, slots])
 
   return (
-    <div className="card">
-      <div className="section-label">{t('title')}</div>
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 18 }}>
-        <Metric label={t('objective')} value={result.objective.toFixed(2)} />
-        <Metric label={t('baseline')} value={baseline.objective.toFixed(2)} />
-        <Metric
-          label={t('improvement')}
-          value={`+${improvement.toFixed(1)}%`}
-          accent={improvement > 0}
-        />
-        <Metric label={t('binds')} value={String(result.assignments.length)} />
-        {elapsedMs !== null && <Metric label={t('time')} value={`${elapsedMs} ms`} />}
+    <section className="panel fade-in">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: 20,
+          marginBottom: 28,
+        }}
+      >
+        <Stat label={t('objective')} value={result.objective.toFixed(2)} />
+        <Stat label={t('baseline')} value={baseline.objective.toFixed(2)} />
+        <Stat label={t('improvement')} value={`+${improvement.toFixed(1)}%`} tone="ok" />
+        <Stat label={t('binds')} value={String(result.assignments.length)} />
+        {elapsedMs !== null && <Stat label={t('time')} value={`${elapsedMs} ms`} />}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {categoryQuality.map(({ category, average, count }) => (
-          <div key={category} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div key={category} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: 3,
-                background: `var(--cat-${category})`,
+                fontSize: '0.85rem',
+                width: 190,
+                color: 'var(--text-soft)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
                 flexShrink: 0,
               }}
-            />
-            <span style={{ fontSize: '0.82rem', width: 160, color: 'var(--text-secondary)' }}>
+            >
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 3,
+                  background: `var(--cat-${category})`,
+                  flexShrink: 0,
+                }}
+              />
               {tCat(category)} · {count}
             </span>
             <div
               style={{
                 flex: 1,
-                height: 8,
-                borderRadius: 4,
-                background: 'var(--surface-2)',
+                height: 10,
+                borderRadius: 5,
+                background: 'var(--inset)',
                 overflow: 'hidden',
               }}
             >
@@ -82,26 +94,34 @@ export function ScorePanel({ result, baseline, abilities, slots, elapsedMs }: Pr
                 style={{
                   width: `${Math.round(average * 100)}%`,
                   height: '100%',
-                  borderRadius: 4,
+                  borderRadius: 5,
                   background: `var(--cat-${category})`,
                   transition: 'width 0.4s ease-out',
                 }}
               />
             </div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', width: 36, textAlign: 'right' }}>
+            <span
+              style={{
+                fontSize: '0.82rem',
+                color: 'var(--text-faint)',
+                width: 34,
+                textAlign: 'right',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
               {(average * 100).toFixed(0)}
             </span>
           </div>
         ))}
       </div>
       {result.warnings.length > 0 && (
-        <div style={{ marginTop: 14, fontSize: '0.8rem', color: 'var(--warn)' }}>
+        <div style={{ marginTop: 18, fontSize: '0.85rem', color: 'var(--warn)' }}>
           {result.warnings.map((warning) => (
             <div key={warning}>⚠ {formatWarning(warning, t)}</div>
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -115,18 +135,13 @@ function formatWarning(warning: string, t: ReturnType<typeof useTranslations>): 
   return warning
 }
 
-function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: 'ok' }) {
   return (
-    <div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 2 }}>{label}</div>
-      <div
-        style={{
-          fontSize: '1.5rem',
-          fontWeight: 700,
-          color: accent ? 'var(--ok)' : 'var(--text-primary)',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
+    <div className="inset-panel" style={{ padding: '16px 20px' }}>
+      <div className="stat-label" style={{ marginBottom: 4 }}>
+        {label}
+      </div>
+      <div className="stat-value" style={{ color: tone === 'ok' ? 'var(--ok)' : 'var(--text)' }}>
         {value}
       </div>
     </div>
