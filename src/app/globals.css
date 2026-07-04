@@ -1,0 +1,33 @@
+:root {
+  color-scheme: light dark;
+  --surface-0: #f7f8fa;
+  --surface-1: #ffffff;
+  --surface-2: #eef0f4;
+  --text-primary: #16181d;
+  --text-secondary: #6b7280;
+  --accent: #6c5ce7;
+  --radius-card: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-0: #101114;
+    --surface-1: #1a1c21;
+    --surface-2: #24262d;
+    --text-primary: #f2f3f5;
+    --text-secondary: #9aa0aa;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
