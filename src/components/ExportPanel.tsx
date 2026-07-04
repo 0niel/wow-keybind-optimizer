@@ -13,7 +13,7 @@ import {
 } from '@/lib/exports'
 import type { AddonDecor } from '@/lib/exports'
 import { buildZipBlob } from '@/lib/zip'
-import { spellIconUrl } from '@/lib/data'
+import { abilityIconName, spellIconUrl } from '@/lib/data'
 import { CATEGORY_HEX } from '@/core/model/category-colors'
 import { ALL_CATEGORIES } from '@/core/model/ability-category'
 import type { AbilityCategory } from '@/core/model/ability-category'
@@ -138,8 +138,11 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
           }}
         >
           {binds.map((bind) => {
-            const icon =
-              bind.ability.spellId > 0 ? spellMeta[String(bind.ability.spellId)]?.icon : null
+            const icon = abilityIconName(
+              bind.ability.spellId,
+              bind.ability.id,
+              spellMeta[String(bind.ability.spellId)]?.icon,
+            )
             return (
               <div
                 key={`${bind.ability.id}-${bind.wowKey}`}

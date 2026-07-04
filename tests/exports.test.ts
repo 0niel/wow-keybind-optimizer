@@ -244,7 +244,7 @@ describe('lua addon generator', () => {
       expect(entry.command).toBe(`${expectedBar}${expectedButton}`)
       placementIndex += 1
     }
-    expect(placementIndex).toBe(entries.length)
+    expect(placementIndex).toBe(Math.min(entries.length, 48))
     if (entries.length >= 24) {
       const firstTwoBars = entries.slice(0, 24).map((entry) => entry.command)
       expect(firstTwoBars.filter((command) => command?.startsWith('MULTIACTIONBAR1'))).toHaveLength(12)

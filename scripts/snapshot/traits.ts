@@ -69,8 +69,10 @@ export async function buildTraitData(source: WagoSource): Promise<Map<number, Sp
 
   const definitionById = new Map<number, { spellId: number; overridesSpellId: number }>()
   for (const row of definitions) {
+    const visibleSpellId = asInt(row, 'VisibleSpellID')
+    const spellId = asInt(row, 'SpellID')
     definitionById.set(asInt(row, 'ID'), {
-      spellId: asInt(row, 'SpellID'),
+      spellId: visibleSpellId > 0 ? visibleSpellId : spellId,
       overridesSpellId: asInt(row, 'OverridesSpellID'),
     })
   }

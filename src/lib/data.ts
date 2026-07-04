@@ -70,3 +70,13 @@ export async function loadExamples(): Promise<ExamplePreset[]> {
 export function spellIconUrl(icon: string): string {
   return `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`
 }
+
+export const TRINKET_ICON = 'inv_misc_pocketwatch_01'
+export const PVP_TRINKET_ICON = 'inv_jewelry_trinketpvp_01'
+
+export function abilityIconName(spellId: number, abilityId: string, metaIcon: string | undefined): string | null {
+  if (spellId > 0) return metaIcon ?? null
+  if (abilityId === 'trinket:pvp') return PVP_TRINKET_ICON
+  if (abilityId.startsWith('trinket')) return TRINKET_ICON
+  return null
+}

@@ -542,6 +542,8 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `    if bind.spell then`,
     `      name = resolveSpellName(bind.spell)`,
     `      known = name ~= nil and knowsSpell(bind.spell)`,
+    `    elseif bind.item then`,
+    `      known = GetInventoryItemID("player", bind.item) ~= nil`,
     `    end`,
     `    if known then`,
     `      local body = buildMacroBody(bind, name)`,

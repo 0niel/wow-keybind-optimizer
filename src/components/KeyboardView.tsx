@@ -9,7 +9,7 @@ import { buildKeyboardGeometry } from '@/core/hardware/keyboards'
 import { MOVEMENT_SCHEMES } from '@/core/hardware/movement-schemes'
 import { MOUSE_BUTTONS, WHEEL_BUTTONS } from '@/core/hardware/mice'
 import type { TextShard } from '@/lib/data'
-import { spellIconUrl } from '@/lib/data'
+import { abilityIconName, spellIconUrl } from '@/lib/data'
 import { SegmentedControl } from './controls'
 import { HoverCard } from './HoverCard'
 import type { HoverInfo } from './HoverCard'
@@ -130,6 +130,7 @@ export function KeyboardView({
     const slot = slotById.get(slotId)
     const isMovement = movementKeys.has(keyId)
     const meta = ability && ability.spellId > 0 ? spellMeta[String(ability.spellId)] : undefined
+    const iconName = ability ? abilityIconName(ability.spellId, ability.id, meta?.icon) : null
     const spellText =
       ability && ability.spellId > 0 ? text.spells[String(ability.spellId)] : undefined
     const dimmed =
@@ -168,7 +169,7 @@ export function KeyboardView({
             slot,
             name: abilityName ?? '',
             description: spellText?.description ?? '',
-            icon: meta?.icon ?? null,
+            icon: iconName,
             partners: synergyPartnersByAbility.get(ability.id) ?? [],
             x: event.clientX,
             y: event.clientY,
@@ -220,7 +221,7 @@ export function KeyboardView({
         )}
         {ability && heatmap === 'none' && (
           <>
-            {meta ? (
+            {iconName ? (
               <>
                 <rect
                   x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2 - 2}
@@ -232,7 +233,7 @@ export function KeyboardView({
                   opacity={dimmed ? 0.3 : 1}
                 />
                 <image
-                  href={spellIconUrl(meta.icon)}
+                  href={spellIconUrl(iconName)}
                   x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2}
                   y={(h * KEY_UNIT - GAP - CATEGORY_BAR - iconSize(w, h)) / 2}
                   width={iconSize(w, h)}
