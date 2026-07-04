@@ -114,6 +114,7 @@ body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 button {
@@ -345,6 +346,14 @@ select:focus {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   align-items: start;
+}
+
+.two-col > * {
+  min-width: 0;
+}
+
+.panel {
+  min-width: 0;
 }
 
 @media (max-width: 1100px) {
