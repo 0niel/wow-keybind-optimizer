@@ -624,7 +624,7 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `          placed = placed + 1`,
     `          bindKeyToCommand(bind.key, target.command)`,
     `          if target.toggle then usedToggles[target.toggle] = true end`,
-    `          decorateButton(target.frame, bind.color, bind.note)`,
+    `          decorateButton(target.frame, bind.category, bind.variant)`,
     `        else`,
     `          SetBindingSpell(bind.key, name)`,
     `        end`,

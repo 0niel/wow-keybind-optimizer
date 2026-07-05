@@ -214,6 +214,13 @@ describe('lua addon generator', () => {
     expect(lua).toContain('GetLocale')
     expect(lua).toContain('Прерывание')
     expect(lua).toContain('Interrupt')
+    expect(lua).not.toContain('bind.color')
+    expect(lua).not.toContain('bind.note')
+    const decorateCalls = lua.match(/decorateButton\(target\.frame, [^)]*\)/g) ?? []
+    expect(decorateCalls.length).toBeGreaterThanOrEqual(2)
+    for (const call of decorateCalls) {
+      expect(call).toBe('decorateButton(target.frame, bind.category, bind.variant)')
+    }
     expect(lua).toMatch(/command == "colors"/)
     expect(lua).toMatch(/command == "legend"/)
     expect(lua).toContain('UIPanelCloseButton')
