@@ -2,16 +2,19 @@ import type { Ability, BindAssignment, Slot } from '@/core/model/ability'
 import type { AbilityCategory } from '@/core/model/ability-category'
 import type { SpellTextShard } from '@/core/model/snapshot'
 
+export interface AddonLocaleStrings {
+  categories: Record<AbilityCategory, string>
+  optionsTitle: string
+  colorsLabel: string
+  colorsTooltip: string
+  legendLabel: string
+  legendTooltip: string
+}
+
 export interface AddonDecor {
   colorByCategory: Record<AbilityCategory, string>
-  labelByCategory: Record<AbilityCategory, string>
-  settings: {
-    optionsTitle: string
-    colorsLabel: string
-    colorsTooltip: string
-    legendLabel: string
-    legendTooltip: string
-  }
+  ru: AddonLocaleStrings
+  en: AddonLocaleStrings
 }
 
 const WOW_KEY_BY_KEY_ID: Record<string, string> = {
@@ -171,8 +174,8 @@ interface LuaBindEntry {
   item?: number
   target?: string
   mouseover?: boolean
-  color?: string
-  note?: string
+  category?: string
+  variant?: string
 }
 
 export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): LuaBindEntry[] {
@@ -194,11 +197,8 @@ export function buildLuaBindEntries(binds: ExportBind[], decor?: AddonDecor): Lu
     }
 
     if (decor) {
-      entry.color = decor.colorByCategory[bind.ability.category]
-      const label = decor.labelByCategory[bind.ability.category]
-      const variantSuffix =
-        bind.ability.variantKind === 'base' ? '' : ` [@${variantTarget(bind.ability.variantKind)}]`
-      entry.note = `${label}${variantSuffix}`
+      entry.category = bind.ability.category
+      if (bind.ability.variantKind !== 'base') entry.variant = variantTarget(bind.ability.variantKind)
     }
 
     entries.push(entry)
@@ -212,8 +212,8 @@ function luaBindLiteral(entry: LuaBindEntry): string {
   if (entry.item !== undefined) parts.push(`item = ${entry.item}`)
   if (entry.target !== undefined) parts.push(`target = "${entry.target}"`)
   if (entry.mouseover) parts.push(`mouseover = true`)
-  if (entry.color !== undefined) parts.push(`color = "${entry.color}"`)
-  if (entry.note !== undefined) parts.push(`note = "${escapeLua(entry.note)}"`)
+  if (entry.category !== undefined) parts.push(`category = "${entry.category}"`)
+  if (entry.variant !== undefined) parts.push(`variant = "${entry.variant}"`)
   return `  { ${parts.join(', ')} },`
 }
 
@@ -221,44 +221,67 @@ function escapeLua(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-function buildLegendEntries(binds: ExportBind[], decor: AddonDecor): Array<[string, string]> {
+function buildLegendCategories(binds: ExportBind[]): string[] {
   const seen = new Set<string>()
-  const legend: Array<[string, string]> = []
+  const categories: string[] = []
   for (const bind of binds) {
-    const category = bind.ability.category
-    if (seen.has(category)) continue
-    seen.add(category)
-    legend.push([decor.colorByCategory[category], decor.labelByCategory[category]])
+    if (seen.has(bind.ability.category)) continue
+    seen.add(bind.ability.category)
+    categories.push(bind.ability.category)
   }
-  return legend
+  return categories
 }
+
+function localeStringsLiteral(strings: AddonLocaleStrings, colorKeys: string[]): string {
+  const categoryLines = colorKeys
+    .map((key) => `    ["${key}"] = "${escapeLua(strings.categories[key as AbilityCategory] ?? key)}"`)
+    .join(',\n')
+  return [
+    `{`,
+    `  categories = {`,
+    categoryLines,
+    `  },`,
+    `  optionsTitle = "${escapeLua(strings.optionsTitle)}",`,
+    `  colorsLabel = "${escapeLua(strings.colorsLabel)}",`,
+    `  colorsTooltip = "${escapeLua(strings.colorsTooltip)}",`,
+    `  legendLabel = "${escapeLua(strings.legendLabel)}",`,
+    `  legendTooltip = "${escapeLua(strings.legendTooltip)}",`,
+    `}`,
+  ].join('\n')
+}
+
+const DEFAULT_LOCALE_STRINGS = (categories: Record<string, string>): AddonLocaleStrings => ({
+  categories: categories as Record<AbilityCategory, string>,
+  optionsTitle: 'Keybind Optimizer',
+  colorsLabel: 'Category colors',
+  colorsTooltip: 'Color action buttons by ability category.',
+  legendLabel: 'Color legend',
+  legendTooltip: 'Show the draggable color legend.',
+})
 
 export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: AddonDecor): string {
   const entries = buildLuaBindEntries(binds, decor)
-  const legend = decor ? buildLegendEntries(binds, decor) : []
-  const settings = decor?.settings ?? {
-    optionsTitle: 'Keybind Optimizer',
-    colorsLabel: 'Category colors',
-    colorsTooltip: 'Color action buttons by ability category.',
-    legendLabel: 'Color legend',
-    legendTooltip: 'Show the draggable color legend.',
-  }
+  const legendCategories = decor ? buildLegendCategories(binds) : []
+  const colorKeys = Object.keys(decor?.colorByCategory ?? {})
+  const ru = decor?.ru ?? DEFAULT_LOCALE_STRINGS({})
+  const en = decor?.en ?? DEFAULT_LOCALE_STRINGS({})
   return [
     `local ADDON = "${addonName}"`,
-    `local TEXT = {`,
-    `  optionsTitle = "${escapeLua(settings.optionsTitle)}",`,
-    `  colorsLabel = "${escapeLua(settings.colorsLabel)}",`,
-    `  colorsTooltip = "${escapeLua(settings.colorsTooltip)}",`,
-    `  legendLabel = "${escapeLua(settings.legendLabel)}",`,
-    `  legendTooltip = "${escapeLua(settings.legendTooltip)}",`,
+    `local COLORS = {`,
+    ...colorKeys.map((key) => `  ["${key}"] = "${decor?.colorByCategory[key as AbilityCategory]}",`),
     `}`,
+    `local STRINGS = {`,
+    `  ru = ${localeStringsLiteral(ru, colorKeys)},`,
+    `  en = ${localeStringsLiteral(en, colorKeys)},`,
+    `}`,
+    `local LOCALE = (GetLocale and string.sub(GetLocale(), 1, 2) == "ru") and "ru" or "en"`,
+    `local L = STRINGS[LOCALE]`,
+    `local TEXT = L`,
     `local BINDS = {`,
     ...entries.map(luaBindLiteral),
     `}`,
     ``,
-    `local LEGEND = {`,
-    ...legend.map(([color, label]) => `  { color = "${color}", label = "${escapeLua(label)}" },`),
-    `}`,
+    `local LEGEND_CATEGORIES = { ${legendCategories.map((c) => `"${c}"`).join(', ')} }`,
     ``,
     `local BARS = {`,
     `  { base = 0, command = "ACTIONBUTTON", frame = "ActionButton", main = true },`,
@@ -333,8 +356,19 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  return placeable`,
     `end`,
     ``,
-    `local function decorateButton(button, color, note)`,
-    `  if not button or not color then return end`,
+    `local function noteFor(category, variant)`,
+    `  local label = L.categories[category] or category`,
+    `  if variant and variant ~= "" then`,
+    `    return label .. " [@" .. variant .. "]"`,
+    `  end`,
+    `  return label`,
+    `end`,
+    ``,
+    `local function decorateButton(button, category, variant)`,
+    `  if not button or not category then return end`,
+    `  local color = COLORS[category]`,
+    `  if not color then return end`,
+    `  local note = noteFor(category, variant)`,
     `  local r, g, b = hexColor(color)`,
     `  local bar = button.koCategoryBar`,
     `  if not bar then`,
@@ -381,7 +415,7 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `local function buildLegendFrame()`,
     `  if legendFrame then return legendFrame end`,
     `  local frame = CreateFrame("Frame", "KeybindOptimizerLegend", UIParent, "BackdropTemplate")`,
-    `  frame:SetSize(190, 34 + #LEGEND * 18)`,
+    `  frame:SetSize(200, 34 + #LEGEND_CATEGORIES * 18)`,
     `  frame:SetPoint("RIGHT", UIParent, "RIGHT", -220, 0)`,
     `  frame:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })`,
     `  frame:SetBackdropColor(0.06, 0.06, 0.08, 0.92)`,
@@ -402,22 +436,22 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `    updateLegend()`,
     `    syncOptions()`,
     `  end)`,
-    `  for index, entry in ipairs(LEGEND) do`,
+    `  for index, category in ipairs(LEGEND_CATEGORIES) do`,
     `    local swatch = frame:CreateTexture(nil, "OVERLAY")`,
     `    swatch:SetSize(10, 10)`,
     `    swatch:SetPoint("TOPLEFT", 10, -10 - index * 18)`,
-    `    local r, g, b = hexColor(entry.color)`,
+    `    local r, g, b = hexColor(COLORS[category] or "888888")`,
     `    swatch:SetColorTexture(r, g, b, 1)`,
     `    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")`,
     `    text:SetPoint("LEFT", swatch, "RIGHT", 6, 0)`,
-    `    text:SetText(entry.label)`,
+    `    text:SetText(L.categories[category] or category)`,
     `  end`,
     `  legendFrame = frame`,
     `  return frame`,
     `end`,
     ``,
     `updateLegend = function()`,
-    `  if #LEGEND == 0 then return end`,
+    `  if #LEGEND_CATEGORIES == 0 then return end`,
     `  local frame = buildLegendFrame()`,
     `  frame:SetShown(db().legend and db().decor)`,
     `end`,
@@ -570,7 +604,7 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `            placed = placed + 1`,
     `            bindKeyToCommand(bind.key, target.command)`,
     `            if target.toggle then usedToggles[target.toggle] = true end`,
-    `            decorateButton(target.frame, bind.color, bind.note)`,
+    `            decorateButton(target.frame, bind.category, bind.variant)`,
     `          else`,
     `            SetBindingMacro(bind.key, label)`,
     `          end`,

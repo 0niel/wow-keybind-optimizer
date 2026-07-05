@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { spellIconUrl } from '@/lib/data'
 
 export interface SpellTooltipInfo {
@@ -13,31 +14,62 @@ export interface SpellTooltipInfo {
 }
 
 export function SpellTooltip({ info }: { info: SpellTooltipInfo }) {
-  const left = Math.min(info.x + 16, typeof window !== 'undefined' ? window.innerWidth - 340 : info.x)
-  const top = Math.min(info.y + 16, typeof window !== 'undefined' ? window.innerHeight - 220 : info.y)
+  const [iconFailed, setIconFailed] = useState(false)
+  const left = Math.min(info.x + 18, typeof window !== 'undefined' ? window.innerWidth - 336 : info.x)
+  const top = Math.min(info.y + 18, typeof window !== 'undefined' ? window.innerHeight - 210 : info.y)
 
   return (
     <div
       className="overlay-card"
-      style={{ position: 'fixed', left, top, width: 320, zIndex: 50, pointerEvents: 'none' }}
+      style={{
+        position: 'fixed',
+        left,
+        top,
+        width: 316,
+        zIndex: 50,
+        pointerEvents: 'none',
+        padding: 16,
+      }}
     >
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: info.description ? 8 : 0 }}>
-        {info.icon && (
-          <img src={spellIconUrl(info.icon)} alt="" width={40} height={40} style={{ borderRadius: 10 }} />
-        )}
-        <div>
-          <div style={{ fontWeight: 700, fontSize: '1rem' }}>{info.name}</div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: info.description ? 12 : 0 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            flexShrink: 0,
+            background: 'var(--inset-strong)',
+            boxShadow: `inset 0 0 0 2px ${info.accent}`,
+            overflow: 'hidden',
+          }}
+        >
+          {info.icon && !iconFailed && (
+            <img
+              src={spellIconUrl(info.icon)}
+              alt=""
+              width={44}
+              height={44}
+              onError={() => setIconFailed(true)}
+              style={{ display: 'block' }}
+            />
+          )}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: '1.02rem', lineHeight: 1.2 }}>{info.name}</div>
           {info.subtitle && (
-            <div style={{ fontSize: '0.8rem', color: info.accent, fontWeight: 600 }}>{info.subtitle}</div>
+            <div style={{ fontSize: '0.8rem', color: info.accent, fontWeight: 600, marginTop: 2 }}>
+              {info.subtitle}
+            </div>
           )}
         </div>
       </div>
       {info.description && (
         <p
           style={{
-            fontSize: '0.82rem',
+            fontSize: '0.85rem',
+            lineHeight: 1.55,
             color: 'var(--text-soft)',
-            maxHeight: 130,
+            maxHeight: 150,
             overflow: 'hidden',
             whiteSpace: 'pre-line',
           }}

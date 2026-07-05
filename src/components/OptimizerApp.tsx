@@ -343,7 +343,37 @@ export function OptimizerApp() {
           </div>
         )}
       </main>
+      <AppFooter />
     </div>
+  )
+}
+
+function AppFooter() {
+  return (
+    <footer
+      style={{
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: '28px clamp(20px, 4vw, 56px) 40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        fontSize: '0.88rem',
+        color: 'var(--text-faint)',
+      }}
+    >
+      <span>© Oniel</span>
+      <span aria-hidden>·</span>
+      <a
+        href="https://github.com/0niel"
+        target="_blank"
+        rel="noreferrer noopener"
+        style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}
+      >
+        GitHub
+      </a>
+    </footer>
   )
 }
 

@@ -11,13 +11,32 @@ import {
   renderPlainList,
   renderAddonToc,
 } from '@/lib/exports'
-import type { AddonDecor } from '@/lib/exports'
+import type { AddonDecor, AddonLocaleStrings } from '@/lib/exports'
 import { buildZipBlob } from '@/lib/zip'
 import { abilityIconName, spellIconUrl } from '@/lib/data'
 import { CATEGORY_HEX } from '@/core/model/category-colors'
 import { ALL_CATEGORIES } from '@/core/model/ability-category'
 import type { AbilityCategory } from '@/core/model/ability-category'
+import ruMessages from '@/i18n/messages/ru.json'
+import enMessages from '@/i18n/messages/en.json'
+import { CodeBlock } from './CodeBlock'
 import { SegmentedControl } from './controls'
+
+type Messages = typeof ruMessages
+
+function localeStringsFor(messages: Messages): AddonLocaleStrings {
+  const categories = Object.fromEntries(
+    ALL_CATEGORIES.map((category) => [category, messages.categories[category]]),
+  ) as Record<AbilityCategory, string>
+  return {
+    categories,
+    optionsTitle: 'Keybind Optimizer',
+    colorsLabel: messages.export.settingColors,
+    colorsTooltip: messages.export.settingColorsHint,
+    legendLabel: messages.export.settingLegend,
+    legendTooltip: messages.export.settingLegendHint,
+  }
+}
 
 type ExportTab = 'list' | 'macros' | 'lua'
 
@@ -34,7 +53,6 @@ const ADDON_NAME = 'KeybindOptimizer'
 
 export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, build }: Props) {
   const t = useTranslations('export')
-  const tCat = useTranslations('categories')
   const [tab, setTab] = useState<ExportTab>('list')
   const [copied, setCopied] = useState(false)
 
@@ -43,22 +61,14 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     [assignments, abilities, slots, spells, t],
   )
 
-  const decor: AddonDecor = useMemo(() => {
-    const labelByCategory = Object.fromEntries(
-      ALL_CATEGORIES.map((category) => [category, tCat(category)]),
-    ) as Record<AbilityCategory, string>
-    return {
+  const decor: AddonDecor = useMemo(
+    () => ({
       colorByCategory: CATEGORY_HEX,
-      labelByCategory,
-      settings: {
-        optionsTitle: 'Keybind Optimizer',
-        colorsLabel: t('settingColors'),
-        colorsTooltip: t('settingColorsHint'),
-        legendLabel: t('settingLegend'),
-        legendTooltip: t('settingLegendHint'),
-      },
-    }
-  }, [tCat, t])
+      ru: localeStringsFor(ruMessages),
+      en: localeStringsFor(enMessages),
+    }),
+    [],
+  )
 
   const content = useMemo(() => {
     if (tab === 'list') return renderPlainList(binds)
@@ -208,20 +218,7 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
           })}
         </div>
       ) : (
-        <pre
-          style={{
-            background: 'var(--inset)',
-            borderRadius: 'var(--r-control)',
-            padding: 16,
-            fontSize: '0.78rem',
-            lineHeight: 1.6,
-            overflowX: 'auto',
-            maxHeight: 420,
-            overflowY: 'auto',
-          }}
-        >
-          {content}
-        </pre>
+        <CodeBlock code={content} />
       )}
       {tab === 'macros' && (
         <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('macrosHint')}</p>

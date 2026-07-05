@@ -67,8 +67,11 @@ export async function loadExamples(): Promise<ExamplePreset[]> {
   return fetchJson<ExamplePreset[]>('/data/examples.json')
 }
 
+export const FALLBACK_ICON = 'inv_misc_questionmark'
+
 export function spellIconUrl(icon: string): string {
-  return `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`
+  const clean = icon.trim().replace(/\s+/g, '').toLowerCase() || FALLBACK_ICON
+  return `https://wow.zamimg.com/images/wow/icons/large/${clean}.jpg`
 }
 
 export const TRINKET_ICON = 'inv_misc_pocketwatch_01'

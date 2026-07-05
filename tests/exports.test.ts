@@ -150,23 +150,46 @@ describe('lua addon generator', () => {
         utility: 'aab2c4',
         trinket: 'ff9dc8',
       },
-      labelByCategory: {
-        'rotational-core': 'Rotation',
-        'rotational-proc': 'Proc',
-        'cooldown-burst': 'Burst',
-        'defensive-major': 'Major defensive',
-        'defensive-minor': 'Minor defensive',
-        external: 'External',
-        'heal-utility': 'Healing',
-        interrupt: 'Interrupt',
-        'cc-hard': 'Hard CC',
-        'cc-soft': 'Soft CC',
-        dispel: 'Dispel',
-        mobility: 'Mobility',
-        utility: 'Utility',
-        trinket: 'Trinket',
+      ru: {
+        categories: {
+          'rotational-core': 'Ротация',
+          'rotational-proc': 'Прок',
+          'cooldown-burst': 'Бурст',
+          'defensive-major': 'Защита',
+          'defensive-minor': 'Малая защита',
+          external: 'Внешка',
+          'heal-utility': 'Лечение',
+          interrupt: 'Прерывание',
+          'cc-hard': 'Жёсткий контроль',
+          'cc-soft': 'Мягкий контроль',
+          dispel: 'Диспел',
+          mobility: 'Мобильность',
+          utility: 'Утилити',
+          trinket: 'Тринкет',
+        },
+        optionsTitle: 'Keybind Optimizer',
+        colorsLabel: 'Подсветка',
+        colorsTooltip: 'Цвет категории',
+        legendLabel: 'Легенда',
+        legendTooltip: 'Показать легенду',
       },
-      settings: {
+      en: {
+        categories: {
+          'rotational-core': 'Rotation',
+          'rotational-proc': 'Proc',
+          'cooldown-burst': 'Burst',
+          'defensive-major': 'Major defensive',
+          'defensive-minor': 'Minor defensive',
+          external: 'External',
+          'heal-utility': 'Healing',
+          interrupt: 'Interrupt',
+          'cc-hard': 'Hard CC',
+          'cc-soft': 'Soft CC',
+          dispel: 'Dispel',
+          mobility: 'Mobility',
+          utility: 'Utility',
+          trinket: 'Trinket',
+        },
         optionsTitle: 'Keybind Optimizer',
         colorsLabel: 'Category colors',
         colorsTooltip: 'Color action buttons by category.',
@@ -175,7 +198,7 @@ describe('lua addon generator', () => {
       },
     }
     const entries = buildLuaBindEntries(layout.binds, decor)
-    expect(entries.some((entry) => entry.color !== undefined && entry.note !== undefined)).toBe(true)
+    expect(entries.some((entry) => entry.category !== undefined)).toBe(true)
     const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer', decor)
     expect(lua).toContain('decorateButton')
     expect(lua).toContain('SetColorTexture')
@@ -186,8 +209,11 @@ describe('lua addon generator', () => {
     expect(lua).toContain('GetBindingKey')
     expect(lua).toContain('HasAction')
     expect(lua).toContain('KeybindOptimizerDB')
-    expect(lua).toContain('local LEGEND = {')
+    expect(lua).toContain('LEGEND_CATEGORIES')
     expect(lua).toContain('KeybindOptimizerLegend')
+    expect(lua).toContain('GetLocale')
+    expect(lua).toContain('Прерывание')
+    expect(lua).toContain('Interrupt')
     expect(lua).toMatch(/command == "colors"/)
     expect(lua).toMatch(/command == "legend"/)
     expect(lua).toContain('UIPanelCloseButton')
