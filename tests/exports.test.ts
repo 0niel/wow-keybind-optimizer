@@ -172,6 +172,7 @@ describe('lua addon generator', () => {
         colorsTooltip: 'Цвет категории',
         legendLabel: 'Легенда',
         legendTooltip: 'Показать легенду',
+        enableBarsHint: 'введите /kbo bars',
       },
       en: {
         categories: {
@@ -195,6 +196,7 @@ describe('lua addon generator', () => {
         colorsTooltip: 'Color action buttons by category.',
         legendLabel: 'Color legend',
         legendTooltip: 'Show the color legend.',
+        enableBarsHint: 'type /kbo bars',
       },
     }
     const entries = buildLuaBindEntries(layout.binds, decor)
@@ -221,6 +223,9 @@ describe('lua addon generator', () => {
     for (const call of decorateCalls) {
       expect(call).toBe('decorateButton(target.frame, bind.category, bind.variant)')
     }
+    expect(lua).toContain('C_EditMode.SetAccountSetting')
+    expect(lua).toContain('Enum.EditModeAccountSetting["Show" .. barName]')
+    expect(lua).toMatch(/command == "bars"/)
     expect(lua).toMatch(/command == "colors"/)
     expect(lua).toMatch(/command == "legend"/)
     expect(lua).toContain('UIPanelCloseButton')

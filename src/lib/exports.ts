@@ -9,6 +9,7 @@ export interface AddonLocaleStrings {
   colorsTooltip: string
   legendLabel: string
   legendTooltip: string
+  enableBarsHint: string
 }
 
 export interface AddonDecor {
@@ -246,6 +247,7 @@ function localeStringsLiteral(strings: AddonLocaleStrings, colorKeys: string[]):
     `  colorsTooltip = "${escapeLua(strings.colorsTooltip)}",`,
     `  legendLabel = "${escapeLua(strings.legendLabel)}",`,
     `  legendTooltip = "${escapeLua(strings.legendTooltip)}",`,
+    `  enableBarsHint = "${escapeLua(strings.enableBarsHint)}",`,
     `}`,
   ].join('\n')
 }
@@ -257,6 +259,7 @@ const DEFAULT_LOCALE_STRINGS = (categories: Record<string, string>): AddonLocale
   colorsTooltip: 'Color action buttons by ability category.',
   legendLabel: 'Color legend',
   legendTooltip: 'Show the draggable color legend.',
+  enableBarsHint: 'some abilities are on hidden bars — type /kbo bars to show bars 2-5, or enable them in Edit Mode',
 })
 
 export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: AddonDecor): string {
@@ -642,10 +645,12 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  end`,
     `  if GetActionBarToggles then`,
     `    local toggles = { GetActionBarToggles() }`,
+    `    local anyHidden = false`,
     `    for barNumber = 1, 4 do`,
-    `      if usedToggles[barNumber] and not toggles[barNumber] then`,
-    `        print("|cff7c78ff" .. ADDON .. "|r: enable Action Bar " .. (barNumber + 1) .. " in Edit Mode to see the placed abilities")`,
-    `      end`,
+    `      if usedToggles[barNumber] and not toggles[barNumber] then anyHidden = true end`,
+    `    end`,
+    `    if anyHidden then`,
+    `      print("|cff7c78ff" .. ADDON .. "|r: " .. T.enableBarsHint)`,
     `    end`,
     `  end`,
     `end`,
@@ -664,6 +669,37 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `  print("|cff7c78ff" .. ADDON .. "|r: main action bar spells cleared (mounts, toys and macros kept)")`,
     `end`,
     ``,
+    `local function enableExtraBars()`,
+    `  if InCombatLockdown() then`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: leave combat first, then /kbo bars")`,
+    `    return`,
+    `  end`,
+    `  if not (C_EditMode and C_EditMode.SetAccountSetting and Enum and Enum.EditModeAccountSetting) then`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: this client cannot toggle bars from Lua — enable Action Bars 2-5 in Edit Mode")`,
+    `    return`,
+    `  end`,
+    `  local barNames = { "MultiBarBottomLeft", "MultiBarBottomRight", "MultiBarRight", "MultiBarLeft" }`,
+    `  local changed = 0`,
+    `  for _, barName in ipairs(barNames) do`,
+    `    local setting = Enum.EditModeAccountSetting["Show" .. barName]`,
+    `    if setting then`,
+    `      if EditModeManagerFrame and EditModeManagerFrame.OnAccountSettingChanged then`,
+    `        if pcall(function() EditModeManagerFrame:OnAccountSettingChanged(setting, true) end) then`,
+    `          changed = changed + 1`,
+    `        end`,
+    `      elseif pcall(C_EditMode.SetAccountSetting, setting, 1) then`,
+    `        changed = changed + 1`,
+    `      end`,
+    `    end`,
+    `  end`,
+    `  if C_EditMode.SaveLayouts then pcall(C_EditMode.SaveLayouts, C_EditMode.GetLayouts()) end`,
+    `  if changed > 0 then`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: enabled action bars 2-5 — if any are still hidden, type /reload")`,
+    `  else`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: could not toggle bars automatically — enable Action Bars 2-5 in Edit Mode")`,
+    `  end`,
+    `end`,
+    ``,
     `local function handleCommand(message)`,
     `  local command = string.lower(string.gsub(message or "", "%s+", ""))`,
     `  if command == "colors" then`,
@@ -679,11 +715,13 @@ export function renderLuaAddon(binds: ExportBind[], addonName: string, decor?: A
     `    print("|cff7c78ff" .. ADDON .. "|r: legend " .. (db().legend and "ON" or "OFF"))`,
     `  elseif command == "clearmain" then`,
     `    clearMainBar()`,
+    `  elseif command == "bars" then`,
+    `    enableExtraBars()`,
     `  elseif command == "mainbar" then`,
     `    db().mainbar = not db().mainbar`,
     `    print("|cff7c78ff" .. ADDON .. "|r: main bar usage " .. (db().mainbar and "ON" or "OFF") .. " — run /kbo to re-apply")`,
     `  elseif command == "help" then`,
-    `    print("|cff7c78ff" .. ADDON .. "|r: /kbo — apply layout, /kbo colors — toggle category colors, /kbo legend — toggle legend, /kbo mainbar — use the main bar too, /kbo clearmain — clear the main action bar")`,
+    `    print("|cff7c78ff" .. ADDON .. "|r: /kbo — apply, /kbo bars — show bars 2-5, /kbo colors — colors, /kbo legend — legend, /kbo mainbar — use the main bar, /kbo clearmain — clear the main bar")`,
     `  else`,
     `    apply()`,
     `  end`,

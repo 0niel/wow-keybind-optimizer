@@ -35,6 +35,7 @@ function localeStringsFor(messages: Messages): AddonLocaleStrings {
     colorsTooltip: messages.export.settingColorsHint,
     legendLabel: messages.export.settingLegend,
     legendTooltip: messages.export.settingLegendHint,
+    enableBarsHint: messages.export.addonEnableBarsHint,
   }
 }
 
