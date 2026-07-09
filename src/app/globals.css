@@ -183,7 +183,6 @@ select:focus {
   background: var(--panel);
   border-radius: var(--r-panel);
   padding: clamp(20px, 3vw, 32px);
-  border: 1px solid var(--inset-strong);
 }
 
 .inset-panel {
@@ -305,7 +304,6 @@ select:focus {
   padding: 20px 24px;
   border-radius: 20px;
   background: var(--panel);
-  border: 1px solid var(--inset-strong);
 }
 
 .hero-input:hover {
@@ -410,7 +408,6 @@ select:focus {
   gap: 16px;
   min-height: 58px;
   padding: 8px 10px 8px 14px;
-  border: 1px solid var(--inset-strong);
   border-radius: 18px;
   background: var(--panel);
 }
@@ -639,8 +636,8 @@ select:focus {
   gap: 2px;
   min-width: 0;
   padding: 11px;
-  border: 1px solid var(--inset-strong);
   border-radius: 14px;
+  background: var(--inset);
 }
 
 .data-metric strong {

@@ -47,7 +47,6 @@ export function SpellTooltip({ info }: { info: SpellTooltipInfo }) {
             borderRadius: 12,
             flexShrink: 0,
             background: 'var(--inset-strong)',
-            boxShadow: `inset 0 0 0 2px ${info.accent}`,
             overflow: 'hidden',
           }}
         >

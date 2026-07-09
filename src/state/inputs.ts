@@ -40,6 +40,23 @@ export function effectiveTargetBinds(inputs: OptimizerInputs): boolean {
   return inputs.arenaTargetBinds ?? inputs.arenaTargetScheme === 'arena123'
 }
 
+export function normalizePvpTalentIds(
+  selectedIds: readonly number[],
+  availableIds: Iterable<number>,
+  limit = 3,
+): number[] {
+  const available = new Set(availableIds)
+  const seen = new Set<number>()
+  const normalized: number[] = []
+  for (const id of selectedIds) {
+    if (!available.has(id) || seen.has(id)) continue
+    seen.add(id)
+    normalized.push(id)
+    if (normalized.length === limit) break
+  }
+  return normalized
+}
+
 const GAME_MODES: GameMode[] = ['raid', 'mythic-plus', 'arena', 'rbg', 'battleground']
 const FORM_FACTORS: KeyboardFormFactor[] = ['full', 'tkl', 'sixty']
 const LAYOUTS: PhysicalLayout[] = ['ansi', 'iso']
@@ -139,13 +156,19 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
   const mode = GAME_MODES.find((value) => value === params.get('mode')) ?? DEFAULT_INPUTS.mode
   const scheme: ArenaTargetScheme = params.get('scheme') === 'arena123' ? 'arena123' : 'focus'
 
+  const parsedPvpTalentIds = (params.get('pvp') ?? '')
+    .split('.')
+    .map((value) => Number.parseInt(value, 10))
+    .filter((value) => !Number.isNaN(value))
+
   return {
     importString: params.get('s') ?? '',
     raceId: params.get('race') ? Number.parseInt(params.get('race') ?? '', 10) : null,
-    pvpTalentIds: (params.get('pvp') ?? '')
-      .split('.')
-      .map((value) => Number.parseInt(value, 10))
-      .filter((value) => !Number.isNaN(value)),
+    pvpTalentIds: normalizePvpTalentIds(
+      parsedPvpTalentIds,
+      parsedPvpTalentIds,
+      Number.POSITIVE_INFINITY,
+    ),
     mode,
     arenaTargetScheme: scheme,
     arenaTargetBinds: params.get('tb') === '1' ? true : params.get('tb') === '0' ? false : null,

@@ -48,7 +48,6 @@ function BarButton({ cell }: { cell: BarCell | undefined }) {
         borderRadius: 8,
         border: tag ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.14)',
         background: cell ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.38)',
-        boxShadow: cell ? 'none' : 'inset 0 2px 8px rgba(0,0,0,0.55)',
         flexShrink: 0,
       }}
     >
@@ -213,7 +212,6 @@ export function GameBarsPreview({
           borderRadius: 16,
           padding: '28px 20px 20px',
           background: '#131a28',
-          border: '1px solid rgba(255,255,255,0.08)',
           overflowX: 'auto',
         }}
       >

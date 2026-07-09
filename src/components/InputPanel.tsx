@@ -7,7 +7,7 @@ import type { ClassRecord, RaceRecord, SpecSnapshot, SpellMetaShard } from '@/co
 import type { GameMode } from '@/core/model/ability'
 import type { Modifier } from '@/core/model/hardware'
 import type { OptimizerInputs } from '@/state/inputs'
-import { effectiveTargetBinds } from '@/state/inputs'
+import { effectiveTargetBinds, normalizePvpTalentIds } from '@/state/inputs'
 import type { TextShard } from '@/lib/data'
 import { spellIconUrl } from '@/lib/data'
 import { SegmentedControl, ChipToggle } from './controls'
@@ -103,6 +103,10 @@ interface SettingsPanelProps {
 export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, locale }: SettingsPanelProps) {
   const t = useTranslations('input')
   const isPvpMode = ['arena', 'rbg', 'battleground'].includes(inputs.mode)
+  const selectedPvpTalentIds = useMemo(
+    () => normalizePvpTalentIds(inputs.pvpTalentIds, spec?.pvpTalents.map((talent) => talent.id) ?? []),
+    [inputs.pvpTalentIds, spec],
+  )
 
   const update = (partial: Partial<OptimizerInputs>) => onChange({ ...inputs, ...partial })
   const updateHardware = (partial: Partial<OptimizerInputs['hardware']>) =>
@@ -165,11 +169,11 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
           {isPvpMode && spec && spec.pvpTalents.length > 0 && (
             <div style={{ marginTop: 20 }}>
               <span className="label">
-                {t('pvpTalents')} · {inputs.pvpTalentIds.length}/3
+                {t('pvpTalents')} · {selectedPvpTalentIds.length}/3
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {spec.pvpTalents.map((talent) => {
-                  const active = inputs.pvpTalentIds.includes(talent.id)
+                  const active = selectedPvpTalentIds.includes(talent.id)
                   const name = text.spells[String(talent.spellId)]?.name ?? `#${talent.spellId}`
                   const icon =
                     spellMeta[String(talent.spellId)]?.icon ??
@@ -181,9 +185,9 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
                       title={text.spells[String(talent.spellId)]?.description ?? ''}
                       onClick={() => {
                         if (active) {
-                          update({ pvpTalentIds: inputs.pvpTalentIds.filter((id) => id !== talent.id) })
-                        } else if (inputs.pvpTalentIds.length < 3) {
-                          update({ pvpTalentIds: [...inputs.pvpTalentIds, talent.id] })
+                          update({ pvpTalentIds: selectedPvpTalentIds.filter((id) => id !== talent.id) })
+                        } else if (selectedPvpTalentIds.length < 3) {
+                          update({ pvpTalentIds: [...selectedPvpTalentIds, talent.id] })
                         }
                       }}
                     >

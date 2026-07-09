@@ -670,10 +670,8 @@ function KeyEditorPopover({
         top,
         width: 312,
         zIndex: 70,
-        background: 'var(--panel)',
-        border: '1px solid var(--border)',
+        background: 'var(--inset-strong)',
         borderRadius: 14,
-        boxShadow: '0 18px 44px rgba(0,0,0,0.45)',
         padding: 14,
       }}
     >
@@ -760,7 +758,7 @@ function KeyEditorPopover({
               boxSizing: 'border-box',
               padding: '7px 10px',
               borderRadius: 9,
-              border: '1px solid var(--border)',
+              border: 'none',
               background: 'var(--inset)',
               color: 'var(--text)',
               fontSize: '0.84rem',

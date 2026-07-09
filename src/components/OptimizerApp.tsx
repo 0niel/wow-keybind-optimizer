@@ -4,7 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useGameData, useSpecSnapshot } from '@/hooks/useGameData'
 import { useSolver } from '@/hooks/useSolver'
-import { DEFAULT_INPUTS, deserializeInputs, effectiveTargetBinds, serializeInputs } from '@/state/inputs'
+import {
+  DEFAULT_INPUTS,
+  deserializeInputs,
+  effectiveTargetBinds,
+  normalizePvpTalentIds,
+  serializeInputs,
+} from '@/state/inputs'
 import type { OptimizerInputs } from '@/state/inputs'
 import { DEFAULT_BANNED_KEY_IDS } from '@/core/model/hardware'
 import {
@@ -69,7 +75,20 @@ export function OptimizerApp() {
   }, [])
 
   const specId = useMemo(() => detectSpecId(inputs.importString), [inputs.importString])
-  const { spec, specError } = useSpecSnapshot(data?.build ?? null, specId)
+  const { spec: loadedSpec, specError } = useSpecSnapshot(data?.build ?? null, specId)
+  const spec = loadedSpec?.specId === specId ? loadedSpec : null
+  const selectedPvpTalentIds = useMemo(
+    () => normalizePvpTalentIds(inputs.pvpTalentIds, spec?.pvpTalents.map((talent) => talent.id) ?? []),
+    [inputs.pvpTalentIds, spec],
+  )
+
+  useEffect(() => {
+    if (!hydrated || !spec) return
+    const unchanged =
+      selectedPvpTalentIds.length === inputs.pvpTalentIds.length &&
+      selectedPvpTalentIds.every((id, index) => id === inputs.pvpTalentIds[index])
+    if (!unchanged) updateInputs({ ...inputs, pvpTalentIds: selectedPvpTalentIds })
+  }, [hydrated, inputs, selectedPvpTalentIds, spec, updateInputs])
 
   const race = useMemo(
     () => data?.races.find((candidate) => candidate.id === inputs.raceId) ?? null,
@@ -99,7 +118,7 @@ export function OptimizerApp() {
         spellMeta: data.spellMeta,
         importString: inputs.importString,
         race,
-        pvpTalentIds: inputs.pvpTalentIds,
+        pvpTalentIds: selectedPvpTalentIds,
         mode: inputs.mode,
         arenaTargetScheme: inputs.arenaTargetScheme,
         hardware: inputs.hardware,
@@ -116,7 +135,7 @@ export function OptimizerApp() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [hydrated, data, spec, race, inputs, solve, spellNames, preservation])
+  }, [hydrated, data, spec, race, inputs, selectedPvpTalentIds, solve, spellNames, preservation])
 
   const outcome = solverState.outcome
 
