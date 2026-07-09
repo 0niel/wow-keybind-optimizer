@@ -298,6 +298,16 @@
       "bar4": "Bar 4 (right side)",
       "bar5": "Bar 5 (left side)",
       "extra": "Bar {n} (hidden by default)",
+      "groups": {
+        "rotation": "Rotation",
+        "burst": "Burst",
+        "survival": "Defence and recovery",
+        "control": "Control and reactions",
+        "mobility": "Mobility",
+        "utility": "Utility",
+        "maintenance": "Long buffs"
+      },
+      "layoutNote": "Base / Shift / Ctrl / Alt binds from the same physical key stay together. Combat abilities are grouped by purpose and urgency; verified one-hour buffs move to a side bar.",
       "hiddenHint": "Hidden bars can be enabled with /kbo bars or in Edit Mode.",
       "keysOnly": "Key-only binds (not on bars)",
       "empty": "empty",

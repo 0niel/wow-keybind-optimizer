@@ -15,6 +15,14 @@ export interface SnapshotManifest {
   specIds: number[]
   sources?: SnapshotSource[]
   coverage?: SnapshotCoverage
+  frequencySources?: Record<string, SnapshotFrequencySource>
+}
+
+export interface SnapshotFrequencySource {
+  encounterId: number
+  encounterName: string
+  metric: 'dps' | 'hps'
+  samples: Array<{ reportId: string; fightId: number }>
 }
 
 export interface SnapshotSource {
@@ -53,6 +61,8 @@ export interface SpellMetaRecord {
   cooldownMs: number
   chargeCooldownMs: number
   charges: number
+  auraDurationMs?: number
+  maintenance?: boolean
   gcd: 'normal' | 'off'
   rangeYd: number
   targeting: Targeting

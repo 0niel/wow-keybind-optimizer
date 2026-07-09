@@ -82,6 +82,8 @@ async function main() {
   const localizedSpecNames = new Map<string, Map<number, string>>()
   const localizedRaceNames = new Map<string, Map<number, string>>()
   const localizedSubTreeNames = new Map<string, Map<number, string>>()
+  let localizedSpellIds = new Set<string>()
+  let hasLocalizedSpellLocale = false
   for (const locale of LOCALES) {
     const classes = await loadTable(source, 'ChrClasses', locale)
     localizedClassNames.set(locale, new Map(classes.map((row) => [asInt(row, 'ID'), row['Name_lang'] ?? ''])))
@@ -105,6 +107,12 @@ async function main() {
   const referencedSpellIds = new Set<number>()
   const nameOnlySpellIds = new Set<number>()
   const specSnapshots: SpecSnapshot[] = []
+  const frequencySources: Record<string, {
+    encounterId: number
+    encounterName: string
+    metric: 'dps' | 'hps'
+    samples: Array<{ reportId: string; fightId: number }>
+  }> = {}
 
   for (const specId of specIds) {
     const traits = traitData.get(specId)
@@ -215,13 +223,20 @@ async function main() {
       const encounter = encounters[0]
       if (wclClass && wclSpec && encounter) {
         try {
+          const metric = role === 'healer' ? 'hps' : 'dps'
           const casts = await wcl.specCasts(
             wclClass.id,
             wclSpec.id,
             encounter.id,
-            role === 'healer' ? 'hps' : 'dps',
+            metric,
             options.wclSampleSize,
           )
+          frequencySources[String(specId)] = {
+            encounterId: encounter.id,
+            encounterName: encounter.name,
+            metric,
+            samples: casts.samples,
+          }
           for (const [spellId, cpm] of casts.cpmBySpellId) {
             const existing = frequencyBySpellId[String(spellId)]
             frequencyBySpellId[String(spellId)] = {
@@ -360,6 +375,11 @@ async function main() {
       if (name === '') continue
       spells[String(spellId)] = { name, description }
     }
+    const localeSpellIds = new Set(Object.keys(spells))
+    localizedSpellIds = hasLocalizedSpellLocale
+      ? new Set([...localizedSpellIds].filter((spellId) => localeSpellIds.has(spellId)))
+      : localeSpellIds
+    hasLocalizedSpellLocale = true
     const subTreeNames: Record<string, string> = {}
     for (const snapshot of specSnapshots) {
       for (const subTree of snapshot.subTrees) {
@@ -418,8 +438,6 @@ async function main() {
   const simulationSpecs = specSnapshots.filter((snapshot) =>
     Object.values(snapshot.frequencyBySpellId).some((record) => record.aplRank !== null),
   ).length
-  const localizedSpellIds = new Set([...referencedSpellIds, ...nameOnlySpellIds])
-
   writeFileSync(
     join(outDir, 'manifest.json'),
     JSON.stringify(
@@ -429,6 +447,7 @@ async function main() {
         generatedAt: new Date().toISOString(),
         locales: LOCALES.map((locale) => APP_LOCALE_BY_DATA_LOCALE[locale] ?? locale),
         specIds: specSnapshots.map((s) => s.specId),
+        frequencySources,
         sources: [
           { id: 'game-tables', name: 'wago.tools', url: 'https://wago.tools' },
           { id: 'combat-logs', name: 'Warcraft Logs', url: 'https://www.warcraftlogs.com' },

@@ -19,6 +19,19 @@ const manifestSchema = z.object({
   generatedAt: z.string().datetime(),
   locales: z.array(z.string().min(2)),
   specIds: z.array(z.number().int().positive()).min(1),
+  frequencySources: z
+    .record(
+      z.string(),
+      z.object({
+        encounterId: z.number().int().positive(),
+        encounterName: z.string().min(1),
+        metric: z.enum(['dps', 'hps']),
+        samples: z.array(
+          z.object({ reportId: z.string().min(1), fightId: z.number().int().positive() }),
+        ),
+      }),
+    )
+    .optional(),
   sources: z
     .array(
       z.object({

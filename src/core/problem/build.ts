@@ -15,24 +15,19 @@ import { enumerateSlots } from '@/core/scoring/slots'
 import { scoreImportance } from '@/core/scoring/importance'
 
 const APL_SYNERGY_CAP = 0.6
-const SEMANTIC_SYNERGY = 0.4
-const VARIANT_SYNERGY = 2.2
+const VARIANT_SYNERGY = 3.2
 const FOCUS_SET_SYNERGY = 0.5
 const TRINKET_DEFENSIVE_SYNERGY = 0.5
 
-const SEMANTIC_GROUPS: AbilityCategory[][] = [
-  ['cc-hard'],
-  ['cc-soft'],
-  ['external'],
-  ['heal-utility'],
-  ['dispel'],
-  ['mobility'],
-  ['defensive-major', 'defensive-minor'],
-  ['cooldown-burst'],
-  ['utility'],
+const SEMANTIC_GROUPS: Array<{ categories: AbilityCategory[]; weight: number }> = [
+  { categories: ['mobility'], weight: 0.9 },
+  { categories: ['defensive-major', 'defensive-minor'], weight: 0.8 },
+  { categories: ['cc-hard', 'cc-soft'], weight: 0.75 },
+  { categories: ['interrupt', 'dispel'], weight: 0.75 },
+  { categories: ['external', 'heal-utility'], weight: 0.7 },
+  { categories: ['cooldown-burst'], weight: 0.65 },
+  { categories: ['utility'], weight: 0.55 },
 ]
-
-const MAINTENANCE_SYNERGY = 0.55
 
 export interface ProblemInput {
   abilities: Ability[]
@@ -109,8 +104,7 @@ function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[]
   }
 
   for (const group of SEMANTIC_GROUPS) {
-    const groupSet = new Set(group)
-    const weight = group.includes('utility') ? MAINTENANCE_SYNERGY : SEMANTIC_SYNERGY
+    const groupSet = new Set(group.categories)
     const members = abilities.filter(
       (ability) => groupSet.has(ability.category) && ability.variantKind === 'base',
     )
@@ -118,7 +112,7 @@ function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[]
       for (let j = i + 1; j < members.length; j++) {
         const a = members[i]
         const b = members[j]
-        if (a && b) addEdge(a.id, b.id, weight)
+        if (a && b) addEdge(a.id, b.id, group.weight)
       }
     }
   }

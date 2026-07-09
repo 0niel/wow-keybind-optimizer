@@ -6,6 +6,7 @@ import type {
   SpellMetaShard,
 } from '@/core/model/snapshot'
 import type { Ability, ArenaTargetScheme, GameMode } from '@/core/model/ability'
+import { isMaintenanceAura } from '@/core/model/usage'
 
 export interface ExtractionInput {
   spec: SpecSnapshot
@@ -216,6 +217,8 @@ function buildAbility(
     reactivity: meta.reactivity,
     panic: meta.panic,
     offGcd: meta.gcd === 'off',
+    auraDurationMs: meta.auraDurationMs,
+    maintenance: meta.maintenance,
     targeting: meta.targeting,
     sourceNodeIds,
     importance: 0,
@@ -229,6 +232,7 @@ function resolveFrequency(
   spec: SpecSnapshot,
   mode: GameMode,
 ): number {
+  if (meta.maintenance && isMaintenanceAura(meta.auraDurationMs)) return 0.01
   const record = spec.frequencyBySpellId[String(spellId)]
   if (mode === 'raid' && record?.cpm !== null && record?.cpm !== undefined) {
     return Math.min(1, record.cpm / CPM_CAP)

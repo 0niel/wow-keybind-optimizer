@@ -4,7 +4,9 @@ import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import type { SpellMetaShard } from '@/core/model/snapshot'
 import type { LuaBindPlacement } from '@/lib/exports'
-import { BAR_SIZE } from '@/lib/placement'
+import { BAR_SIZE, visualClusterForCategory } from '@/lib/placement'
+import type { VisualCluster } from '@/lib/placement'
+import { isMaintenanceAura } from '@/core/model/usage'
 import { abilityIconName, spellIconUrl } from '@/lib/data'
 
 interface BarCell {
@@ -12,6 +14,8 @@ interface BarCell {
   name: string
   hotkey: string
   category: string
+  cluster: VisualCluster
+  maintenance: boolean
   variant?: string
   mouseover?: boolean
 }
@@ -89,7 +93,9 @@ function BarButton({ cell }: { cell: BarCell | undefined }) {
             fontWeight: 800,
             fontFamily: 'monospace',
             color: '#fff',
-            textShadow: '0 1px 2px #000, 0 0 4px #000',
+            background: 'rgba(0,0,0,0.78)',
+            borderRadius: 3,
+            padding: '0 2px',
             letterSpacing: '-0.02em',
           }}
         >
@@ -172,6 +178,9 @@ export function GameBarsPreview({
         name: bind.name,
         hotkey: shortWowKey(entry.key),
         category: entry.category ?? bind.ability.category,
+        cluster: visualClusterForCategory(bind.ability.category),
+        maintenance:
+          bind.ability.maintenance === true && isMaintenanceAura(bind.ability.auraDurationMs),
         variant: entry.variant,
         mouseover: entry.mouseover,
       }
@@ -194,10 +203,23 @@ export function GameBarsPreview({
     }
   }, [placements, spellMeta])
 
-  const barLabel = (bar: number): string => {
+  const physicalBarLabel = (bar: number): string => {
     if (bar === 0) return t('main')
     if (bar <= 4) return t(`bar${bar + 1}` as 'bar2' | 'bar3' | 'bar4' | 'bar5')
     return t('extra', { n: bar + 1 })
+  }
+
+  const barLabel = (bar: number): string => {
+    const cells = (cellsByBar.get(bar) ?? []).filter((cell): cell is BarCell => cell !== undefined)
+    if (cells.length === 0) return physicalBarLabel(bar)
+    const maintenanceCount = cells.filter((cell) => cell.maintenance).length
+    let group: VisualCluster = maintenanceCount > cells.length / 2 ? 'maintenance' : 'utility'
+    if (group !== 'maintenance') {
+      const counts = new Map<VisualCluster, number>()
+      for (const cell of cells) counts.set(cell.cluster, (counts.get(cell.cluster) ?? 0) + 1)
+      group = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'utility'
+    }
+    return `${t(`groups.${group}`)} · ${physicalBarLabel(bar)}`
   }
 
   const bottomBars = [2, 1, 0].filter((bar) => cellsByBar.has(bar))
@@ -233,6 +255,9 @@ export function GameBarsPreview({
           )}
         </div>
       </div>
+      <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-soft)' }}>
+        {t('layoutNote')}
+      </p>
       {keysOnly.length > 0 && (
         <div style={{ marginTop: 12 }}>
           <div className="label">{t('keysOnly')}</div>

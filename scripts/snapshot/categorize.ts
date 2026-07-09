@@ -35,6 +35,7 @@ export function categorize(
       category: traits.category,
       reactivity: traits.reactivity ?? 0,
       panic: traits.panic ?? 0,
+      ...(traits.maintenance ? { maintenance: true } : {}),
       ...(traits.targeting ? { targeting: traits.targeting } : {}),
     }
   }
@@ -43,6 +44,13 @@ export function categorize(
   }
   if (meta.cooldownMs >= 45_000 && meta.targeting === 'enemy') {
     return { category: 'cooldown-burst', reactivity: 0, panic: 0 }
+  }
+  if (meta.targeting === 'ally') {
+    return {
+      category: meta.cooldownMs >= 30_000 ? 'external' : 'heal-utility',
+      reactivity: meta.cooldownMs >= 30_000 ? 0.75 : 0.35,
+      panic: 0,
+    }
   }
   return { category: 'rotational-core', reactivity: 0, panic: 0 }
 }

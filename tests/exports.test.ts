@@ -19,6 +19,7 @@ import {
   buildAddonProfile,
   buildExportBinds,
   buildLuaBindEntries,
+  buildLuaBindPlacements,
   interfaceVersionFromBuild,
   macroBody,
   macroName,
@@ -173,6 +174,18 @@ describe('lua addon generator', () => {
   it.each(layouts)('emits syntactically valid Lua 5.1 for %s', (_label, mode, scheme, specId) => {
     const layout = solveLayout(specId, mode, scheme)
     const lua = renderLuaAddon([toProfile(layout, mode)], 'KeybindOptimizer')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('resolves planned slots by stable bar identity when the paged main bar is unavailable', () => {
+    const layout = solveLayout(263, 'mythic-plus', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
+
+    expect(lua).toContain('{ id = 0, base = 0')
+    expect(lua).toContain('bar = bar.id, column = i - 1')
+    expect(lua).toContain('plannedTargetIndex(bind, targets)')
+    expect(lua).toContain('target.bar == plannedBar and target.column == plannedColumn')
+    expect(lua).not.toContain('plannedTargetIndex(bind, barCount)')
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 
@@ -409,38 +422,54 @@ describe('lua addon generator', () => {
     if (focusBind) expect(macroBody(focusBind)).toBe('/focus [@mouseover,exists][]')
   })
 
-  it('packs bottom bars densely with no interior gaps, layers on separate bars', () => {
-    const layout = solveLayout(263, 'arena', 'arena123')
-    const entries = buildLuaBindEntries(layout.binds)
-    const digitOrder: Record<string, number> = {
-      '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '0': 9, '-': 10, '=': 11,
-    }
-    for (const entry of entries) {
-      if (entry.command !== undefined) {
-        expect(entry.slot).toBeUndefined()
-      } else {
-        expect(entry.slot).toBeDefined()
+  it('keeps physical key families contiguous on bars without slot collisions', () => {
+    for (const mode of ['raid', 'mythic-plus', 'arena'] as const) {
+      const layout = solveLayout(263, mode, mode === 'arena' ? 'arena123' : 'focus')
+      const entries = buildLuaBindEntries(layout.binds)
+      for (const entry of entries) {
+        if (entry.command !== undefined) {
+          expect(entry.slot).toBeUndefined()
+        } else {
+          expect(entry.slot).toBeDefined()
+        }
       }
-    }
-    const baseDigits = entries
-      .filter((entry) => entry.slot !== undefined && /^[0-9=-]$/.test(entry.key))
-      .sort((a, b) => (digitOrder[a.key] ?? 0) - (digitOrder[b.key] ?? 0))
-    baseDigits.forEach((entry, index) => expect(entry.slot).toBe(index))
 
-    const columnsByBar = new Map<number, number[]>()
-    for (const entry of entries) {
-      if (entry.slot === undefined) continue
-      const bar = Math.floor(entry.slot / 12)
-      const columns = columnsByBar.get(bar) ?? []
-      columns.push(entry.slot % 12)
-      columnsByBar.set(bar, columns)
+      const slotsByKey = new Map<string, number[]>()
+      layout.binds.forEach((bind, index) => {
+        const slot = entries[index]?.slot
+        if (slot === undefined) return
+        const slots = slotsByKey.get(bind.slot.keyId) ?? []
+        slots.push(slot)
+        slotsByKey.set(bind.slot.keyId, slots)
+      })
+      for (const slots of slotsByKey.values()) {
+        if (slots.length < 2) continue
+        const sorted = [...slots].sort((a, b) => a - b)
+        expect(new Set(sorted.map((slot) => Math.floor(slot / 12))).size).toBe(1)
+        sorted.slice(1).forEach((slot, index) => expect(slot).toBe((sorted[index] ?? 0) + 1))
+      }
+      const slots = entries.map((entry) => entry.slot).filter((slot) => slot !== undefined)
+      expect(new Set(slots).size).toBe(slots.length)
     }
-    for (const columns of columnsByBar.values()) {
-      const sorted = [...columns].sort((a, b) => a - b)
-      sorted.forEach((column, index) => expect(column).toBe(index))
+  })
+
+  it('moves real one-hour shaman buff families to side bars', () => {
+    const layout = solveLayout(263, 'mythic-plus', 'focus')
+    const placements = buildLuaBindPlacements(layout.binds)
+    const maintenance = placements.filter(({ bind }) => bind.ability.maintenance)
+
+    expect(maintenance.map(({ bind }) => bind.name).sort()).toEqual(
+      expect.arrayContaining(['Flametongue Weapon', 'Lightning Shield', 'Windfury Weapon']),
+    )
+    for (const { entry } of maintenance) {
+      expect(entry.slot).toBeDefined()
+      expect([3, 4]).toContain(Math.floor((entry.slot ?? 0) / 12))
     }
-    const slots = entries.map((entry) => entry.slot).filter((slot) => slot !== undefined)
-    expect(new Set(slots).size).toBe(slots.length)
+    const maintenanceKeys = new Set(maintenance.map(({ bind }) => bind.slot.keyId))
+    for (const { bind, entry } of placements) {
+      if (entry.slot === undefined || ![3, 4].includes(Math.floor(entry.slot / 12))) continue
+      expect(maintenanceKeys.has(bind.slot.keyId)).toBe(true)
+    }
   })
 
   it('keeps manual macro bodies within game limits', () => {

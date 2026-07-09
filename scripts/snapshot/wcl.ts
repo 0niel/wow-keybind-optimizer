@@ -7,6 +7,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000
 export interface WclSpecCasts {
   cpmBySpellId: Map<number, number>
   sampledFights: number
+  samples: Array<{ reportId: string; fightId: number }>
 }
 
 interface WclZone {
@@ -87,6 +88,7 @@ export class WclV1Client {
       { cacheKey: `wcl-rank-${encounterId}-${wclClassId}-${wclSpecId}-${metric}`, minIntervalMs: 400, maxAgeMs: SIX_HOURS },
     )
     const totalCpm = new Map<number, number>()
+    const samples: Array<{ reportId: string; fightId: number }> = []
     let sampled = 0
     for (const ranking of rankings.rankings.slice(0, sampleSize)) {
       try {
@@ -113,6 +115,7 @@ export class WclV1Client {
         for (const entry of table.entries) {
           totalCpm.set(entry.guid, (totalCpm.get(entry.guid) ?? 0) + entry.total / minutes)
         }
+        samples.push({ reportId: ranking.reportID, fightId: ranking.fightID })
         sampled++
       } catch {
         continue
@@ -124,6 +127,6 @@ export class WclV1Client {
         cpmBySpellId.set(spellId, sum / sampled)
       }
     }
-    return { cpmBySpellId, sampledFights: sampled }
+    return { cpmBySpellId, sampledFights: sampled, samples }
   }
 }

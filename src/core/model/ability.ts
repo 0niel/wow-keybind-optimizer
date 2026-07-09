@@ -18,6 +18,8 @@ export interface Ability {
   reactivity: number
   panic: number
   offGcd: boolean
+  auraDurationMs?: number
+  maintenance?: boolean
   targeting: Targeting
   sourceNodeIds: number[]
   importance: number

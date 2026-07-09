@@ -19,6 +19,7 @@ export interface CuratedAbilityTraits {
   category: AbilityCategory
   reactivity?: number
   panic?: number
+  maintenance?: boolean
   targeting?: 'self' | 'enemy' | 'ally' | 'ground' | 'none'
 }
 

@@ -1,0 +1,335 @@
+[
+ {
+  "id": 1,
+  "slug": "human",
+  "faction": "alliance",
+  "names": {
+   "en": "Human",
+   "ru": "Человек"
+  },
+  "racialSpellIds": [
+   59752
+  ]
+ },
+ {
+  "id": 2,
+  "slug": "orc",
+  "faction": "horde",
+  "names": {
+   "en": "Orc",
+   "ru": "Орк"
+  },
+  "racialSpellIds": [
+   20572,
+   33702,
+   33697
+  ]
+ },
+ {
+  "id": 3,
+  "slug": "dwarf",
+  "faction": "alliance",
+  "names": {
+   "en": "Dwarf",
+   "ru": "Дворф"
+  },
+  "racialSpellIds": [
+   20594
+  ]
+ },
+ {
+  "id": 4,
+  "slug": "night-elf",
+  "faction": "alliance",
+  "names": {
+   "en": "Night Elf",
+   "ru": "Ночной эльф"
+  },
+  "racialSpellIds": [
+   58984
+  ]
+ },
+ {
+  "id": 5,
+  "slug": "undead",
+  "faction": "horde",
+  "names": {
+   "en": "Undead",
+   "ru": "Нежить"
+  },
+  "racialSpellIds": [
+   7744,
+   20577
+  ]
+ },
+ {
+  "id": 6,
+  "slug": "tauren",
+  "faction": "horde",
+  "names": {
+   "en": "Tauren",
+   "ru": "Таурен"
+  },
+  "racialSpellIds": [
+   20549
+  ]
+ },
+ {
+  "id": 7,
+  "slug": "gnome",
+  "faction": "alliance",
+  "names": {
+   "en": "Gnome",
+   "ru": "Гном"
+  },
+  "racialSpellIds": [
+   20589
+  ]
+ },
+ {
+  "id": 8,
+  "slug": "troll",
+  "faction": "horde",
+  "names": {
+   "en": "Troll",
+   "ru": "Тролль"
+  },
+  "racialSpellIds": [
+   26297
+  ]
+ },
+ {
+  "id": 9,
+  "slug": "goblin",
+  "faction": "horde",
+  "names": {
+   "en": "Goblin",
+   "ru": "Гоблин"
+  },
+  "racialSpellIds": [
+   69041,
+   69070
+  ]
+ },
+ {
+  "id": 10,
+  "slug": "blood-elf",
+  "faction": "horde",
+  "names": {
+   "en": "Blood Elf",
+   "ru": "Эльф крови"
+  },
+  "racialSpellIds": [
+   25046,
+   50613,
+   69179,
+   80483,
+   202719,
+   28730,
+   155145,
+   129597,
+   232633
+  ]
+ },
+ {
+  "id": 11,
+  "slug": "draenei",
+  "faction": "alliance",
+  "names": {
+   "en": "Draenei",
+   "ru": "Дреней"
+  },
+  "racialSpellIds": [
+   28880,
+   59545,
+   59543,
+   59548,
+   59542,
+   59544,
+   59547,
+   121093,
+   370626,
+   416250
+  ]
+ },
+ {
+  "id": 22,
+  "slug": "worgen",
+  "faction": "alliance",
+  "names": {
+   "en": "Worgen",
+   "ru": "Ворген"
+  },
+  "racialSpellIds": [
+   68992,
+   406087
+  ]
+ },
+ {
+  "id": 24,
+  "slug": "pandaren",
+  "faction": "neutral",
+  "names": {
+   "en": "Pandaren",
+   "ru": "Пандарен"
+  },
+  "racialSpellIds": [
+   107079
+  ]
+ },
+ {
+  "id": 27,
+  "slug": "nightborne",
+  "faction": "horde",
+  "names": {
+   "en": "Nightborne",
+   "ru": "Ночнорожденный"
+  },
+  "racialSpellIds": [
+   260364,
+   255661
+  ]
+ },
+ {
+  "id": 28,
+  "slug": "highmountain-tauren",
+  "faction": "horde",
+  "names": {
+   "en": "Highmountain Tauren",
+   "ru": "Таурен Крутогорья"
+  },
+  "racialSpellIds": [
+   255654
+  ]
+ },
+ {
+  "id": 29,
+  "slug": "void-elf",
+  "faction": "alliance",
+  "names": {
+   "en": "Void Elf",
+   "ru": "Эльф Бездны"
+  },
+  "racialSpellIds": [
+   256948
+  ]
+ },
+ {
+  "id": 30,
+  "slug": "lightforged-draenei",
+  "faction": "alliance",
+  "names": {
+   "en": "Lightforged Draenei",
+   "ru": "Озаренный дреней"
+  },
+  "racialSpellIds": [
+   255647
+  ]
+ },
+ {
+  "id": 31,
+  "slug": "zandalari-troll",
+  "faction": "horde",
+  "names": {
+   "en": "Zandalari Troll",
+   "ru": "Зандалар"
+  },
+  "racialSpellIds": [
+   281954,
+   291944,
+   292752
+  ]
+ },
+ {
+  "id": 32,
+  "slug": "kul-tiran",
+  "faction": "alliance",
+  "names": {
+   "en": "Kul Tiran",
+   "ru": "Култирасец"
+  },
+  "racialSpellIds": [
+   287712
+  ]
+ },
+ {
+  "id": 34,
+  "slug": "dark-iron-dwarf",
+  "faction": "alliance",
+  "names": {
+   "en": "Dark Iron Dwarf",
+   "ru": "Дворф из клана Черного Железа"
+  },
+  "racialSpellIds": [
+   265221
+  ]
+ },
+ {
+  "id": 35,
+  "slug": "vulpera",
+  "faction": "horde",
+  "names": {
+   "en": "Vulpera",
+   "ru": "Вульпера"
+  },
+  "racialSpellIds": [
+   312411,
+   312425
+  ]
+ },
+ {
+  "id": 36,
+  "slug": "mag-har-orc",
+  "faction": "horde",
+  "names": {
+   "en": "Mag'har Orc",
+   "ru": "Маг'хар"
+  },
+  "racialSpellIds": [
+   274738
+  ]
+ },
+ {
+  "id": 52,
+  "slug": "dracthyr",
+  "faction": "neutral",
+  "names": {
+   "en": "Dracthyr",
+   "ru": "Драктир"
+  },
+  "racialSpellIds": [
+   369536,
+   357214,
+   358733,
+   376743,
+   376744,
+   403216,
+   1289789
+  ]
+ },
+ {
+  "id": 84,
+  "slug": "earthen",
+  "faction": "neutral",
+  "names": {
+   "en": "Earthen",
+   "ru": "Земельник"
+  },
+  "racialSpellIds": [
+   436344,
+   461063
+  ]
+ },
+ {
+  "id": 86,
+  "slug": "haranir",
+  "faction": "neutral",
+  "names": {
+   "en": "Haranir",
+   "ru": "Харанир"
+  },
+  "racialSpellIds": [
+   1237885
+  ]
+ }
+]

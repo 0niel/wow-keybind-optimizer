@@ -2,6 +2,7 @@ import { asInt } from '../lib/csv'
 import { loadTable } from '../lib/wago'
 import type { WagoSource } from '../lib/wago'
 import type { SpellMetaRecord, Targeting } from '../../src/core/model/snapshot'
+import { isMaintenanceAura } from '../../src/core/model/usage'
 
 const PASSIVE_ATTRIBUTE_BIT = 0x40
 const TARGET_ALLY = 21
@@ -40,26 +41,35 @@ export async function buildSpellUniverse(
   source: WagoSource,
   locales: string[],
 ): Promise<SpellUniverse> {
-  const [misc, cooldowns, categories, category, ranges, effects, manifest] = await Promise.all([
+  const [misc, cooldowns, categories, category, ranges, effects, durations, manifest] = await Promise.all([
     loadTable(source, 'SpellMisc'),
     loadTable(source, 'SpellCooldowns'),
     loadTable(source, 'SpellCategories'),
     loadTable(source, 'SpellCategory'),
     loadTable(source, 'SpellRange'),
     loadTable(source, 'SpellEffect'),
+    loadTable(source, 'SpellDuration'),
     loadTable(source, 'ManifestInterfaceData'),
   ])
 
   const implicitTargetsBySpellId = new Map<number, number[]>()
+  const auraSpellIds = new Set<number>()
   for (const row of effects) {
     if (asInt(row, 'DifficultyID') !== 0) continue
     const spellId = asInt(row, 'SpellID')
+    if (asInt(row, 'EffectAura') > 0) auraSpellIds.add(spellId)
     const targets = implicitTargetsBySpellId.get(spellId) ?? []
     const target0 = asInt(row, 'ImplicitTarget_0')
     const target1 = asInt(row, 'ImplicitTarget_1')
     if (target0 > 0) targets.push(target0)
     if (target1 > 0) targets.push(target1)
     implicitTargetsBySpellId.set(spellId, targets)
+  }
+
+  const durationMsById = new Map<number, number>()
+  for (const row of durations) {
+    const durationMs = asInt(row, 'Duration')
+    if (durationMs > 0) durationMsById.set(asInt(row, 'ID'), durationMs)
   }
 
   const iconByFileDataId = new Map<number, string>()
@@ -123,12 +133,16 @@ export async function buildSpellUniverse(
     const cooldown = cooldownBySpellId.get(spellId) ?? { recoveryMs: 0, gcd: 'normal' as const }
     const charges = chargeInfoBySpellId.get(spellId)
     const targeting = classifySpellTargeting(implicitTargetsBySpellId.get(spellId) ?? [], range)
+    const auraDurationMs = auraSpellIds.has(spellId)
+      ? durationMsById.get(asInt(row, 'DurationIndex'))
+      : undefined
     metaBySpellId.set(spellId, {
       id: spellId,
       icon: iconByFileDataId.get(asInt(row, 'SpellIconFileDataID')) ?? 'inv_misc_questionmark',
       cooldownMs: charges ? charges.recoveryMs : cooldown.recoveryMs,
       chargeCooldownMs: charges?.recoveryMs ?? 0,
       charges: charges?.maxCharges ?? 0,
+      ...(auraDurationMs !== undefined ? { auraDurationMs } : {}),
       gcd: cooldown.gcd,
       rangeYd: Math.max(range.enemy, range.ally),
       targeting,
@@ -159,6 +173,22 @@ export async function buildSpellUniverse(
     const existing = spellIdsByNormalizedName.get(normalized) ?? []
     existing.push(spellId)
     spellIdsByNormalizedName.set(normalized, existing)
+  }
+
+  // Some player-facing imbue/buff buttons and their resulting aura use different
+  // spell IDs (for example Windfury Weapon). Propagate only maintenance-length
+  // durations across an exact canonical-name group; short combat auras remain
+  // attached to their original spell ID.
+  for (const spellIds of spellIdsByNormalizedName.values()) {
+    const maintenanceDurationMs = Math.max(
+      0,
+      ...spellIds.map((spellId) => metaBySpellId.get(spellId)?.auraDurationMs ?? 0),
+    )
+    if (!isMaintenanceAura(maintenanceDurationMs)) continue
+    for (const spellId of spellIds) {
+      const meta = metaBySpellId.get(spellId)
+      if (meta && meta.auraDurationMs === undefined) meta.auraDurationMs = maintenanceDurationMs
+    }
   }
 
   return {
