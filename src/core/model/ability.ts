@@ -70,7 +70,7 @@ export interface ObjectiveWeights {
 export const DEFAULT_OBJECTIVE_WEIGHTS: ObjectiveWeights = {
   quadratic: 0.25,
   arenaCluster: 0.2,
-  switchCost: 0.15,
+  switchCost: 0.3,
   rotationFlow: 0.35,
   reactiveSlotThreshold: 0.75,
   frequentSlotTierFloor: 0.55,

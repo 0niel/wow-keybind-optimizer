@@ -8,7 +8,7 @@ import type { TextShard } from '@/lib/data'
 import { spellIconUrl } from '@/lib/data'
 import { formatSpellDescription } from '@/lib/format'
 import { SpellTooltip } from './SpellTooltip'
-import type { SpellTooltipInfo } from './SpellTooltip'
+import type { SpellTooltipInfo, SpellTooltipPill } from './SpellTooltip'
 
 interface Props {
   spec: SpecSnapshot
@@ -32,7 +32,17 @@ export function TalentTreeView({
   text,
 }: Props) {
   const t = useTranslations('tree')
+  const tCat = useTranslations('categories')
   const [hover, setHover] = useState<SpellTooltipInfo | null>(null)
+
+  const formatCooldown = (ms: number): string => {
+    if (ms >= 60_000) {
+      const minutes = Math.round((ms / 60_000) * 10) / 10
+      return t('minutes', { value: minutes })
+    }
+    const seconds = Math.round((ms / 1_000) * 10) / 10
+    return t('seconds', { value: seconds })
+  }
   const selectedByNodeId = useMemo(
     () => new Map(selections.map((selection) => [selection.nodeId, selection])),
     [selections],
@@ -123,13 +133,29 @@ export function TalentTreeView({
               )
             }
 
+            const meta = entry ? spellMeta[String(entry.spellId)] : undefined
             const showHover = (event: { clientX: number; clientY: number }) => {
+              const pills: SpellTooltipPill[] = []
+              if (meta) {
+                pills.push({ label: t('active'), color: 'var(--cat-defensive-major)' })
+                pills.push({ label: tCat(meta.category), color: `var(--cat-${meta.category})` })
+                if (meta.cooldownMs > 0) {
+                  pills.push({ label: t('cooldown', { value: formatCooldown(meta.cooldownMs) }) })
+                }
+              } else {
+                pills.push({ label: t('passive') })
+              }
+              if (node.maxRanks > 1) {
+                pills.push({ label: t('ranks', { current: selection?.ranks ?? 0, max: node.maxRanks }) })
+              }
+              if (node.kind === 'choice') pills.push({ label: t('choiceNode') })
               setHover({
                 name,
                 description: formatSpellDescription(text.spells[String(entry?.spellId)]?.description ?? ''),
                 icon,
                 accent: sectionColor(node),
                 subtitle: t(`section.${node.section}`),
+                pills,
                 x: event.clientX,
                 y: event.clientY,
               })

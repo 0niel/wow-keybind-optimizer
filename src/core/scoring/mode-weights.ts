@@ -18,4 +18,5 @@ export const MODE_WEIGHTS: Record<AbilityCategory, ModeWeightRow> = {
   mobility: { raid: 0.6, 'mythic-plus': 0.8, arena: 1.2, rbg: 1.3, battleground: 1.2 },
   utility: { raid: 0.35, 'mythic-plus': 0.55, arena: 0.8, rbg: 0.85, battleground: 0.75 },
   trinket: { raid: 0.5, 'mythic-plus': 0.7, arena: 1.35, rbg: 1.15, battleground: 1.05 },
+  targeting: { raid: 0, 'mythic-plus': 0, arena: 1.25, rbg: 0.9, battleground: 0.8 },
 }

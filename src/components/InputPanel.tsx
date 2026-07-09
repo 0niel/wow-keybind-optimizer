@@ -7,6 +7,7 @@ import type { ClassRecord, RaceRecord, SpecSnapshot, SpellMetaShard } from '@/co
 import type { GameMode } from '@/core/model/ability'
 import type { Modifier } from '@/core/model/hardware'
 import type { OptimizerInputs } from '@/state/inputs'
+import { effectiveTargetBinds } from '@/state/inputs'
 import type { TextShard } from '@/lib/data'
 import { spellIconUrl } from '@/lib/data'
 import { SegmentedControl, ChipToggle } from './controls'
@@ -124,7 +125,7 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
             onChange={(mode) => update({ mode })}
           />
           {inputs.mode === 'arena' && (
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <SegmentedControl<'focus' | 'arena123'>
                 options={[
                   { value: 'focus', label: t('targetScheme.focus') },
@@ -133,6 +134,13 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
                 value={inputs.arenaTargetScheme}
                 onChange={(arenaTargetScheme) => update({ arenaTargetScheme })}
               />
+              <ChipToggle
+                active={effectiveTargetBinds(inputs)}
+                onClick={() => update({ arenaTargetBinds: !effectiveTargetBinds(inputs) })}
+                title={t('targetBindsHint')}
+              >
+                {t('targetBinds')}
+              </ChipToggle>
             </div>
           )}
         </div>

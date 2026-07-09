@@ -119,31 +119,47 @@ async function main() {
 
     const nodesWithSection = assignSections(traits.nodes)
 
-    const talentGrantedNames = new Set<string>()
+    const treeGrantedNames = new Set<string>()
     for (const node of nodesWithSection) {
       for (const entry of node.entries) {
         if (entry.spellId === 0) continue
         const entryName = enNames.get(entry.spellId)
-        if (entryName) talentGrantedNames.add(normalizeSpellName(entryName))
+        if (entryName) treeGrantedNames.add(normalizeSpellName(entryName))
       }
     }
-    for (const spell of spellbook.specSpellsBySpecId.get(specId) ?? []) {
+
+    const specSpells = spellbook.specSpellsBySpecId.get(specId) ?? []
+    const specGrantedNames = new Set<string>()
+    for (const spell of specSpells) {
       const spellName = enNames.get(spell.spellId)
-      if (spellName) talentGrantedNames.add(normalizeSpellName(spellName))
+      if (spellName) specGrantedNames.add(normalizeSpellName(spellName))
     }
 
-    const baseline: BaselineSpellRecord[] = []
+    const rawBaseline: BaselineSpellRecord[] = []
     const seenBaselineNames = new Set<string>()
+    const overriddenBySpecSpells = new Set<number>()
+    for (const spell of specSpells) {
+      if (spell.overridesSpellId > 0) overriddenBySpecSpells.add(spell.overridesSpellId)
+      const name = enNames.get(spell.spellId) ?? ''
+      if (name === '' || isDenied(name, curated)) continue
+      if (!universe.metaBySpellId.has(spell.spellId)) continue
+      const normalizedName = normalizeSpellName(name)
+      if (treeGrantedNames.has(normalizedName)) continue
+      if (seenBaselineNames.has(normalizedName)) continue
+      seenBaselineNames.add(normalizedName)
+      rawBaseline.push({ spellId: spell.spellId })
+    }
     for (const record of spellbook.baselineByClassId.get(classId) ?? []) {
       const name = enNames.get(record.spellId) ?? ''
       if (name === '' || isDenied(name, curated)) continue
       if (!universe.metaBySpellId.has(record.spellId)) continue
       const normalizedName = normalizeSpellName(name)
       if (seenBaselineNames.has(normalizedName)) continue
-      if (talentGrantedNames.has(normalizedName)) continue
+      if (treeGrantedNames.has(normalizedName)) continue
+      if (specGrantedNames.has(normalizedName)) continue
       seenBaselineNames.add(normalizedName)
       if (record.raceMaskLow === 0n && record.raceMaskHigh === 0n) {
-        baseline.push({ spellId: record.spellId })
+        rawBaseline.push({ spellId: record.spellId })
         continue
       }
       const raceIds = races
@@ -154,10 +170,10 @@ async function main() {
             : (record.raceMaskHigh & (1n << (bit - 64n))) !== 0n
         })
         .map((race) => race.id)
-      if (raceIds.length > 0) baseline.push({ spellId: record.spellId, raceIds })
+      if (raceIds.length > 0) rawBaseline.push({ spellId: record.spellId, raceIds })
     }
+    const baseline = rawBaseline.filter((record) => !overriddenBySpecSpells.has(record.spellId))
 
-    const specSpells = spellbook.specSpellsBySpecId.get(specId) ?? []
     const specPvpTalents = pvpTalents.get(specId) ?? []
 
     const poolSpellIds = new Set<number>()
@@ -327,9 +343,18 @@ async function main() {
     }
     for (const spellId of nameOnlySpellIds) {
       if (spells[String(spellId)] !== undefined) continue
-      const name = names.get(spellId) ?? ''
+      let name = names.get(spellId) ?? ''
+      let description = descriptions.get(spellId) ?? ''
+      if (!options.skipWowhead) {
+        const wowhead = await fetchWowheadSpell(spellId, locale)
+        if (wowhead?.name) name = wowhead.name
+        if (wowhead?.description) {
+          description = wowhead.description
+          wowheadHits++
+        }
+      }
       if (name === '') continue
-      spells[String(spellId)] = { name, description: descriptions.get(spellId) ?? '' }
+      spells[String(spellId)] = { name, description }
     }
     const subTreeNames: Record<string, string> = {}
     for (const snapshot of specSnapshots) {

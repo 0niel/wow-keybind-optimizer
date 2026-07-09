@@ -34,6 +34,7 @@
   --cat-mobility: #85cc55;
   --cat-utility: #9aa0af;
   --cat-trinket: #e086ad;
+  --cat-targeting: #e07a7a;
 
   --code-keyword: #b45cc0;
   --code-string: #3f8f5f;
@@ -70,6 +71,7 @@
   --cat-mobility: #ace76a;
   --cat-utility: #aab2c4;
   --cat-trinket: #ff9dc8;
+  --cat-targeting: #ff8f8f;
   --code-keyword: #d18cff;
   --code-string: #7fd39a;
   --code-number: #ffb066;
@@ -106,6 +108,7 @@
     --cat-mobility: #ace76a;
     --cat-utility: #aab2c4;
     --cat-trinket: #ff9dc8;
+    --cat-targeting: #ff8f8f;
   --code-keyword: #d18cff;
   --code-string: #7fd39a;
   --code-number: #ffb066;

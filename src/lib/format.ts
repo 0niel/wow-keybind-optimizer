@@ -23,13 +23,61 @@ function collapseScaling(input: string): string {
 
 const VALUE_PLACEHOLDER = 'X'
 
+function resolveConditionals(text: string): string {
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    const start = text.indexOf('$?', i)
+    if (start === -1) {
+      out += text.slice(i)
+      break
+    }
+    out += text.slice(i, start)
+    let cursor = start + 2
+    const branches: string[] = []
+    let valid = false
+    while (cursor < text.length) {
+      const open = text.indexOf('[', cursor)
+      if (open === -1) break
+      const condition = text.slice(cursor, open)
+      if (condition.includes(']') || condition.includes('\n') || condition.length > 60) break
+      let depth = 0
+      let close = open
+      for (; close < text.length; close++) {
+        if (text[close] === '[') depth++
+        else if (text[close] === ']') {
+          depth--
+          if (depth === 0) break
+        }
+      }
+      if (close >= text.length) break
+      branches.push(text.slice(open + 1, close))
+      cursor = close + 1
+      valid = true
+      if (text[cursor] === '?') {
+        cursor++
+        continue
+      }
+      if (text[cursor] === '[') continue
+      break
+    }
+    if (!valid) {
+      out += '$'
+      i = start + 1
+      continue
+    }
+    out += branches.find((branch) => branch.trim() !== '') ?? ''
+    i = cursor
+  }
+  return out
+}
+
 function stripGameVariables(text: string): string {
   let out = text
-  for (let pass = 0; pass < 4; pass++) {
+  for (let pass = 0; pass < 6; pass++) {
     const before = out
-    out = out
+    out = resolveConditionals(out)
       .replace(/\$@[a-z]+\d*/gi, '')
-      .replace(/\$\?[a-z]?\d*\s*\[([^\]]*)\]\s*\[[^\]]*\]/gi, '$1')
       .replace(/\$[lg]\s*([^:;$]*)(?::[^;$]*)+;/gi, '$1')
       .replace(/\$\{[^}]*\}/g, VALUE_PLACEHOLDER)
       .replace(/\$\d+[a-z]\d*/gi, VALUE_PLACEHOLDER)
@@ -38,8 +86,7 @@ function stripGameVariables(text: string): string {
     if (out === before) break
   }
   return out
-    .replace(/\$\?[a-z]?\d*\s*\[[^\]]*\]/gi, '')
-    .replace(/\$\?[a-z]?\d*/gi, '')
+    .replace(/\$\?[!&a-z0-9]*/gi, '')
     .replace(/\$+/g, '')
     .replace(/\bX\s*X\b/g, VALUE_PLACEHOLDER)
 }
@@ -60,7 +107,7 @@ function dedupeParagraphs(text: string): string {
 export function formatSpellDescription(input: string): string {
   if (!input) return ''
   return dedupeParagraphs(
-    stripGameVariables(collapseScaling(input))
+    collapseScaling(stripGameVariables(input))
       .replace(/\[\s*\]/g, '')
       .replace(/\(\s*\)/g, '')
       .replace(/\s*ед\.\s+урона/gi, ' урон')

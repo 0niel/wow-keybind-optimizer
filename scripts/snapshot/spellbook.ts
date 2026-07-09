@@ -3,6 +3,7 @@ import { loadTable } from '../lib/wago'
 import type { WagoSource } from '../lib/wago'
 
 const CLASS_SKILL_LINE_CATEGORY = 7
+const AUTO_LEARN_ACQUIRE_METHODS = new Set([2, 4])
 
 export interface BaselineSpell {
   spellId: number
@@ -59,6 +60,7 @@ export async function buildSpellbookData(source: WagoSource): Promise<SpellbookD
 
   const spellsBySkillLine = new Map<number, BaselineSpell[]>()
   for (const row of skillLineAbilities) {
+    if (!AUTO_LEARN_ACQUIRE_METHODS.has(asInt(row, 'AcquireMethod'))) continue
     const skillLine = asInt(row, 'SkillLine')
     const record: BaselineSpell = {
       spellId: asInt(row, 'Spell'),

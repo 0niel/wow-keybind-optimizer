@@ -76,10 +76,29 @@ export function spellIconUrl(icon: string): string {
 
 export const TRINKET_ICON = 'inv_misc_pocketwatch_01'
 export const PVP_TRINKET_ICON = 'inv_jewelry_trinketpvp_01'
+export const TARGET_ICON = 'ability_hunter_snipershot'
+export const FOCUS_ICON = 'ability_hunter_mastermarksman'
 
 export function abilityIconName(spellId: number, abilityId: string, metaIcon: string | undefined): string | null {
   if (spellId > 0) return metaIcon ?? null
   if (abilityId === 'trinket:pvp') return PVP_TRINKET_ICON
   if (abilityId.startsWith('trinket')) return TRINKET_ICON
+  if (abilityId.startsWith('target:arena')) return TARGET_ICON
+  if (abilityId === 'focus:set') return FOCUS_ICON
   return null
+}
+
+export interface ZeroSpellLabels {
+  trinket: string
+  pvpTrinket: string
+  targetArena: (n: number) => string
+  setFocus: string
+}
+
+export function zeroSpellLabel(abilityId: string, labels: ZeroSpellLabels): string {
+  if (abilityId === 'trinket:pvp') return labels.pvpTrinket
+  if (abilityId.startsWith('trinket')) return labels.trinket
+  if (abilityId.startsWith('target:arena')) return labels.targetArena(Number(abilityId.slice(-1)) || 1)
+  if (abilityId === 'focus:set') return labels.setFocus
+  return labels.trinket
 }

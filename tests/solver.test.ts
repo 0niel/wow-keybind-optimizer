@@ -159,6 +159,34 @@ describe('solver', () => {
     expect(elapsed).toBeLessThan(1000)
   })
 
+  it('keeps most shared abilities on preserved keys when re-solving another mode', () => {
+    const base = buildProblem('mythic-plus')
+    const baseResult = solveAssignment(base, {
+      strategyId: 'qap-annealing',
+      seed: 5,
+      moveBudget: 40_000,
+      hardware: DEFAULT_HARDWARE_CONFIG,
+    })
+    const preserved: Record<string, string> = {}
+    for (const bind of baseResult.assignments) preserved[bind.abilityId] = bind.slotId
+    const arenaProblem: AssignmentProblem = {
+      ...buildProblem('arena'),
+      constraints: { lockedBinds: {}, bannedSlotIds: [], preservedBinds: preserved },
+    }
+    const arenaResult = solveAssignment(arenaProblem, {
+      strategyId: 'qap-annealing',
+      seed: 5,
+      moveBudget: 40_000,
+      hardware: DEFAULT_HARDWARE_CONFIG,
+    })
+    const shared = arenaResult.assignments.filter(
+      (bind) => preserved[bind.abilityId] !== undefined,
+    )
+    expect(shared.length).toBeGreaterThan(10)
+    const kept = shared.filter((bind) => bind.slotId === preserved[bind.abilityId])
+    expect(kept.length / shared.length).toBeGreaterThanOrEqual(0.5)
+  })
+
   it('respects locked binds', () => {
     const base = buildProblem('mythic-plus')
     const interrupt = base.abilities.find((ability) => ability.category === 'interrupt')

@@ -29,6 +29,10 @@ export interface SolverRequest {
   constraints: UserConstraints
   seed: number
   strategyId: SolverStrategyId
+  spellNames?: Record<string, string>
+  preservedBinds?: Record<string, string>
+  anchorInterruptSlotId?: string
+  includeTargetBinds?: boolean
 }
 
 export interface LayoutVariant {
@@ -71,14 +75,32 @@ self.onmessage = (event: MessageEvent<SolverRequest>) => {
       pvpTalentIds: request.pvpTalentIds,
       mode: request.mode,
       arenaTargetScheme: request.arenaTargetScheme,
+      spellNames: request.spellNames,
+      includeTargetBinds: request.includeTargetBinds,
     })
+    const preservedBinds: Record<string, string> = { ...(request.preservedBinds ?? {}) }
+    if (request.anchorInterruptSlotId) {
+      const interrupt = abilities.find(
+        (ability) => ability.category === 'interrupt' && ability.variantKind === 'base',
+      )
+      if (interrupt && preservedBinds[interrupt.id] === undefined) {
+        preservedBinds[interrupt.id] = request.anchorInterruptSlotId
+      }
+    }
+    const abilityIds = new Set(abilities.map((ability) => ability.id))
+    for (const abilityId of Object.keys(preservedBinds)) {
+      if (!abilityIds.has(abilityId)) delete preservedBinds[abilityId]
+    }
     const problem = buildAssignmentProblem({
       abilities,
       spec: request.spec,
       hardware: request.hardware,
       mode: request.mode,
       arenaTargetScheme: request.arenaTargetScheme,
-      constraints: request.constraints,
+      constraints: {
+        ...request.constraints,
+        preservedBinds: { ...request.constraints.preservedBinds, ...preservedBinds },
+      },
     })
     const variantSeeds = [1, 2, 3, 4]
     const variants: LayoutVariant[] = []

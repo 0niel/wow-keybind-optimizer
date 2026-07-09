@@ -10,7 +10,13 @@ import { DEFAULT_HARDWARE_CONFIG } from '@/core/model/hardware'
 import type { ArenaTargetScheme, GameMode, SolveResult } from '@/core/model/ability'
 import type { Ability, Slot } from '@/core/model/ability'
 import type { RaceRecord, SpecSnapshot, SpellMetaShard } from '@/core/model/snapshot'
+import { CATEGORY_HEX } from '@/core/model/category-colors'
+import { ALL_CATEGORIES } from '@/core/model/ability-category'
+import type { ZeroSpellLabels } from '@/lib/data'
 import {
+  DEFAULT_ADDON_UI,
+  buildAddonKeyboard,
+  buildAddonProfile,
   buildExportBinds,
   buildLuaBindEntries,
   interfaceVersionFromBuild,
@@ -21,7 +27,7 @@ import {
   renderMacroList,
   renderPlainList,
 } from '@/lib/exports'
-import type { ExportBind } from '@/lib/exports'
+import type { AddonDecor, AddonProfile, ExportBind } from '@/lib/exports'
 import { buildZipBlob } from '@/lib/zip'
 import golden from './fixtures/decoder-golden.json'
 
@@ -56,6 +62,13 @@ async function readStoredZip(blob: Blob): Promise<Record<string, string>> {
 const BUILD = '12.0.7.68367'
 const DATA_ROOT = join(process.cwd(), 'public', 'data', 'retail', BUILD)
 
+const EN_LABELS: ZeroSpellLabels = {
+  trinket: 'Trinket',
+  pvpTrinket: 'PvP Trinket',
+  targetArena: (n: number) => `Target arena ${n}`,
+  setFocus: 'Set focus',
+}
+
 let spellMeta: SpellMetaShard
 let races: RaceRecord[]
 
@@ -70,7 +83,7 @@ function solveLayout(specId: number, mode: GameMode, scheme: ArenaTargetScheme):
   const spec = JSON.parse(
     readFileSync(join(DATA_ROOT, 'specs', `${specId}.json`), 'utf8'),
   ) as SpecSnapshot
-  const text = JSON.parse(readFileSync(join(DATA_ROOT, 'text', 'ru.json'), 'utf8')) as {
+  const text = JSON.parse(readFileSync(join(DATA_ROOT, 'text', 'en.json'), 'utf8')) as {
     spells: Record<string, { name: string; description: string }>
   }
   const goldenCase = golden.cases.find((c) => c.specId === specId)
@@ -107,10 +120,42 @@ function solveLayout(specId: number, mode: GameMode, scheme: ArenaTargetScheme):
     problem.abilities,
     problem.slots,
     text.spells,
-    'Trinket',
-    'PvP Trinket',
+    EN_LABELS,
   )
   return { binds, abilities: problem.abilities, slots: problem.slots, result }
+}
+
+function testDecor(): AddonDecor {
+  const categories = Object.fromEntries(ALL_CATEGORIES.map((category) => [category, category]))
+  return {
+    colorByCategory: CATEGORY_HEX,
+    ru: {
+      categories: {
+        ...categories,
+        interrupt: 'Прерывание',
+      } as AddonDecor['ru']['categories'],
+      ui: { ...DEFAULT_ADDON_UI, applyButton: 'Применить' },
+    },
+    en: {
+      categories: { ...categories, interrupt: 'Interrupt' } as AddonDecor['en']['categories'],
+      ui: { ...DEFAULT_ADDON_UI },
+    },
+  }
+}
+
+const TEST_KEYBOARD = buildAddonKeyboard(DEFAULT_HARDWARE_CONFIG)
+
+function toProfile(layout: SolvedLayout, mode: GameMode, decor?: AddonDecor): AddonProfile {
+  return buildAddonProfile(
+    `${mode}-v1`,
+    `${mode} - variant 1`,
+    mode,
+    263,
+    'SHAMAN',
+    layout.binds,
+    TEST_KEYBOARD,
+    decor,
+  )
 }
 
 beforeAll(() => {
@@ -119,224 +164,256 @@ beforeAll(() => {
 })
 
 describe('lua addon generator', () => {
-  const layouts: Array<[string, () => SolvedLayout]> = [
-    ['elemental mythic-plus', () => solveLayout(262, 'mythic-plus', 'focus')],
-    ['enhancement arena focus', () => solveLayout(263, 'arena', 'focus')],
-    ['enhancement arena123', () => solveLayout(263, 'arena', 'arena123')],
+  const layouts: Array<[string, GameMode, ArenaTargetScheme, number]> = [
+    ['elemental mythic-plus', 'mythic-plus', 'focus', 262],
+    ['enhancement arena focus', 'arena', 'focus', 263],
+    ['enhancement arena123', 'arena', 'arena123', 263],
   ]
 
-  it.each(layouts)('emits syntactically valid Lua 5.1 for %s', (_label, build) => {
-    const layout = build()
-    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
+  it.each(layouts)('emits syntactically valid Lua 5.1 for %s', (_label, mode, scheme, specId) => {
+    const layout = solveLayout(specId, mode, scheme)
+    const lua = renderLuaAddon([toProfile(layout, mode)], 'KeybindOptimizer')
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 
-  it('colors buttons and adds tooltip notes when decor is supplied', () => {
+  it('ships multiple profiles with stable hashes and per-character selection', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const profileA = toProfile(layout, 'arena')
+    const profileB = toProfile(layout, 'arena')
+    expect(profileA.hash).toBe(profileB.hash)
+    expect(profileA.hash).toMatch(/^[0-9a-f]{8}$/)
+    const lua = renderLuaAddon([profileA], 'KeybindOptimizer')
+    expect(lua).toContain('local PROFILES = {')
+    expect(lua).toContain(`hash = "${profileA.hash}"`)
+    expect(lua).toContain('spec = 263')
+    expect(lua).toContain('class = "SHAMAN"')
+    expect(lua).toContain('KeybindOptimizerCharDB')
+    expect(lua).toContain('currentProfile')
+    expect(lua).toContain('profileBySpec')
+    expect(lua).toContain('appliedBySpec')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('switches profiles per spec with class-wide fallback and never wipes state on trait events', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'arena')], 'KeybindOptimizer')
+    expect(lua).toContain('currentProfileIndex')
+    expect(lua).toContain('playerClassTag')
+    expect(lua).toContain('scheduleAuto')
+    expect(lua).toContain('msgSpecSwitched')
+    expect(lua).toContain('msgSpecAdapted')
+    expect(lua).not.toContain('appliedHash = nil')
+    expect(lua).toContain('invalidateApplied')
+    expect(lua).toContain('"^KO%d+$"')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('uses identity-verified spell pickup instead of raw spellbook indices', () => {
     const layout = solveLayout(262, 'mythic-plus', 'focus')
-    const decor = {
-      colorByCategory: {
-        'rotational-core': '74acff',
-        'rotational-proc': '97c8ff',
-        'cooldown-burst': 'ff8e63',
-        'defensive-major': '4bdb92',
-        'defensive-minor': '8ce8b6',
-        external: '4fdcc6',
-        'heal-utility': '63e6c0',
-        interrupt: 'ffd44f',
-        'cc-hard': 'c78bff',
-        'cc-soft': 'e0c2ff',
-        dispel: '6fdcfb',
-        mobility: 'ace76a',
-        utility: 'aab2c4',
-        trinket: 'ff9dc8',
-      },
-      ru: {
-        categories: {
-          'rotational-core': 'Ротация',
-          'rotational-proc': 'Прок',
-          'cooldown-burst': 'Бурст',
-          'defensive-major': 'Защита',
-          'defensive-minor': 'Малая защита',
-          external: 'Внешка',
-          'heal-utility': 'Лечение',
-          interrupt: 'Прерывание',
-          'cc-hard': 'Жёсткий контроль',
-          'cc-soft': 'Мягкий контроль',
-          dispel: 'Диспел',
-          mobility: 'Мобильность',
-          utility: 'Утилити',
-          trinket: 'Тринкет',
-        },
-        optionsTitle: 'Keybind Optimizer',
-        colorsLabel: 'Подсветка',
-        colorsTooltip: 'Цвет категории',
-        legendLabel: 'Легенда',
-        legendTooltip: 'Показать легенду',
-        enableBarsHint: 'введите /kbo bars',
-      },
-      en: {
-        categories: {
-          'rotational-core': 'Rotation',
-          'rotational-proc': 'Proc',
-          'cooldown-burst': 'Burst',
-          'defensive-major': 'Major defensive',
-          'defensive-minor': 'Minor defensive',
-          external: 'External',
-          'heal-utility': 'Healing',
-          interrupt: 'Interrupt',
-          'cc-hard': 'Hard CC',
-          'cc-soft': 'Soft CC',
-          dispel: 'Dispel',
-          mobility: 'Mobility',
-          utility: 'Utility',
-          trinket: 'Trinket',
-        },
-        optionsTitle: 'Keybind Optimizer',
-        colorsLabel: 'Category colors',
-        colorsTooltip: 'Color action buttons by category.',
-        legendLabel: 'Color legend',
-        legendTooltip: 'Show the color legend.',
-        enableBarsHint: 'type /kbo bars',
-      },
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
+    expect(lua).toContain('C_Spell.PickupSpell')
+    expect(lua).toContain('FindSpellBookSlotForSpell')
+    expect(lua).toContain('pcall(C_SpellBook.PickupSpellBookItem, slotIndex, bank or 0)')
+    expect(lua).not.toContain('pcall(C_SpellBook.PickupSpellBookItem, spellId)')
+    expect(lua).toContain('cursorHasSpell')
+    expect(lua).toContain('actionMatchesSpell')
+    expect(lua).toContain('GetCursorInfo()')
+    expect(lua).toContain('FindSpellOverrideByID')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('applies idempotently: hash + verification gate, combat queue, trait invalidation', () => {
+    const layout = solveLayout(263, 'arena', 'arena123')
+    const lua = renderLuaAddon([toProfile(layout, 'arena')], 'KeybindOptimizer')
+    expect(lua).toContain('verifyApplied')
+    expect(lua).toContain('appliedBySpec')
+    expect(lua).toContain('st.hash = profile.hash')
+    expect(lua).toContain('PLAYER_REGEN_ENABLED')
+    expect(lua).toContain('TRAIT_CONFIG_UPDATED')
+    expect(lua).toContain('ACTIVE_PLAYER_SPECIALIZATION_CHANGED')
+    expect(lua).toContain('applyQueued')
+    expect(lua).toContain('if db().autoApply then apply("auto") end')
+    expect(lua).toContain('placeVerified')
+    expect(lua).toContain('GetMacroInfo(id) == label')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('renders the in-game layout browser with icons and tooltips', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'arena', testDecor())], 'KeybindOptimizer', testDecor())
+    expect(lua).toContain('KeybindOptimizerBrowser')
+    expect(lua).toContain('C_Spell.GetSpellTexture')
+    expect(lua).toContain('UISpecialFrames')
+    expect(lua).toContain('SetSpellByID')
+    expect(lua).toContain('browserProfileButtons')
+    expect(lua).toContain('UIPanelButtonTemplate')
+    expect(lua).toContain('SetDesaturated')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('ships the keyboard view with layers, history backups and restore', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'arena')], 'KeybindOptimizer')
+    expect(lua).toContain('local KEYBOARDS = {')
+    expect(lua).toContain('kb = 1')
+    expect(lua).toContain('updateKeyboardView')
+    expect(lua).toContain('browserLayer')
+    expect(lua).toContain('SHIFT-')
+    expect(lua).toContain('captureBackup')
+    expect(lua).toContain('restoreBackup')
+    expect(lua).toContain('restoreQueued')
+    expect(lua).toContain('macroBodies')
+    expect(lua).toContain('^MACRO (KO%d+)$')
+    expect(lua).toContain('c.backups')
+    expect(lua).toContain('TARGETARENA(%d)')
+    expect(lua).toMatch(/k = "Q", label = "Q"/)
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('clears the previous profile placements before applying a new one', () => {
+    const layout = solveLayout(263, 'arena', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'arena')], 'KeybindOptimizer')
+    expect(lua).toContain('for _, record in pairs(st.placements or {}) do')
+    expect(lua).toContain('captureBackup(UI.backupAuto, true)')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('exposes expanded settings and slash commands', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
+    for (const command of ['apply', 'force', 'check', 'profile', 'auto', 'mouseover', 'colors', 'legend', 'clearmain', 'bars', 'mainbar', 'help']) {
+      expect(lua).toMatch(new RegExp(`command == "${command}"`))
     }
+    expect(lua).toContain('"autoApply"')
+    expect(lua).toContain('"mouseover"')
+    expect(lua).toContain('UICheckButtonTemplate')
+    expect(lua).toMatch(/RegisterAddOnCategory|InterfaceOptions_AddCategory/)
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('offers every slash command as a button in the browser and settings panel', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
+    expect(lua).toContain('makeCommandButton')
+    expect(lua).toContain('makePanelButton')
+    for (const key of ['UI.forceButton', 'UI.checkButton', 'UI.barsButton', 'UI.clearMainButton']) {
+      const uses = lua.split(key).length - 1
+      expect(uses).toBeGreaterThanOrEqual(2)
+    }
+    expect(lua).toContain('runCheck')
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('enables hidden bars through Edit Mode layouts, not account settings', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
+    expect(lua).toContain('C_EditMode.GetLayouts')
+    expect(lua).toContain('C_EditMode.SaveLayouts')
+    expect(lua).toContain('Enum.EditModeActionBarSetting')
+    expect(lua).toContain('SetActionBarToggles')
+    expect(lua).not.toContain('Enum.EditModeAccountSetting["Show"')
+  })
+
+  it('colors buttons and bakes both locales when decor is supplied', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const decor = testDecor()
     const entries = buildLuaBindEntries(layout.binds, decor)
     expect(entries.some((entry) => entry.category !== undefined)).toBe(true)
-    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer', decor)
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus', decor)], 'KeybindOptimizer', decor)
     expect(lua).toContain('decorateButton')
     expect(lua).toContain('SetColorTexture')
     expect(lua).toContain('MultiBarBottomLeftButton')
     expect(lua).toContain('isProtectedSlot')
     expect(lua).toContain('isOwnedMacroName')
-    expect(lua).toContain('^KO%d%d$')
-    expect(lua).toContain('placeableTargets')
+    expect(lua).toContain('^KO%d+$')
     expect(lua).toContain('clearOwnedButtons')
-    expect(lua).toContain('for slot = 1, 120 do')
-    expect(lua).toContain('PickupSpellBookItem')
-    expect(lua).toContain('cursorReady')
-    expect(lua).toContain('buildSpellMacroBody')
-    expect(lua).toContain('placeMacro')
     expect(lua).toContain('IsSpellKnownOrOverridesKnown')
-    expect(lua).toContain('GetActionInfo')
-    expect(lua).toContain('GetBindingKey')
-    expect(lua).toContain('HasAction')
     expect(lua).toContain('KeybindOptimizerDB')
     expect(lua).toContain('LEGEND_CATEGORIES')
     expect(lua).toContain('KeybindOptimizerLegend')
     expect(lua).toContain('GetLocale')
     expect(lua).toContain('Прерывание')
     expect(lua).toContain('Interrupt')
-    expect(lua).not.toContain('bind.color')
-    expect(lua).not.toContain('bind.note')
-    const decorateCalls = lua.match(/decorateButton\(target\.frame, [^)]*\)/g) ?? []
-    expect(decorateCalls.length).toBeGreaterThanOrEqual(1)
-    for (const call of decorateCalls) {
-      expect(call).toBe('decorateButton(target.frame, bind.category, bind.variant)')
-    }
-    expect(lua).toContain('C_EditMode.SetAccountSetting')
-    expect(lua).toContain('Enum.EditModeAccountSetting["Show" .. barName]')
-    expect(lua).toContain('TEXT.enableBarsHint')
-    expect(lua).not.toContain('" .. T.enableBarsHint')
-    expect(lua).toMatch(/command == "bars"/)
-    expect(lua).toMatch(/command == "colors"/)
-    expect(lua).toMatch(/command == "legend"/)
-    expect(lua).toContain('UIPanelCloseButton')
-    expect(lua).toContain('buildOptions')
-    expect(lua).toMatch(/RegisterAddOnCategory|InterfaceOptions_AddCategory/)
-    expect(lua).toContain('UICheckButtonTemplate')
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
   })
 
-  it('makes addon application idempotent and verifies placed macros', () => {
-    const layout = solveLayout(263, 'arena', 'arena123')
-    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
-    expect(lua).toContain('clearOwnedButtons()')
-    expect(lua).toContain('local actionType, id = GetActionInfo(slot)')
-    expect(lua).toContain('return name == label')
-    expect(lua).toContain('onBar = placeMacro(label, target)')
-    expect(lua).toContain('bindPlacedTarget(bind, target, usedToggles)')
-    expect(lua).toContain('onBar = placeVerified(target.slot)')
-    expect(lua).toMatch(/if not onBar then\s+local label = string\.format\("KO%02d", index\)/)
-    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
-  })
-
-  it('is locale-independent: no localized names inside the addon source', () => {
+  it('is locale-independent without decor: no localized names inside the addon source', () => {
     const layout = solveLayout(262, 'mythic-plus', 'focus')
-    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
     expect(/[а-яА-ЯёЁ]/.test(lua)).toBe(false)
   })
 
-  it('covers every bindable assignment with a BINDS entry', () => {
+  it('covers every assignment with a BINDS entry: spells, items, commands, macros', () => {
     const layout = solveLayout(263, 'arena', 'arena123')
     const entries = buildLuaBindEntries(layout.binds)
     expect(entries.length).toBe(layout.binds.length)
     const keys = entries.map((entry) => entry.key)
     expect(new Set(keys).size).toBe(keys.length)
     for (const entry of entries) {
-      expect(entry.spell !== undefined || entry.item !== undefined).toBe(true)
+      expect(
+        entry.spell !== undefined ||
+          entry.item !== undefined ||
+          entry.command !== undefined ||
+          entry.macrotext !== undefined,
+      ).toBe(true)
       expect(entry.key).toMatch(/^((SHIFT|CTRL|ALT)-)?[A-Z0-9`\-=[\];',./]+$/)
     }
+    const commands = entries.filter((entry) => entry.command !== undefined)
+    expect(commands.map((entry) => entry.command).sort()).toEqual([
+      'TARGETARENA1',
+      'TARGETARENA2',
+      'TARGETARENA3',
+    ])
   })
 
-  it('orders binds by modifier layer then key position', () => {
-    const layout = solveLayout(263, 'arena', 'arena123')
-    const rank: Record<string, number> = { none: 0, shift: 1, ctrl: 2, alt: 3 }
-    let previous = -1
-    for (const bind of layout.binds) {
-      const current = rank[bind.slot.modifier] ?? 9
-      expect(current).toBeGreaterThanOrEqual(previous)
-      previous = current
-    }
-  })
-
-  it('emits binds in modifier-then-key order for sequential runtime placement', () => {
+  it('adds a set-focus macro bind under the focus scheme', () => {
     const layout = solveLayout(263, 'arena', 'focus')
     const entries = buildLuaBindEntries(layout.binds)
-    const rank: Record<string, number> = { none: 0, shift: 1, ctrl: 2, alt: 3 }
-    const modifierOf = (key: string) => {
-      if (key.startsWith('SHIFT-')) return 'shift'
-      if (key.startsWith('CTRL-')) return 'ctrl'
-      if (key.startsWith('ALT-')) return 'alt'
-      return 'none'
+    const setFocus = entries.find((entry) => entry.macrotext !== undefined)
+    expect(setFocus).toBeDefined()
+    expect(setFocus?.macrotext).toBe('/focus [@mouseover,exists][]')
+    const focusBind = layout.binds.find((bind) => bind.ability.id === 'focus:set')
+    expect(focusBind).toBeDefined()
+    if (focusBind) expect(macroBody(focusBind)).toBe('/focus [@mouseover,exists][]')
+  })
+
+  it('plans keyboard-mirrored bar slots: digits aligned, layers on separate bars', () => {
+    const layout = solveLayout(263, 'arena', 'arena123')
+    const entries = buildLuaBindEntries(layout.binds)
+    const digitColumn: Record<string, number> = {
+      '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '0': 9, '-': 10, '=': 11,
     }
-    let previous = -1
     for (const entry of entries) {
-      const current = rank[modifierOf(entry.key)] ?? 9
-      expect(current).toBeGreaterThanOrEqual(previous)
-      previous = current
+      if (entry.command !== undefined) {
+        expect(entry.slot).toBeUndefined()
+        continue
+      }
+      expect(entry.slot).toBeDefined()
+      const column = digitColumn[entry.key]
+      if (column !== undefined) {
+        expect(entry.slot).toBe(column)
+      }
     }
-    expect(entries.length).toBeGreaterThan(20)
-  })
-
-  it('generates the main bar plus four multibars for runtime placement', () => {
-    const layout = solveLayout(263, 'arena', 'focus')
-    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
-    expect(lua).toContain('command = "ACTIONBUTTON"')
-    expect(lua).toContain('command = "MULTIACTIONBAR1BUTTON"')
-    expect(lua).toContain('mainBarPages')
-    expect(lua).toContain('buildTargets')
-    expect(lua).toMatch(/class == "DRUID" or class == "ROGUE"/)
-    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
-  })
-
-  it('marks focus, arena, and mouseover binds for macro generation', () => {
-    const layout = solveLayout(263, 'arena', 'arena123')
-    const entries = buildLuaBindEntries(layout.binds)
-    const arenaEntries = entries.filter((entry) => entry.target?.startsWith('arena'))
-    expect(arenaEntries.length).toBeGreaterThanOrEqual(3)
-    const trinkets = entries.filter((entry) => entry.item !== undefined)
-    expect(trinkets.map((entry) => entry.item).sort()).toEqual([13, 14])
+    const shiftDigits = entries.filter(
+      (entry) => entry.slot !== undefined && /^SHIFT-[0-9=-]$/.test(entry.key),
+    )
+    for (const entry of shiftDigits) {
+      const keyChar = entry.key.slice(6)
+      expect((entry.slot ?? 0) % 12).toBe(digitColumn[keyChar])
+      expect(entry.slot ?? 0).toBeGreaterThanOrEqual(12)
+    }
+    const slots = entries.map((entry) => entry.slot).filter((slot) => slot !== undefined)
+    expect(new Set(slots).size).toBe(slots.length)
   })
 
   it('keeps manual macro bodies within game limits', () => {
     const layout = solveLayout(263, 'arena', 'arena123')
-    const seenNames = new Set<string>()
     for (const bind of layout.binds) {
       const body = macroBody(bind)
       if (body === null) continue
       expect(body.length).toBeLessThanOrEqual(255)
       const name = macroName(bind)
       expect(name.length).toBeLessThanOrEqual(16)
-      seenNames.add(name)
     }
     expect(renderMacroList(layout.binds).length).toBeGreaterThan(0)
   })
@@ -345,13 +422,16 @@ describe('lua addon generator', () => {
     const layout = solveLayout(262, 'mythic-plus', 'focus')
     expect(renderPlainList(layout.binds).split('\n').length).toBe(layout.binds.length)
     expect(interfaceVersionFromBuild('12.0.7.68367')).toBe('120007')
-    expect(renderAddonToc('KeybindOptimizer', BUILD)).toContain('## Interface: 120007')
+    const toc = renderAddonToc('KeybindOptimizer', BUILD)
+    expect(toc).toContain('## Interface: 120007')
+    expect(toc).toContain('## SavedVariables: KeybindOptimizerDB')
+    expect(toc).toContain('## SavedVariablesPerCharacter: KeybindOptimizerCharDB')
   })
 
   it('packs a ZIP with the correct addon folder structure that round-trips', async () => {
     const layout = solveLayout(263, 'arena', 'focus')
     const toc = renderAddonToc('KeybindOptimizer', BUILD)
-    const lua = renderLuaAddon(layout.binds, 'KeybindOptimizer')
+    const lua = renderLuaAddon([toProfile(layout, 'arena')], 'KeybindOptimizer')
     const zip = buildZipBlob([
       { name: 'KeybindOptimizer/KeybindOptimizer.toc', content: toc },
       { name: 'KeybindOptimizer/KeybindOptimizer.lua', content: lua },
@@ -366,9 +446,5 @@ describe('lua addon generator', () => {
     expect(() =>
       parseLua(extracted['KeybindOptimizer/KeybindOptimizer.lua'] ?? '', { luaVersion: '5.1' }),
     ).not.toThrow()
-    expect(extracted['KeybindOptimizer/KeybindOptimizer.toc']).toMatch(/^## Interface:/)
-    expect(extracted['KeybindOptimizer/KeybindOptimizer.toc']).toContain(
-      '## SavedVariables: KeybindOptimizerDB',
-    )
   })
 })

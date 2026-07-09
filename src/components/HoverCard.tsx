@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { Ability, BindAssignment, Slot } from '@/core/model/ability'
 import { spellIconUrl } from '@/lib/data'
 import { formatSpellDescription } from '@/lib/format'
+import { useClampedOverlay } from './overlay-position'
 
 export interface HoverInfo {
   ability: Ability
@@ -48,11 +49,11 @@ export function HoverCard({ info }: { info: HoverInfo }) {
   if (info.ability.variantKind.startsWith('arena')) reasons.push(t('reasonArenaVariant'))
   if (info.bind.synergyScore > 0.01) reasons.push(t('reasonSynergy'))
 
-  const left = Math.min(info.x + 16, typeof window !== 'undefined' ? window.innerWidth - 340 : info.x)
-  const top = Math.min(info.y + 16, typeof window !== 'undefined' ? window.innerHeight - 260 : info.y)
+  const { ref, left, top } = useClampedOverlay(info.x, info.y, 320)
 
   return (
     <div
+      ref={ref}
       className="overlay-card"
       style={{
         position: 'fixed',
@@ -86,7 +87,9 @@ export function HoverCard({ info }: { info: HoverInfo }) {
             fontSize: '0.82rem',
             color: 'var(--text-soft)',
             marginBottom: 10,
-            maxHeight: 110,
+            display: '-webkit-box',
+            WebkitLineClamp: 9,
+            WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
             whiteSpace: 'pre-line',
           }}

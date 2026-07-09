@@ -13,6 +13,7 @@ export type AbilityCategory =
   | 'mobility'
   | 'utility'
   | 'trinket'
+  | 'targeting'
 
 export interface CuratedAbilityTraits {
   category: AbilityCategory
@@ -36,4 +37,5 @@ export const ALL_CATEGORIES: AbilityCategory[] = [
   'mobility',
   'utility',
   'trinket',
+  'targeting',
 ]

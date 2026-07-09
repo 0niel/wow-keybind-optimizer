@@ -15,4 +15,5 @@ export const CATEGORY_HEX: Record<AbilityCategory, string> = {
   mobility: 'ace76a',
   utility: 'aab2c4',
   trinket: 'ff9dc8',
+  targeting: 'ff8f8f',
 }

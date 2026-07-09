@@ -2,18 +2,26 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import type { Ability, BindAssignment, Slot } from '@/core/model/ability'
+import type { Ability, ArenaTargetScheme, GameMode, Slot } from '@/core/model/ability'
 import type { SpellMetaShard, SpellTextShard } from '@/core/model/snapshot'
+import type { LayoutVariant } from '@/workers/solver.worker'
+import { cartEntryId } from '@/state/addon-cart'
+import type { AddonCartEntry } from '@/state/addon-cart'
 import {
+  buildAddonKeyboard,
+  buildAddonProfile,
   buildExportBinds,
   renderLuaAddon,
   renderMacroList,
   renderPlainList,
   renderAddonToc,
+  ADDON_UI_KEYS,
 } from '@/lib/exports'
-import type { AddonDecor, AddonLocaleStrings } from '@/lib/exports'
+import type { HardwareConfig } from '@/core/model/hardware'
+import type { AddonDecor, AddonLocaleStrings, AddonUiKey } from '@/lib/exports'
 import { buildZipBlob } from '@/lib/zip'
 import { abilityIconName, spellIconUrl } from '@/lib/data'
+import type { ZeroSpellLabels } from '@/lib/data'
 import { CATEGORY_HEX } from '@/core/model/category-colors'
 import { ALL_CATEGORIES } from '@/core/model/ability-category'
 import type { AbilityCategory } from '@/core/model/ability-category'
@@ -28,38 +36,91 @@ function localeStringsFor(messages: Messages): AddonLocaleStrings {
   const categories = Object.fromEntries(
     ALL_CATEGORIES.map((category) => [category, messages.categories[category]]),
   ) as Record<AbilityCategory, string>
-  return {
-    categories,
-    optionsTitle: 'Keybind Optimizer',
-    colorsLabel: messages.export.settingColors,
-    colorsTooltip: messages.export.settingColorsHint,
-    legendLabel: messages.export.settingLegend,
-    legendTooltip: messages.export.settingLegendHint,
-    enableBarsHint: messages.export.addonEnableBarsHint,
-  }
+  const ui = Object.fromEntries(
+    ADDON_UI_KEYS.map((key) => [key, messages.export.addon[key]]),
+  ) as Record<AddonUiKey, string>
+  return { categories, ui }
 }
 
 type ExportTab = 'list' | 'macros' | 'lua'
 
 interface Props {
-  assignments: BindAssignment[]
+  variants: LayoutVariant[]
+  selectedSeed: number
   abilities: Ability[]
   slots: Slot[]
   spells: SpellTextShard
   spellMeta: SpellMetaShard
   build: string
+  mode: GameMode
+  scheme: ArenaTargetScheme
+  specId: number
+  classId: number
+  classTag: string
+  specName: string
+  hardware: HardwareConfig
+  cart: AddonCartEntry[]
+  onAddToCart: (entry: AddonCartEntry) => void
+  onRemoveFromCart: (id: string) => void
 }
 
 const ADDON_NAME = 'KeybindOptimizer'
 
-export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, build }: Props) {
+const MODE_LABEL_KEY: Record<GameMode, string> = {
+  raid: 'raid',
+  'mythic-plus': 'mythicPlus',
+  arena: 'arena',
+  rbg: 'rbg',
+  battleground: 'battleground',
+}
+
+export function ExportPanel({
+  variants,
+  selectedSeed,
+  abilities,
+  slots,
+  spells,
+  spellMeta,
+  build,
+  mode,
+  scheme,
+  specId,
+  classId,
+  classTag,
+  specName,
+  hardware,
+  cart,
+  onAddToCart,
+  onRemoveFromCart,
+}: Props) {
   const t = useTranslations('export')
+  const tResults = useTranslations('results')
+  const tInput = useTranslations('input')
   const [tab, setTab] = useState<ExportTab>('list')
   const [copied, setCopied] = useState(false)
+  const [added, setAdded] = useState(false)
+
+  const labels: ZeroSpellLabels = useMemo(
+    () => ({
+      trinket: t('trinket'),
+      pvpTrinket: t('pvpTrinket'),
+      targetArena: (n: number) => tResults('targetArena', { n }),
+      setFocus: tResults('setFocus'),
+    }),
+    [t, tResults],
+  )
+
+  const selectedVariant = useMemo(
+    () => variants.find((variant) => variant.seed === selectedSeed) ?? variants[0] ?? null,
+    [variants, selectedSeed],
+  )
 
   const binds = useMemo(
-    () => buildExportBinds(assignments, abilities, slots, spells, t('trinket'), t('pvpTrinket')),
-    [assignments, abilities, slots, spells, t],
+    () =>
+      selectedVariant
+        ? buildExportBinds(selectedVariant.result.assignments, abilities, slots, spells, labels)
+        : [],
+    [selectedVariant, abilities, slots, spells, labels],
   )
 
   const decor: AddonDecor = useMemo(
@@ -71,11 +132,93 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     [],
   )
 
+  const currentCartId = cartEntryId(specId, mode, scheme)
+
+  const keyboard = useMemo(() => buildAddonKeyboard(hardware), [hardware])
+
+  const profiles = useMemo(() => {
+    const modeLabel = tInput(`modes.${MODE_LABEL_KEY[mode]}`)
+    const cartProfiles = cart
+      .filter((entry) => entry.id !== currentCartId)
+      .map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        mode: entry.mode,
+        specId: entry.specId,
+        classTag: entry.classTag,
+        hash: entry.hash,
+        binds: entry.binds,
+        keyboard: entry.keyboard ?? keyboard,
+      }))
+    const currentProfiles = variants.map((variant, index) => {
+      const variantBinds = buildExportBinds(
+        variant.result.assignments,
+        abilities,
+        slots,
+        spells,
+        labels,
+      )
+      const baseName = `${specName} · ${t('profileName', { mode: modeLabel, n: index + 1 })}`
+      const name = index === 0 ? `${baseName} · ${t('profileBest')}` : baseName
+      return buildAddonProfile(
+        `${currentCartId}-v${variant.seed}`,
+        name,
+        mode,
+        specId,
+        classTag,
+        variantBinds,
+        keyboard,
+        decor,
+      )
+    })
+    return [...cartProfiles, ...currentProfiles]
+  }, [variants, abilities, slots, spells, labels, mode, specId, classTag, specName, decor, t, tInput, cart, currentCartId, keyboard])
+
+  const addCurrentToCart = () => {
+    const selected = selectedVariant
+    if (!selected) return
+    const modeLabel = tInput(`modes.${MODE_LABEL_KEY[mode]}`)
+    const profile = buildAddonProfile(
+      currentCartId,
+      `${specName} · ${modeLabel}`,
+      mode,
+      specId,
+      classTag,
+      binds,
+      keyboard,
+      decor,
+    )
+    const preserved: Record<string, string> = {}
+    for (const assignment of selected.result.assignments) {
+      preserved[assignment.abilityId] = assignment.slotId
+    }
+    const interruptAbility = abilities.find(
+      (ability) => ability.category === 'interrupt' && ability.variantKind === 'base',
+    )
+    const interruptSlotId = interruptAbility ? preserved[interruptAbility.id] : undefined
+    onAddToCart({
+      id: currentCartId,
+      name: `${specName} · ${modeLabel}`,
+      specId,
+      classId,
+      classTag,
+      mode,
+      hash: profile.hash,
+      binds: profile.binds,
+      keyboard,
+      preserved,
+      interruptSlotId,
+      savedAt: Date.now(),
+    })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
+
   const content = useMemo(() => {
     if (tab === 'list') return renderPlainList(binds)
     if (tab === 'macros') return renderMacroList(binds)
-    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(binds, ADDON_NAME, decor)}`
-  }, [tab, binds, build, decor])
+    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(profiles, ADDON_NAME, decor)}`
+  }, [tab, binds, profiles, build, decor])
 
   const copy = async () => {
     await navigator.clipboard.writeText(content)
@@ -96,7 +239,7 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
     if (tab === 'lua') {
       const zip = buildZipBlob([
         { name: `${ADDON_NAME}/${ADDON_NAME}.toc`, content: renderAddonToc(ADDON_NAME, build) },
-        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(binds, ADDON_NAME, decor) },
+        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(profiles, ADDON_NAME, decor) },
       ])
       triggerDownload(zip, `${ADDON_NAME}.zip`)
       return
@@ -125,7 +268,12 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
           value={tab}
           onChange={setTab}
         />
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {tab === 'lua' && (
+            <button className="action" onClick={addCurrentToCart}>
+              {added ? t('addedToAddon') : t('addToAddon')}
+            </button>
+          )}
           <button className="action" onClick={copy}>
             {copied ? t('copied') : t('copy')}
           </button>
@@ -190,7 +338,7 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
                   <span style={{ width: 26, textAlign: 'center' }}>🎒</span>
                 )}
                 <span style={{ fontSize: '0.9rem' }}>{bind.name}</span>
-                {bind.ability.variantKind !== 'base' && (
+                {bind.ability.variantKind !== 'base' && bind.ability.category !== 'targeting' && (
                   <span
                     style={{
                       fontSize: '0.72rem',
@@ -223,6 +371,52 @@ export function ExportPanel({ assignments, abilities, slots, spells, spellMeta, 
       )}
       {tab === 'macros' && (
         <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('macrosHint')}</p>
+      )}
+      {tab === 'lua' && cart.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <div className="label">{t('cartTitle')}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+            {cart.map((entry) => (
+              <span
+                key={entry.id}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '5px 10px',
+                  borderRadius: 10,
+                  background: 'var(--inset)',
+                  fontSize: '0.82rem',
+                }}
+              >
+                {entry.name}
+                {entry.id === currentCartId && (
+                  <span style={{ color: 'var(--accent)', fontWeight: 650 }}>
+                    {t('cartCurrent')}
+                  </span>
+                )}
+                <button
+                  onClick={() => onRemoveFromCart(entry.id)}
+                  title={t('cartRemove')}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--text-faint)',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    lineHeight: 1,
+                    padding: 0,
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <p style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--text-faint)' }}>
+            {t('cartHint')}
+          </p>
+        </div>
       )}
       {tab === 'lua' && (
         <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('luaHint')}</p>

@@ -36,6 +36,14 @@ export function isFeasible(
   context: FeasibilityContext,
 ): boolean {
   if (ability.panic >= PANIC_HARD_THRESHOLD && slot.modifier !== 'none') return false
+  if (
+    ability.category === 'interrupt' &&
+    ability.variantKind === 'base' &&
+    slot.modifier !== 'none' &&
+    problem.constraints.lockedBinds[ability.id] === undefined
+  ) {
+    return false
+  }
   if (ability.reactivity >= REACTIVE_HARD_THRESHOLD && slot.accessibility < context.reactiveSlotThreshold) {
     return false
   }

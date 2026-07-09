@@ -9,7 +9,7 @@ import { buildKeyboardGeometry } from '@/core/hardware/keyboards'
 import { MOVEMENT_SCHEMES } from '@/core/hardware/movement-schemes'
 import { MOUSE_BUTTONS, WHEEL_BUTTONS } from '@/core/hardware/mice'
 import type { TextShard } from '@/lib/data'
-import { abilityIconName, spellIconUrl } from '@/lib/data'
+import { abilityIconName, spellIconUrl, zeroSpellLabel } from '@/lib/data'
 import { SegmentedControl } from './controls'
 import { HoverCard } from './HoverCard'
 import type { HoverInfo } from './HoverCard'
@@ -151,9 +151,12 @@ export function KeyboardView({
 
     const abilityName =
       ability?.spellId === 0
-        ? ability.id === 'trinket:pvp'
-          ? t('pvpTrinket')
-          : t('trinket')
+        ? zeroSpellLabel(ability.id, {
+            trinket: t('trinket'),
+            pvpTrinket: t('pvpTrinket'),
+            targetArena: (n) => t('targetArena', { n }),
+            setFocus: t('setFocus'),
+          })
         : spellText?.name
 
     const canToggle = editMode && !isMovement
@@ -225,7 +228,25 @@ export function KeyboardView({
         )}
         {ability && heatmap === 'none' && (
           <>
-            {iconName ? (
+            {ability.category === 'targeting' && ability.id.startsWith('target:arena') ? (
+              <g
+                transform={`translate(${(w * KEY_UNIT - GAP) / 2}, ${(h * KEY_UNIT - GAP - CATEGORY_BAR) / 2})`}
+                opacity={dimmed ? 0.3 : 1}
+              >
+                <circle r={13} fill="var(--cat-targeting)" opacity={0.25} />
+                <circle r={13} fill="none" stroke="var(--cat-targeting)" strokeWidth={1.5} />
+                <text
+                  textAnchor="middle"
+                  y={5.5}
+                  fontSize={15}
+                  fontWeight={800}
+                  fill="var(--text)"
+                >
+                  {ability.id.slice(-1)}
+                </text>
+                <title>{abilityName ?? ''}</title>
+              </g>
+            ) : iconName ? (
               <>
                 <rect
                   x={(w * KEY_UNIT - GAP - iconSize(w, h)) / 2 - 2}
@@ -272,21 +293,24 @@ export function KeyboardView({
         {ability && heatmap === 'none' && (
           <rect x={3} y={3} width={17} height={15} rx={5} fill="var(--panel)" opacity={0.9} />
         )}
-        {ability && ability.variantKind !== 'base' && heatmap === 'none' && (
-          <g transform={`translate(${w * KEY_UNIT - GAP - 11}, 11)`}>
-            <circle r={8} fill="var(--accent)" opacity={dimmed ? 0.3 : 1} />
-            <text
-              textAnchor="middle"
-              y={3.5}
-              fontSize={9}
-              fontWeight={800}
-              fill="var(--on-accent)"
-              opacity={dimmed ? 0.4 : 1}
-            >
-              {ability.variantKind === 'focus' ? 'F' : ability.variantKind.slice(-1)}
-            </text>
-          </g>
-        )}
+        {ability &&
+          ability.variantKind !== 'base' &&
+          ability.category !== 'targeting' &&
+          heatmap === 'none' && (
+            <g transform={`translate(${w * KEY_UNIT - GAP - 11}, 11)`}>
+              <circle r={8} fill="var(--accent)" opacity={dimmed ? 0.3 : 1} />
+              <text
+                textAnchor="middle"
+                y={3.5}
+                fontSize={9}
+                fontWeight={800}
+                fill="var(--on-accent)"
+                opacity={dimmed ? 0.4 : 1}
+              >
+                {ability.variantKind === 'focus' ? 'F' : ability.variantKind.slice(-1)}
+              </text>
+            </g>
+          )}
         <text
           x={ability && heatmap === 'none' ? 11.5 : 7}
           y={14.5}

@@ -4,11 +4,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useGameData, useSpecSnapshot } from '@/hooks/useGameData'
 import { useSolver } from '@/hooks/useSolver'
-import { DEFAULT_INPUTS, deserializeInputs, serializeInputs } from '@/state/inputs'
+import { DEFAULT_INPUTS, deserializeInputs, effectiveTargetBinds, serializeInputs } from '@/state/inputs'
 import type { OptimizerInputs } from '@/state/inputs'
+import {
+  classPreservation,
+  classTagFromSlug,
+  loadCart,
+  saveCart,
+  upsertCartEntry,
+} from '@/state/addon-cart'
+import type { AddonCartEntry } from '@/state/addon-cart'
 import { HeroInput, SettingsPanel, detectSpecId } from './InputPanel'
 import { ExamplePicker, presetToMode } from './ExamplePicker'
 import type { ExamplePreset } from '@/lib/data'
+import { zeroSpellLabel } from '@/lib/data'
 import { KeyboardView } from './KeyboardView'
 import { ScorePanel } from './ScorePanel'
 import { TalentTreeView } from './TalentTreeView'
@@ -17,10 +26,12 @@ import { AppHeader } from './AppHeader'
 
 export function OptimizerApp() {
   const t = useTranslations('app')
+  const tResults = useTranslations('results')
   const locale = useLocale()
   const { data, error } = useGameData()
   const [inputs, setInputs] = useState<OptimizerInputs>(DEFAULT_INPUTS)
   const [hydrated, setHydrated] = useState(false)
+  const [cart, setCart] = useState<AddonCartEntry[]>([])
   const [highlightAbilityIds, setHighlightAbilityIds] = useState<Set<string> | null>(null)
   const [highlightNodeIds, setHighlightNodeIds] = useState<Set<number> | null>(null)
   const { state: solverState, solve } = useSolver()
@@ -28,7 +39,24 @@ export function OptimizerApp() {
 
   useEffect(() => {
     setInputs(deserializeInputs(new URLSearchParams(window.location.search)))
+    setCart(loadCart())
     setHydrated(true)
+  }, [])
+
+  const addToCart = useCallback((entry: AddonCartEntry) => {
+    setCart((previous) => {
+      const next = upsertCartEntry(previous, entry)
+      saveCart(next)
+      return next
+    })
+  }, [])
+
+  const removeFromCart = useCallback((id: string) => {
+    setCart((previous) => {
+      const next = previous.filter((entry) => entry.id !== id)
+      saveCart(next)
+      return next
+    })
   }, [])
 
   const updateInputs = useCallback((next: OptimizerInputs) => {
@@ -44,6 +72,20 @@ export function OptimizerApp() {
   const race = useMemo(
     () => data?.races.find((candidate) => candidate.id === inputs.raceId) ?? null,
     [data, inputs.raceId],
+  )
+
+  const spellNames = useMemo(() => {
+    if (!data) return undefined
+    const names: Record<string, string> = {}
+    for (const [spellId, record] of Object.entries(data.text.spells)) {
+      names[spellId] = record.name
+    }
+    return names
+  }, [data])
+
+  const preservation = useMemo(
+    () => (spec ? classPreservation(cart, spec.classId) : { preservedBinds: {} }),
+    [cart, spec],
   )
 
   useEffect(() => {
@@ -62,12 +104,16 @@ export function OptimizerApp() {
         constraints: { lockedBinds: {}, bannedSlotIds: [], preservedBinds: {} },
         seed: inputs.seed,
         strategyId: 'qap-annealing',
+        spellNames,
+        preservedBinds: preservation.preservedBinds,
+        anchorInterruptSlotId: preservation.anchorInterruptSlotId,
+        includeTargetBinds: effectiveTargetBinds(inputs),
       })
     }, 350)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [hydrated, data, spec, race, inputs, solve])
+  }, [hydrated, data, spec, race, inputs, solve, spellNames, preservation])
 
   const outcome = solverState.outcome
 
@@ -87,7 +133,14 @@ export function OptimizerApp() {
     const nameOf = (abilityId: string): string => {
       const ability = abilityById.get(abilityId)
       if (!ability) return ''
-      if (ability.spellId === 0) return t('trinket')
+      if (ability.spellId === 0) {
+        return zeroSpellLabel(ability.id, {
+          trinket: tResults('trinket'),
+          pvpTrinket: tResults('pvpTrinket'),
+          targetArena: (n) => tResults('targetArena', { n }),
+          setFocus: tResults('setFocus'),
+        })
+      }
       return data.text.spells[String(ability.spellId)]?.name ?? ''
     }
     const iconOf = (abilityId: string): string | null => {
@@ -114,7 +167,7 @@ export function OptimizerApp() {
       }
     }
     return map
-  }, [outcome, data, t, selectedVariant])
+  }, [outcome, data, tResults, selectedVariant])
 
   const pickExample = useCallback(
     (preset: ExamplePreset) => {
@@ -326,12 +379,25 @@ export function OptimizerApp() {
                 text={data.text}
               />
               <ExportPanel
-                assignments={selectedVariant.result.assignments}
+                variants={outcome.variants}
+                selectedSeed={selectedVariant.seed}
                 abilities={outcome.abilities}
                 slots={outcome.slots}
                 spells={data.text.spells}
                 spellMeta={data.spellMeta}
                 build={data.build}
+                mode={inputs.mode}
+                scheme={inputs.arenaTargetScheme}
+                specId={spec.specId}
+                classId={spec.classId}
+                classTag={classTagFromSlug(
+                  data.classes.find((candidate) => candidate.id === spec.classId)?.slug ?? '',
+                )}
+                specName={spec.names[locale] ?? spec.names.en ?? String(spec.specId)}
+                hardware={inputs.hardware}
+                cart={cart}
+                onAddToCart={addToCart}
+                onRemoveFromCart={removeFromCart}
               />
             </div>
           </>

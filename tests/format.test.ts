@@ -58,6 +58,23 @@ describe('spell description formatter', () => {
     expect(formatSpellDescription(raw)).toBe('Наносит двойной урон.')
   })
 
+  it('resolves chained class conditionals without leaking raw tokens', () => {
+    const raw = 'Эффективность чар для оружия повышается на $?c1[$s1]?c2[$s2]?c3[$s3][]%.'
+    const formatted = formatSpellDescription(raw)
+    expect(formatted).toBe('Эффективность чар для оружия повышается на X%.')
+    expect(formatted).not.toContain('?c')
+  })
+
+  it('prefers a non-empty branch when the first branch is blank', () => {
+    const raw = 'Урон$?a137041[][ и лечение] повышен.'
+    expect(formatSpellDescription(raw)).toBe('Урон и лечение повышен.')
+  })
+
+  it('resolves complex conditions with negations and ampersands', () => {
+    const raw = 'Способность действует$?a137041&!a137040[ мгновенно][ с задержкой].'
+    expect(formatSpellDescription(raw)).toBe('Способность действует мгновенно.')
+  })
+
   it('removes self-referencing $@ tokens and resolves plurals', () => {
     const raw = 'Дает $s1 $lзаряд:заряда:зарядов; эффекта $@spellname на цель.'
     const formatted = formatSpellDescription(raw)

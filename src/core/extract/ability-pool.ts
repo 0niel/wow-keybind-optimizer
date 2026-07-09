@@ -15,6 +15,8 @@ export interface ExtractionInput {
   pvpTalentIds: number[]
   mode: GameMode
   arenaTargetScheme: ArenaTargetScheme
+  spellNames?: Record<string, string>
+  includeTargetBinds?: boolean
 }
 
 const PVP_MODES: GameMode[] = ['arena', 'rbg', 'battleground']
@@ -83,6 +85,20 @@ export function extractAbilityPool(input: ExtractionInput): Ability[] {
   ])
   for (const spellId of overriddenSpellIds) allSpellIds.delete(spellId)
 
+  if (input.spellNames && pvpSpellIds.size > 0) {
+    const pvpNames = new Set<string>()
+    for (const spellId of pvpSpellIds) {
+      if (!spellMeta[String(spellId)]) continue
+      const name = input.spellNames[String(spellId)]
+      if (name) pvpNames.add(name)
+    }
+    for (const spellId of [...allSpellIds]) {
+      if (pvpSpellIds.has(spellId)) continue
+      const name = input.spellNames[String(spellId)]
+      if (name && pvpNames.has(name)) allSpellIds.delete(spellId)
+    }
+  }
+
   const seenIcons = new Map<string, number>()
   const abilities: Ability[] = []
   for (const spellId of allSpellIds) {
@@ -103,15 +119,31 @@ export function extractAbilityPool(input: ExtractionInput): Ability[] {
   if (isPvp) abilities.push(pvpTrinketAbility())
 
   if (mode === 'arena') {
-    for (const ability of [...abilities]) {
-      if (!spawnsTargetVariants(ability)) continue
-      if (input.arenaTargetScheme === 'focus') {
+    const includeTargetBinds = input.includeTargetBinds ?? true
+    if (input.arenaTargetScheme === 'focus') {
+      const interrupts = abilities.filter(
+        (ability) => ability.variantKind === 'base' && ability.category === 'interrupt',
+      )
+      const primaryCc = abilities
+        .filter(
+          (ability) =>
+            ability.variantKind === 'base' &&
+            ability.category === 'cc-hard' &&
+            ability.targeting === 'enemy',
+        )
+        .sort((a, b) => b.frequency - a.frequency || a.spellId - b.spellId)
+        .slice(0, 1)
+      for (const ability of [...interrupts, ...primaryCc]) {
         abilities.push(variantOf(ability, 'focus', 0.8))
-      } else {
-        abilities.push(variantOf(ability, 'arena1', 0.65))
-        abilities.push(variantOf(ability, 'arena2', 0.65))
-        abilities.push(variantOf(ability, 'arena3', 0.65))
       }
+      abilities.push(setFocusAbility())
+    }
+    if (includeTargetBinds) {
+      abilities.push(
+        targetingAbility('target:arena1', 'arena1'),
+        targetingAbility('target:arena2', 'arena2'),
+        targetingAbility('target:arena3', 'arena3'),
+      )
     }
   }
 
@@ -201,10 +233,40 @@ function resolveFrequency(spellId: number, meta: SpellMetaRecord, spec: SpecSnap
   return Math.min(situationalCap, 0.3)
 }
 
-function spawnsTargetVariants(ability: Ability): boolean {
-  if (ability.variantKind !== 'base') return false
-  if (ability.category === 'interrupt') return true
-  return ability.category === 'cc-hard' && ability.targeting === 'enemy'
+function targetingAbility(id: string, kind: 'arena1' | 'arena2' | 'arena3'): Ability {
+  return {
+    id,
+    spellId: 0,
+    category: 'targeting',
+    variantKind: kind,
+    baseAbilityId: 'target:arena',
+    frequency: 0.45,
+    reactivity: 0.4,
+    panic: 0,
+    offGcd: true,
+    targeting: 'none',
+    sourceNodeIds: [],
+    importance: 0,
+    rotationRank: null,
+  }
+}
+
+function setFocusAbility(): Ability {
+  return {
+    id: 'focus:set',
+    spellId: 0,
+    category: 'targeting',
+    variantKind: 'base',
+    baseAbilityId: null,
+    frequency: 0.35,
+    reactivity: 0.3,
+    panic: 0,
+    offGcd: true,
+    targeting: 'none',
+    sourceNodeIds: [],
+    importance: 0,
+    rotationRank: null,
+  }
 }
 
 function variantOf(

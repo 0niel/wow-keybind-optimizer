@@ -15,6 +15,7 @@ export interface OptimizerInputs {
   pvpTalentIds: number[]
   mode: GameMode
   arenaTargetScheme: ArenaTargetScheme
+  arenaTargetBinds: boolean | null
   hardware: HardwareConfig
   seed: number
 }
@@ -25,8 +26,13 @@ export const DEFAULT_INPUTS: OptimizerInputs = {
   pvpTalentIds: [],
   mode: 'mythic-plus',
   arenaTargetScheme: 'focus',
+  arenaTargetBinds: null,
   hardware: DEFAULT_HARDWARE_CONFIG,
   seed: 1,
+}
+
+export function effectiveTargetBinds(inputs: OptimizerInputs): boolean {
+  return inputs.arenaTargetBinds ?? inputs.arenaTargetScheme === 'arena123'
 }
 
 const GAME_MODES: GameMode[] = ['raid', 'mythic-plus', 'arena', 'rbg', 'battleground']
@@ -43,6 +49,9 @@ export function serializeInputs(inputs: OptimizerInputs): URLSearchParams {
   if (inputs.pvpTalentIds.length > 0) params.set('pvp', inputs.pvpTalentIds.join('.'))
   params.set('mode', inputs.mode)
   if (inputs.mode === 'arena') params.set('scheme', inputs.arenaTargetScheme)
+  if (inputs.mode === 'arena' && inputs.arenaTargetBinds !== null) {
+    params.set('tb', inputs.arenaTargetBinds ? '1' : '0')
+  }
   const h = inputs.hardware
   params.set('kb', `${h.formFactor}.${h.layout}.${h.mouse}.${h.movementScheme}`)
   params.set('mods', h.enabledModifiers.filter((m) => m !== 'none').join('.') || 'none-only')
@@ -105,6 +114,7 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
       .filter((value) => !Number.isNaN(value)),
     mode,
     arenaTargetScheme: scheme,
+    arenaTargetBinds: params.get('tb') === '1' ? true : params.get('tb') === '0' ? false : null,
     hardware,
     seed: params.get('seed') ? Number.parseInt(params.get('seed') ?? '1', 10) : 1,
   }

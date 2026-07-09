@@ -77,8 +77,11 @@ describe('extraction audit: every spec produces a complete, renderable pool', ()
       expect(base.length, `${context} pool too small — abilities are missing`).toBeGreaterThanOrEqual(10)
       expect(base.length, `${context} pool suspiciously large — junk spells leaking`).toBeLessThanOrEqual(95)
 
-      const trinkets = pool.filter((ability) => ability.spellId === 0)
+      const trinkets = pool.filter((ability) => ability.category === 'trinket')
       expect(trinkets.length, `${context} trinket count`).toBe(mode === 'arena' ? 2 : 1)
+
+      const targeting = pool.filter((ability) => ability.category === 'targeting')
+      expect(targeting.length, `${context} targeting bind count`).toBe(mode === 'arena' ? 3 : 0)
 
       const spellIds = base.filter((ability) => ability.spellId > 0).map((ability) => ability.spellId)
       expect(new Set(spellIds).size, `${context} duplicate spellIds in pool`).toBe(spellIds.length)

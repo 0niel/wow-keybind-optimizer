@@ -16,14 +16,18 @@ import { scoreImportance } from '@/core/scoring/importance'
 
 const APL_SYNERGY_CAP = 0.6
 const SEMANTIC_SYNERGY = 0.4
-const VARIANT_SYNERGY = 1.0
+const VARIANT_SYNERGY = 2.2
+const FOCUS_SET_SYNERGY = 0.5
+const TRINKET_DEFENSIVE_SYNERGY = 0.5
 
-const SEMANTIC_GROUP_CATEGORIES: AbilityCategory[] = [
-  'cc-hard',
-  'external',
-  'heal-utility',
-  'dispel',
-  'mobility',
+const SEMANTIC_GROUPS: AbilityCategory[][] = [
+  ['cc-hard'],
+  ['external'],
+  ['heal-utility'],
+  ['dispel'],
+  ['mobility'],
+  ['defensive-major', 'defensive-minor'],
+  ['cooldown-burst'],
 ]
 
 export interface ProblemInput {
@@ -80,9 +84,10 @@ function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[]
     }
   }
 
-  for (const category of SEMANTIC_GROUP_CATEGORIES) {
+  for (const group of SEMANTIC_GROUPS) {
+    const groupSet = new Set(group)
     const members = abilities.filter(
-      (ability) => ability.category === category && ability.variantKind === 'base',
+      (ability) => groupSet.has(ability.category) && ability.variantKind === 'base',
     )
     for (let i = 0; i < members.length; i++) {
       for (let j = i + 1; j < members.length; j++) {
@@ -93,9 +98,20 @@ function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[]
     }
   }
 
+  const defensives = abilities.filter(
+    (ability) => ability.category === 'defensive-major' && ability.variantKind === 'base',
+  )
+  for (const trinket of abilities) {
+    if (trinket.category !== 'trinket') continue
+    for (const defensive of defensives) {
+      addEdge(trinket.id, defensive.id, TRINKET_DEFENSIVE_SYNERGY)
+    }
+  }
+
   for (const ability of abilities) {
     if (ability.variantKind === 'focus' && ability.baseAbilityId && byId.has(ability.baseAbilityId)) {
       addEdge(ability.id, ability.baseAbilityId, VARIANT_SYNERGY)
+      if (byId.has('focus:set')) addEdge(ability.id, 'focus:set', FOCUS_SET_SYNERGY)
     }
   }
 
