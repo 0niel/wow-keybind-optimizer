@@ -23,6 +23,7 @@ export function SegmentedControl<T extends string>({
           key={option.value}
           className="seg-item"
           data-active={option.value === value}
+          aria-pressed={option.value === value}
           onClick={() => onChange(option.value)}
         >
           {option.label}
@@ -44,7 +45,13 @@ export function ChipToggle({
   title?: string
 }) {
   return (
-    <button className="pill" data-active={active} onClick={onClick} title={title}>
+    <button
+      className="pill"
+      data-active={active}
+      aria-pressed={active}
+      onClick={onClick}
+      title={title}
+    >
       {children}
     </button>
   )

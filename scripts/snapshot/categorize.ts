@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { normalizeSpellName } from '../../src/core/model/spell-name'
 import type { AbilityCategory, CuratedAbilityTraits } from '../../src/core/model/ability-category'
+import type { Targeting } from '../../src/core/model/snapshot'
 import type { UncategorizedSpellMeta } from './spells'
 
 export interface CuratedData {
@@ -26,7 +27,7 @@ export function categorize(
   meta: UncategorizedSpellMeta,
   englishName: string,
   curated: CuratedData,
-): { category: AbilityCategory; reactivity: number; panic: number } {
+): { category: AbilityCategory; reactivity: number; panic: number; targeting?: Targeting } {
   const normalized = normalizeSpellName(englishName)
   const traits = curated.traitsByName.get(normalized)
   if (traits) {
@@ -34,6 +35,7 @@ export function categorize(
       category: traits.category,
       reactivity: traits.reactivity ?? 0,
       panic: traits.panic ?? 0,
+      ...(traits.targeting ? { targeting: traits.targeting } : {}),
     }
   }
   if (meta.cooldownMs >= 120_000 && meta.targeting === 'self') {

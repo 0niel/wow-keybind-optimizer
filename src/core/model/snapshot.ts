@@ -13,6 +13,22 @@ export interface SnapshotManifest {
   generatedAt: string
   locales: string[]
   specIds: number[]
+  sources?: SnapshotSource[]
+  coverage?: SnapshotCoverage
+}
+
+export interface SnapshotSource {
+  id: 'game-tables' | 'combat-logs' | 'simulation' | 'spell-text'
+  name: string
+  url: string
+}
+
+export interface SnapshotCoverage {
+  specs: number
+  spellMeta: number
+  localizedSpells: number
+  combatLogSpecs: number
+  simulationSpecs: number
 }
 
 export interface ClassRecord {

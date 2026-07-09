@@ -8,7 +8,18 @@
     "trinket": "Trinket",
     "theme": "Theme",
     "variants": "Layout variants",
-    "variantBest": "best"
+    "variantBest": "best",
+    "workspaceNav": "Workspace navigation",
+    "navSetup": "Context",
+    "navLayout": "Layout",
+    "navAnalysis": "Analysis",
+    "navExport": "Export",
+    "layoutTitle": "Your optimized layout",
+    "layoutHint": "The primary workspace: inspect layers, compare variants, and pin important assignments directly on the keyboard.",
+    "analysisTitle": "Quality and provenance",
+    "analysisHint": "Solution quality, real press-frequency sources, and the talent tree decoded from the selected build.",
+    "exportTitle": "Move it into the game",
+    "exportHint": "Review the action bars, copy an import string, or download the ready-to-use addon with your layouts."
   },
   "hero": {
     "title": "Keybinds your fingers will thank you for",
@@ -22,6 +33,9 @@
     "importPlaceholder": "CcQAAAAAAAAAAAAAAAAAAAAAA…",
     "importHint": "Open the talent frame in game → share button → Copy Export String",
     "invalidString": "Not a valid export string",
+    "setupEyebrow": "Step 01",
+    "setupTitle": "Character context",
+    "setupHint": "Game mode changes ability priority, race adds active racials, and your hardware defines the available keys.",
     "factions": {
       "alliance": "Alliance",
       "horde": "Horde",
@@ -57,6 +71,27 @@
     },
     "modifiers": "Modifiers:",
     "wheel": "Mouse wheel"
+  },
+  "dataStatus": {
+    "eyebrow": "Data provenance",
+    "title": "Real game data",
+    "observed": "Observed data",
+    "modeled": "Mode model",
+    "heuristic": "Heuristic model",
+    "build": "Retail build",
+    "updated": "Generated",
+    "combatLogSpells": "abilities with WCL cast rates",
+    "simulationSpells": "abilities with SimC priority",
+    "specs": "specializations",
+    "observedNote": "For raids, press frequency is calculated from real Warcraft Logs samples. Talents, spellbook, cooldowns, target type, and range always come from game DB2 tables.",
+    "modeledNote": "Reliable match telemetry is unavailable for this mode, so it uses a model based on SimulationCraft, cooldowns, and mode weights. The ability pool, talents, target type, and range still come from real game DB2 tables.",
+    "heuristicNote": "SimulationCraft data and reliable match telemetry are unavailable for this specialization, so frequency is estimated from cooldowns and mode weights. The ability pool, talents, target type, and range come from real game DB2 tables.",
+    "sources": {
+      "gameTables": "game DB2 tables",
+      "combatLogs": "real combat logs",
+      "simulation": "APL and rotation order",
+      "spellText": "localized names and tooltips"
+    }
   },
   "results": {
     "layerBase": "Base",
@@ -208,6 +243,7 @@
       "msgProfile": "layout selected: %s",
       "msgCheckOk": "layout matches the bars and bindings",
       "msgCheckDrift": "layout drift detected — run /kbo apply",
+      "msgStatus": "addon %s · data %s · layout %s · %s",
       "msgAuto": "auto-apply on login: %s",
       "msgMouseover": "mouseover macros: %s — run /kbo apply",
       "msgColors": "category colors: %s",
@@ -232,7 +268,7 @@
       "clearMainButton": "Clear main bar",
       "stateOn": "ON",
       "stateOff": "OFF",
-      "help": "/kbo — layout browser, /kbo apply — apply, /kbo force — force apply, /kbo check — verify, /kbo import — import a layout string, /kbo profile N — pick layout, /kbo bars — show hidden bars, /kbo auto — login auto-apply, /kbo colors, /kbo legend, /kbo mainbar, /kbo mouseover, /kbo clearmain, /kbo wipe — clear all bars",
+      "help": "/kbo — layout browser, /kbo apply — apply, /kbo force — force apply, /kbo check — verify, /kbo status — version and data, /kbo import — import a layout string, /kbo profile N — pick layout, /kbo bars — show hidden bars, /kbo auto — login auto-apply, /kbo colors, /kbo legend, /kbo mainbar, /kbo mouseover, /kbo clearmain, /kbo wipe — clear all bars",
       "importButton": "Import layout…",
       "importTitle": "Import a layout from the site",
       "importHint": "Paste the import string (starts with !KBO1!) and press Import — no addon re-download needed.",
@@ -244,7 +280,9 @@
       "importErrChecksum": "import string is incomplete — copy it fully and paste again",
       "importErrClient": "this game client does not support import strings (C_EncodingUtil missing)",
       "wipeButton": "Clear all bars",
-      "msgWiped": "all managed bars cleared: %d slots (mounts, toys and personal macros kept) — backup saved"
+      "msgWiped": "all managed bars cleared: %d slots (mounts, toys and personal macros kept) — backup saved",
+      "confirmClear": "Clear managed spells from the main action bar? A backup will be created first.",
+      "confirmWipe": "Clear managed spells from all action bars? A backup will be created first."
     },
     "importTitle": "Import string",
     "importCopy": "Copy import string",

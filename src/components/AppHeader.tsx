@@ -70,7 +70,7 @@ export function AppHeader() {
         </span>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button className="pill" onClick={cycleTheme} title={t('theme')}>
+        <button className="pill" onClick={cycleTheme} title={t('theme')} aria-label={t('theme')}>
           {theme === 'auto' ? '🌗' : theme === 'dark' ? '🌙' : '☀️'}
         </button>
         <button className="pill" onClick={switchLocale}>

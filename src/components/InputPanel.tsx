@@ -42,7 +42,7 @@ export function HeroInput({ inputs, onChange, classes, spec, locale }: HeroInput
   const stringEntered = inputs.importString.trim().length >= 10
 
   return (
-    <section style={{ textAlign: 'center', padding: 'clamp(28px, 6vh, 72px) 0 12px' }}>
+    <section className="hero-section" data-compact={spec !== null}>
       <h1
         style={{
           fontSize: 'clamp(2rem, 5vw, 3.4rem)',
@@ -65,7 +65,7 @@ export function HeroInput({ inputs, onChange, classes, spec, locale }: HeroInput
       >
         {tHero('subtitle')}
       </p>
-      <div style={{ maxWidth: 780, margin: '0 auto' }}>
+      <div className="hero-input-wrap">
         <textarea
           className="hero-input"
           value={inputs.importString}
@@ -109,9 +109,16 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
     onChange({ ...inputs, hardware: { ...inputs.hardware, ...partial } })
 
   return (
-    <section className="panel fade-in">
-      <div className="settings-grid">
+    <section className="panel setup-panel fade-in">
+      <div className="panel-heading-row setup-heading">
         <div>
+          <span className="eyebrow">{t('setupEyebrow')}</span>
+          <h2 className="panel-title">{t('setupTitle')}</h2>
+          <p className="panel-subtitle">{t('setupHint')}</p>
+        </div>
+      </div>
+      <div className="settings-grid">
+        <div className="settings-card">
           <span className="label">{t('mode')}</span>
           <SegmentedControl<GameMode>
             options={[
@@ -145,7 +152,7 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
           )}
         </div>
 
-        <div>
+        <div className="settings-card">
           <span className="label">{t('race')}</span>
           <RacePicker
             races={races}
@@ -190,7 +197,7 @@ export function SettingsPanel({ inputs, onChange, races, spec, spellMeta, text, 
           )}
         </div>
 
-        <div>
+        <div className="settings-card">
           <span className="label">{t('hardware')}</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
             <SegmentedControl<'full' | 'tkl' | 'sixty'>

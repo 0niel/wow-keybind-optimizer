@@ -224,7 +224,7 @@ export function ExportPanel({
   const content = useMemo(() => {
     if (tab === 'list' || tab === 'bars') return renderPlainList(binds)
     if (tab === 'macros') return renderMacroList(binds)
-    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(profiles, ADDON_NAME, decor)}`
+    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(profiles, ADDON_NAME, decor, build)}`
   }, [tab, binds, profiles, build, decor])
 
   const copyImportString = async () => {
@@ -253,7 +253,7 @@ export function ExportPanel({
     if (tab === 'lua') {
       const zip = buildZipBlob([
         { name: `${ADDON_NAME}/${ADDON_NAME}.toc`, content: renderAddonToc(ADDON_NAME, build) },
-        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(profiles, ADDON_NAME, decor) },
+        { name: `${ADDON_NAME}/${ADDON_NAME}.lua`, content: renderLuaAddon(profiles, ADDON_NAME, decor, build) },
       ])
       triggerDownload(zip, `${ADDON_NAME}.zip`)
       return

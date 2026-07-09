@@ -4,6 +4,7 @@ import type { WagoSource } from '../lib/wago'
 import type { SpellMetaRecord, Targeting } from '../../src/core/model/snapshot'
 
 const PASSIVE_ATTRIBUTE_BIT = 0x40
+const TARGET_ALLY = 21
 
 export type UncategorizedSpellMeta = Omit<SpellMetaRecord, 'category' | 'reactivity' | 'panic'>
 
@@ -14,6 +15,17 @@ export interface SpellUniverse {
   namesByLocale: Map<string, Map<number, string>>
   descriptionsByLocale: Map<string, Map<number, string>>
   spellIdsByNormalizedName: Map<string, number[]>
+}
+
+export function classifySpellTargeting(
+  implicitTargets: number[],
+  range: { enemy: number; ally: number },
+): Targeting {
+  if (implicitTargets.includes(TARGET_ALLY)) return 'ally'
+  if (range.enemy > 0 && range.ally === 0) return 'enemy'
+  if (range.ally > 0 && range.enemy === 0) return 'ally'
+  if (range.enemy === 0 && range.ally === 0) return 'self'
+  return 'enemy'
 }
 
 export function normalizeSpellName(name: string): string {
@@ -28,14 +40,27 @@ export async function buildSpellUniverse(
   source: WagoSource,
   locales: string[],
 ): Promise<SpellUniverse> {
-  const [misc, cooldowns, categories, category, ranges, manifest] = await Promise.all([
+  const [misc, cooldowns, categories, category, ranges, effects, manifest] = await Promise.all([
     loadTable(source, 'SpellMisc'),
     loadTable(source, 'SpellCooldowns'),
     loadTable(source, 'SpellCategories'),
     loadTable(source, 'SpellCategory'),
     loadTable(source, 'SpellRange'),
+    loadTable(source, 'SpellEffect'),
     loadTable(source, 'ManifestInterfaceData'),
   ])
+
+  const implicitTargetsBySpellId = new Map<number, number[]>()
+  for (const row of effects) {
+    if (asInt(row, 'DifficultyID') !== 0) continue
+    const spellId = asInt(row, 'SpellID')
+    const targets = implicitTargetsBySpellId.get(spellId) ?? []
+    const target0 = asInt(row, 'ImplicitTarget_0')
+    const target1 = asInt(row, 'ImplicitTarget_1')
+    if (target0 > 0) targets.push(target0)
+    if (target1 > 0) targets.push(target1)
+    implicitTargetsBySpellId.set(spellId, targets)
+  }
 
   const iconByFileDataId = new Map<number, string>()
   for (const row of manifest) {
@@ -97,14 +122,7 @@ export async function buildSpellUniverse(
     const range = rangeById.get(asInt(row, 'RangeIndex')) ?? { enemy: 0, ally: 0 }
     const cooldown = cooldownBySpellId.get(spellId) ?? { recoveryMs: 0, gcd: 'normal' as const }
     const charges = chargeInfoBySpellId.get(spellId)
-    const targeting: Targeting =
-      range.enemy > 0 && range.ally === 0
-        ? 'enemy'
-        : range.ally > 0 && range.enemy === 0
-          ? 'ally'
-          : range.enemy === 0 && range.ally === 0
-            ? 'self'
-            : 'enemy'
+    const targeting = classifySpellTargeting(implicitTargetsBySpellId.get(spellId) ?? [], range)
     metaBySpellId.set(spellId, {
       id: spellId,
       icon: iconByFileDataId.get(asInt(row, 'SpellIconFileDataID')) ?? 'inv_misc_questionmark',

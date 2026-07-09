@@ -6,10 +6,44 @@ import type {
   SpellMetaShard,
   SpellTextShard,
 } from '@/core/model/snapshot'
+import { z } from 'zod'
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 
 const cache = new Map<string, unknown>()
+
+const latestSchema = z.object({ build: z.string().min(1) })
+const manifestSchema = z.object({
+  gameVersion: z.string().min(1),
+  build: z.string().min(1),
+  generatedAt: z.string().datetime(),
+  locales: z.array(z.string().min(2)),
+  specIds: z.array(z.number().int().positive()).min(1),
+  sources: z
+    .array(
+      z.object({
+        id: z.enum(['game-tables', 'combat-logs', 'simulation', 'spell-text']),
+        name: z.string().min(1),
+        url: z.string().url(),
+      }),
+    )
+    .optional(),
+  coverage: z
+    .object({
+      specs: z.number().int().nonnegative(),
+      spellMeta: z.number().int().nonnegative(),
+      localizedSpells: z.number().int().nonnegative(),
+      combatLogSpecs: z.number().int().nonnegative(),
+      simulationSpecs: z.number().int().nonnegative(),
+    })
+    .optional(),
+})
+
+function validated<T>(path: string, schema: z.ZodType<T>, payload: unknown): T {
+  const result = schema.safeParse(payload)
+  if (result.success) return result.data
+  throw new Error(`Invalid game data in ${path}: ${result.error.issues[0]?.message ?? 'schema mismatch'}`)
+}
 
 async function fetchJson<T>(path: string): Promise<T> {
   const cached = cache.get(path)
@@ -27,12 +61,15 @@ export interface TextShard {
 }
 
 export async function loadLatestBuild(): Promise<string> {
-  const { build } = await fetchJson<{ build: string }>('/data/retail/latest.json')
+  const path = '/data/retail/latest.json'
+  const payload = await fetchJson<unknown>(path)
+  const { build } = validated(path, latestSchema, payload)
   return build
 }
 
 export async function loadManifest(build: string): Promise<SnapshotManifest> {
-  return fetchJson<SnapshotManifest>(`/data/retail/${build}/manifest.json`)
+  const path = `/data/retail/${build}/manifest.json`
+  return validated(path, manifestSchema, await fetchJson<unknown>(path)) as SnapshotManifest
 }
 
 export async function loadClasses(build: string): Promise<ClassRecord[]> {

@@ -1,6 +1,8 @@
 import { fetchJsonCached } from '../lib/http'
 
 const BASE = 'https://www.warcraftlogs.com/v1'
+const SIX_HOURS = 6 * 60 * 60 * 1000
+const ONE_DAY = 24 * 60 * 60 * 1000
 
 export interface WclSpecCasts {
   cpmBySpellId: Map<number, number>
@@ -49,11 +51,11 @@ export class WclV1Client {
   }
 
   async zones(): Promise<WclZone[]> {
-    return fetchJsonCached<WclZone[]>(this.url('/zones'), { cacheKey: 'wcl-zones', minIntervalMs: 400 })
+    return fetchJsonCached<WclZone[]>(this.url('/zones'), { cacheKey: 'wcl-zones', minIntervalMs: 400, maxAgeMs: ONE_DAY })
   }
 
   async classes(): Promise<WclClass[]> {
-    return fetchJsonCached<WclClass[]>(this.url('/classes'), { cacheKey: 'wcl-classes', minIntervalMs: 400 })
+    return fetchJsonCached<WclClass[]>(this.url('/classes'), { cacheKey: 'wcl-classes', minIntervalMs: 400, maxAgeMs: ONE_DAY })
   }
 
   async currentRaidEncounters(): Promise<Array<{ id: number; name: string }>> {
@@ -82,7 +84,7 @@ export class WclV1Client {
         spec: wclSpecId,
         includeCombatantInfo: 'false',
       }),
-      { cacheKey: `wcl-rank-${encounterId}-${wclClassId}-${wclSpecId}-${metric}`, minIntervalMs: 400 },
+      { cacheKey: `wcl-rank-${encounterId}-${wclClassId}-${wclSpecId}-${metric}`, minIntervalMs: 400, maxAgeMs: SIX_HOURS },
     )
     const totalCpm = new Map<number, number>()
     let sampled = 0

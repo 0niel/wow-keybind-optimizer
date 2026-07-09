@@ -2,11 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
-import type { ClassRecord, RaceRecord, SpecSnapshot, SpellMetaShard } from '@/core/model/snapshot'
+import type {
+  ClassRecord,
+  RaceRecord,
+  SnapshotManifest,
+  SpecSnapshot,
+  SpellMetaShard,
+} from '@/core/model/snapshot'
 import type { TextShard } from '@/lib/data'
 import {
   loadClasses,
   loadLatestBuild,
+  loadManifest,
   loadRaces,
   loadSpec,
   loadSpellMeta,
@@ -15,6 +22,7 @@ import {
 
 export interface GameData {
   build: string
+  manifest: SnapshotManifest
   classes: ClassRecord[]
   races: RaceRecord[]
   spellMeta: SpellMetaShard
@@ -31,13 +39,14 @@ export function useGameData(): { data: GameData | null; error: string | null } {
     async function load() {
       try {
         const build = await loadLatestBuild()
-        const [classes, races, spellMeta, text] = await Promise.all([
+        const [manifest, classes, races, spellMeta, text] = await Promise.all([
+          loadManifest(build),
           loadClasses(build),
           loadRaces(build),
           loadSpellMeta(build),
           loadText(build, locale),
         ])
-        if (!cancelled) setData({ build, classes, races, spellMeta, text })
+        if (!cancelled) setData({ build, manifest, classes, races, spellMeta, text })
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : String(cause))
       }

@@ -33,6 +33,7 @@ interface CliOptions {
   skipWcl: boolean
   skipWowhead: boolean
   wclSampleSize: number
+  refresh: boolean
 }
 
 function parseArgs(argv: string[]): CliOptions {
@@ -42,6 +43,7 @@ function parseArgs(argv: string[]): CliOptions {
     skipWcl: false,
     skipWowhead: false,
     wclSampleSize: 5,
+    refresh: false,
   }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -52,12 +54,14 @@ function parseArgs(argv: string[]): CliOptions {
     if (arg === '--skip-wcl') options.skipWcl = true
     if (arg === '--skip-wowhead') options.skipWowhead = true
     if (arg === '--wcl-samples') options.wclSampleSize = Number.parseInt(argv[++i] ?? '5', 10)
+    if (arg === '--refresh') options.refresh = true
   }
   return options
 }
 
 async function main() {
   const options = parseArgs(process.argv.slice(2))
+  if (options.refresh) process.env['SNAPSHOT_REFRESH'] = '1'
   const build = options.build ?? (await fetchLatestBuild('wow'))
   console.log(`snapshot build: ${build}`)
   const source = createWagoSource(build)
@@ -408,6 +412,14 @@ async function main() {
   }))
   writeFileSync(join(outDir, 'races.json'), JSON.stringify(raceRecords, null, 1), 'utf8')
 
+  const combatLogSpecs = specSnapshots.filter((snapshot) =>
+    Object.values(snapshot.frequencyBySpellId).some((record) => record.cpm !== null),
+  ).length
+  const simulationSpecs = specSnapshots.filter((snapshot) =>
+    Object.values(snapshot.frequencyBySpellId).some((record) => record.aplRank !== null),
+  ).length
+  const localizedSpellIds = new Set([...referencedSpellIds, ...nameOnlySpellIds])
+
   writeFileSync(
     join(outDir, 'manifest.json'),
     JSON.stringify(
@@ -417,6 +429,19 @@ async function main() {
         generatedAt: new Date().toISOString(),
         locales: LOCALES.map((locale) => APP_LOCALE_BY_DATA_LOCALE[locale] ?? locale),
         specIds: specSnapshots.map((s) => s.specId),
+        sources: [
+          { id: 'game-tables', name: 'wago.tools', url: 'https://wago.tools' },
+          { id: 'combat-logs', name: 'Warcraft Logs', url: 'https://www.warcraftlogs.com' },
+          { id: 'simulation', name: 'SimulationCraft', url: 'https://www.simulationcraft.org' },
+          { id: 'spell-text', name: 'Wowhead', url: 'https://www.wowhead.com' },
+        ],
+        coverage: {
+          specs: specSnapshots.length,
+          spellMeta: Object.keys(spellMeta).length,
+          localizedSpells: localizedSpellIds.size,
+          combatLogSpecs,
+          simulationSpecs,
+        },
       },
       null,
       1,

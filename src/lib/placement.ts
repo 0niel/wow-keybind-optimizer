@@ -39,8 +39,6 @@ export interface PlannedBind {
   placeable: boolean
 }
 
-const MODIFIER_RANK: Record<Modifier, number> = { none: 0, shift: 1, ctrl: 2, alt: 3 }
-
 type Entry = readonly [PlannedBind, number]
 
 function keyOrder(keyId: string): number {
@@ -51,13 +49,6 @@ function byKeyOrder(a: Entry, b: Entry): number {
   return keyOrder(a[0].keyId) - keyOrder(b[0].keyId)
 }
 
-function byModifierThenKey(a: Entry, b: Entry): number {
-  return (
-    MODIFIER_RANK[a[0].modifier] - MODIFIER_RANK[b[0].modifier] ||
-    keyOrder(a[0].keyId) - keyOrder(b[0].keyId)
-  )
-}
-
 const isDigitKey = (keyId: string): boolean => DIGIT_COLUMN[keyId] !== undefined
 
 export function buildPlacementPlan(binds: PlannedBind[]): (number | null)[] {
@@ -66,51 +57,22 @@ export function buildPlacementPlan(binds: PlannedBind[]): (number | null)[] {
     .map((bind, index) => [bind, index] as const)
     .filter(([bind]) => bind.placeable)
 
-  const baseDigits = entries
-    .filter(([bind]) => bind.modifier === 'none' && isDigitKey(bind.keyId))
-    .sort(byKeyOrder)
-  const baseLetters = entries
-    .filter(([bind]) => bind.modifier === 'none' && !isDigitKey(bind.keyId))
-    .sort(byKeyOrder)
-  const shiftDigits = entries
-    .filter(([bind]) => bind.modifier === 'shift' && isDigitKey(bind.keyId))
-    .sort(byKeyOrder)
-  const shiftLetters = entries
-    .filter(([bind]) => bind.modifier === 'shift' && !isDigitKey(bind.keyId))
-    .sort(byKeyOrder)
-  const rest = entries
-    .filter(([bind]) => bind.modifier === 'ctrl' || bind.modifier === 'alt')
-    .sort(byModifierThenKey)
+  const inGroup = (modifier: Modifier, digits: boolean) => (entry: Entry) =>
+    entry[0].modifier === modifier && isDigitKey(entry[0].keyId) === digits
 
-  let nextBar = 0
-  const pool: Entry[] = []
+  const stream: Entry[] = [
+    ...entries.filter(inGroup('none', true)).sort(byKeyOrder),
+    ...entries.filter(inGroup('none', false)).sort(byKeyOrder),
+    ...entries.filter(inGroup('shift', true)).sort(byKeyOrder),
+    ...entries.filter(inGroup('shift', false)).sort(byKeyOrder),
+    ...entries.filter(([bind]) => bind.modifier === 'ctrl').sort(byKeyOrder),
+    ...entries.filter(([bind]) => bind.modifier === 'alt').sort(byKeyOrder),
+  ]
 
-  const fillBar = (groups: Entry[][]): void => {
-    const ordered = groups.flat()
-    if (ordered.length === 0) return
-    const bar = nextBar++
-    ordered.slice(0, BAR_SIZE).forEach(([, index], column) => {
-      result[index] = bar * BAR_SIZE + column
-    })
-    for (const entry of ordered.slice(BAR_SIZE)) pool.push(entry)
-  }
-
-  fillBar([baseDigits])
-  fillBar([shiftDigits, shiftLetters])
-  fillBar([baseLetters])
-
-  const packed = [...pool, ...rest].sort(byModifierThenKey)
-  let bar = nextBar
-  let column = 0
-  for (const [, index] of packed) {
-    if (bar >= MAX_PLANNED_BARS) break
-    result[index] = bar * BAR_SIZE + column
-    column++
-    if (column === BAR_SIZE) {
-      column = 0
-      bar++
-    }
-  }
+  const capacity = MAX_PLANNED_BARS * BAR_SIZE
+  stream.forEach(([, index], position) => {
+    if (position < capacity) result[index] = position
+  })
 
   return result
 }

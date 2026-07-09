@@ -24,6 +24,7 @@ import { ScorePanel } from './ScorePanel'
 import { TalentTreeView } from './TalentTreeView'
 import { ExportPanel } from './ExportPanel'
 import { AppHeader } from './AppHeader'
+import { DataStatus } from './DataStatus'
 
 export function OptimizerApp() {
   const t = useTranslations('app')
@@ -356,17 +357,7 @@ export function OptimizerApp() {
   return (
     <div style={{ minHeight: '100vh' }}>
       <AppHeader />
-      <main
-        style={{
-          width: '100%',
-          maxWidth: 1400,
-          margin: '0 auto',
-          padding: '0 clamp(20px, 4vw, 56px) 96px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 20,
-        }}
-      >
+      <main className="optimizer-main">
         <HeroInput
           inputs={inputs}
           onChange={updateInputs}
@@ -379,6 +370,21 @@ export function OptimizerApp() {
           <ExamplePicker classes={data.classes} locale={locale} onPick={pickExample} />
         )}
 
+        {data && spec && (
+          <nav className="workspace-nav" aria-label={t('workspaceNav')}>
+            <div className="workspace-nav-links">
+              <a href="#setup">{t('navSetup')}</a>
+              <a href="#result">{t('navLayout')}</a>
+              <a href="#analysis">{t('navAnalysis')}</a>
+              <a href="#export">{t('navExport')}</a>
+            </div>
+            <div className="workspace-context">
+              <b>{spec.names[locale] ?? spec.names.en ?? spec.specId}</b>
+              <span>{data.build}</span>
+            </div>
+          </nav>
+        )}
+
         {!data && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
             <LoadingBlock label={t('loadingData')} />
@@ -386,15 +392,17 @@ export function OptimizerApp() {
         )}
 
         {data && (
-          <SettingsPanel
-            inputs={inputs}
-            onChange={updateInputs}
-            races={data.races}
-            spec={spec}
-            spellMeta={data.spellMeta}
-            text={data.text}
-            locale={locale}
-          />
+          <div id="setup" className="anchor-target">
+            <SettingsPanel
+              inputs={inputs}
+              onChange={updateInputs}
+              races={data.races}
+              spec={spec}
+              spellMeta={data.spellMeta}
+              text={data.text}
+              locale={locale}
+            />
+          </div>
         )}
 
         {specError && (
@@ -412,65 +420,73 @@ export function OptimizerApp() {
 
         {spec && data && outcome && selectedVariant && (
           <>
-            <section
-              className="panel fade-in"
-              style={{ opacity: solverState.status === 'solving' ? 0.55 : 1, transition: 'opacity 0.2s' }}
-            >
-              {outcome.variants.length > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  <span className="label" style={{ marginBottom: 0 }}>
-                    {t('variants')}
-                  </span>
-                  {outcome.variants.map((variant, index) => {
-                    const best = outcome.variants[0]?.result.objective ?? 0
-                    const diff = best > 0 ? ((variant.result.objective - best) / best) * 100 : 0
-                    const active = variant.seed === selectedVariant.seed
-                    return (
-                      <button
-                        key={variant.seed}
-                        className="pill"
-                        data-active={active}
-                        onClick={() => updateInputs({ ...inputs, seed: variant.seed })}
-                      >
-                        {index + 1}
-                        {index === 0 ? ` · ${t('variantBest')}` : ` · ${diff.toFixed(1)}%`}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-              <KeyboardView
-                hardware={inputs.hardware}
-                slots={outcome.slots}
-                abilities={outcome.abilities}
-                assignments={selectedVariant.result.assignments}
-                synergyPartnersByAbility={synergyPartnersByAbility}
-                spellMeta={data.spellMeta}
-                text={data.text}
-                highlightAbilityIds={highlightAbilityIds}
-                onAbilityClick={handleAbilityClick}
-                editing={{
-                  pinnedBinds: inputs.pinnedBinds,
-                  excludedAbilityIds: inputs.excludedAbilityIds,
-                  onToggleKeyBan: toggleKeyBan,
-                  onSetKeyPriority: setKeyPriority,
-                  onPinAbility: pinAbility,
-                  onUnpinSlot: unpinSlot,
-                  onExcludeAbility: excludeAbility,
-                  onRestoreAbility: restoreAbility,
-                  onPinAll: pinAllCurrent,
-                  onClearOverrides: clearOverrides,
-                }}
-              />
+            <section id="result" className="workspace-section anchor-target fade-in">
+              <SectionHeading index="02" title={t('layoutTitle')} hint={t('layoutHint')} />
+              <div
+                className="panel result-panel"
+                data-solving={solverState.status === 'solving'}
+              >
+                {outcome.variants.length > 1 && (
+                  <div className="variant-toolbar">
+                    <span className="label" style={{ marginBottom: 0 }}>
+                      {t('variants')}
+                    </span>
+                    {outcome.variants.map((variant, index) => {
+                      const best = outcome.variants[0]?.result.objective ?? 0
+                      const diff = best > 0 ? ((variant.result.objective - best) / best) * 100 : 0
+                      const active = variant.seed === selectedVariant.seed
+                      return (
+                        <button
+                          key={variant.seed}
+                          className="pill"
+                          data-active={active}
+                          onClick={() => updateInputs({ ...inputs, seed: variant.seed })}
+                        >
+                          {index + 1}
+                          {index === 0 ? ` · ${t('variantBest')}` : ` · ${diff.toFixed(1)}%`}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <KeyboardView
+                  hardware={inputs.hardware}
+                  slots={outcome.slots}
+                  abilities={outcome.abilities}
+                  assignments={selectedVariant.result.assignments}
+                  synergyPartnersByAbility={synergyPartnersByAbility}
+                  spellMeta={data.spellMeta}
+                  text={data.text}
+                  highlightAbilityIds={highlightAbilityIds}
+                  onAbilityClick={handleAbilityClick}
+                  editing={{
+                    pinnedBinds: inputs.pinnedBinds,
+                    excludedAbilityIds: inputs.excludedAbilityIds,
+                    onToggleKeyBan: toggleKeyBan,
+                    onSetKeyPriority: setKeyPriority,
+                    onPinAbility: pinAbility,
+                    onUnpinSlot: unpinSlot,
+                    onExcludeAbility: excludeAbility,
+                    onRestoreAbility: restoreAbility,
+                    onPinAll: pinAllCurrent,
+                    onClearOverrides: clearOverrides,
+                  }}
+                />
+              </div>
             </section>
-            <ScorePanel
-              result={selectedVariant.result}
-              baseline={outcome.baseline}
-              abilities={outcome.abilities}
-              slots={outcome.slots}
-              elapsedMs={solverState.elapsedMs}
-            />
-            <div className="two-col">
+
+            <section id="analysis" className="workspace-section anchor-target">
+              <SectionHeading index="03" title={t('analysisTitle')} hint={t('analysisHint')} />
+              <div className="analysis-grid">
+                <ScorePanel
+                  result={selectedVariant.result}
+                  baseline={outcome.baseline}
+                  abilities={outcome.abilities}
+                  slots={outcome.slots}
+                  elapsedMs={solverState.elapsedMs}
+                />
+                <DataStatus manifest={data.manifest} spec={spec} mode={inputs.mode} />
+              </div>
               <TalentTreeView
                 spec={spec}
                 selections={outcome.selections}
@@ -479,6 +495,10 @@ export function OptimizerApp() {
                 spellMeta={data.spellMeta}
                 text={data.text}
               />
+            </section>
+
+            <section id="export" className="workspace-section anchor-target">
+              <SectionHeading index="04" title={t('exportTitle')} hint={t('exportHint')} />
               <ExportPanel
                 variants={outcome.variants}
                 selectedSeed={selectedVariant.seed}
@@ -500,7 +520,7 @@ export function OptimizerApp() {
                 onAddToCart={addToCart}
                 onRemoveFromCart={removeFromCart}
               />
-            </div>
+            </section>
           </>
         )}
 
@@ -546,9 +566,21 @@ function AppFooter() {
 
 function LoadingBlock({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-soft)' }}>
-      <span className="spinner" />
-      {label}
+    <div className="loading-block" role="status">
+      <span className="loading-line" />
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function SectionHeading({ index, title, hint }: { index: string; title: string; hint: string }) {
+  return (
+    <div className="section-heading">
+      <span>{index}</span>
+      <div>
+        <h2>{title}</h2>
+        <p>{hint}</p>
+      </div>
     </div>
   )
 }

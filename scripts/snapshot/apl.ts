@@ -1,5 +1,7 @@
 import { fetchJsonCached, fetchTextCached } from '../lib/http'
 
+const SIX_HOURS = 6 * 60 * 60 * 1000
+
 export interface AplProfile {
   aplRankByActionName: Map<string, number>
   adjacencyPairs: Array<[string, string]>
@@ -41,7 +43,7 @@ interface GithubEntry {
 export async function fetchAplIndex(): Promise<Map<string, string>> {
   const entries = await fetchJsonCached<GithubEntry[]>(
     'https://api.github.com/repos/simulationcraft/simc/contents/profiles/MID1?ref=midnight',
-    { cacheKey: 'simc-mid1-index' },
+    { cacheKey: 'simc-mid1-index', maxAgeMs: SIX_HOURS },
   )
   const bySpecKey = new Map<string, string>()
   for (const entry of entries) {
@@ -53,7 +55,7 @@ export async function fetchAplIndex(): Promise<Map<string, string>> {
 }
 
 export async function fetchAplProfile(downloadUrl: string): Promise<AplProfile> {
-  const text = await fetchTextCached(downloadUrl)
+  const text = await fetchTextCached(downloadUrl, { maxAgeMs: SIX_HOURS })
   return parseApl(text)
 }
 

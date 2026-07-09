@@ -120,7 +120,7 @@ export function extractAbilityPool(input: ExtractionInput): Ability[] {
       if (existing !== undefined) continue
       seenIcons.set(iconKey, spellId)
     }
-    abilities.push(buildAbility(spellId, meta, spec, sourceNodesBySpellId.get(spellId) ?? []))
+    abilities.push(buildAbility(spellId, meta, spec, sourceNodesBySpellId.get(spellId) ?? [], mode))
   }
 
   assignRotationRanks(abilities, spec)
@@ -204,6 +204,7 @@ function buildAbility(
   meta: SpellMetaRecord,
   spec: SpecSnapshot,
   sourceNodeIds: number[],
+  mode: GameMode,
 ): Ability {
   return {
     id: `spell:${spellId}`,
@@ -211,7 +212,7 @@ function buildAbility(
     category: meta.category,
     variantKind: 'base',
     baseAbilityId: null,
-    frequency: resolveFrequency(spellId, meta, spec),
+    frequency: resolveFrequency(spellId, meta, spec, mode),
     reactivity: meta.reactivity,
     panic: meta.panic,
     offGcd: meta.gcd === 'off',
@@ -222,9 +223,14 @@ function buildAbility(
   }
 }
 
-function resolveFrequency(spellId: number, meta: SpellMetaRecord, spec: SpecSnapshot): number {
+function resolveFrequency(
+  spellId: number,
+  meta: SpellMetaRecord,
+  spec: SpecSnapshot,
+  mode: GameMode,
+): number {
   const record = spec.frequencyBySpellId[String(spellId)]
-  if (record?.cpm !== null && record?.cpm !== undefined) {
+  if (mode === 'raid' && record?.cpm !== null && record?.cpm !== undefined) {
     return Math.min(1, record.cpm / CPM_CAP)
   }
   if (record?.aplRank !== null && record?.aplRank !== undefined) {

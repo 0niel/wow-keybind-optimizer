@@ -281,7 +281,7 @@ describe('lua addon generator', () => {
   it('exposes expanded settings and slash commands', () => {
     const layout = solveLayout(262, 'mythic-plus', 'focus')
     const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
-    for (const command of ['apply', 'force', 'check', 'profile', 'auto', 'mouseover', 'colors', 'legend', 'clearmain', 'bars', 'mainbar', 'help']) {
+    for (const command of ['apply', 'force', 'check', 'status', 'profile', 'auto', 'mouseover', 'colors', 'legend', 'clearmain', 'bars', 'mainbar', 'help']) {
       expect(lua).toMatch(new RegExp(`command == "${command}"`))
     }
     expect(lua).toContain('"autoApply"')
@@ -289,6 +289,27 @@ describe('lua addon generator', () => {
     expect(lua).toContain('UICheckButtonTemplate')
     expect(lua).toMatch(/RegisterAddOnCategory|InterfaceOptions_AddCategory/)
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('backs up displaced bindings and confirms destructive bar actions', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer')
+    expect(lua).toContain('local first, second = GetBindingKey(bar.command .. i)')
+    expect(lua).toContain('captureKey(first)')
+    expect(lua).toContain('captureKey(second)')
+    expect(lua).toContain('confirmDanger("CLEAR_MAIN"')
+    expect(lua).toContain('confirmDanger("WIPE_ALL"')
+    expect(lua.match(/if confirmed ~= true then/g)?.length).toBe(2)
+    expect(lua).toMatch(/clearMainBar\(confirmed\)[\s\S]*captureBackup\(UI\.backupManual\)/)
+    expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('embeds addon and source data versions for /kbo status', () => {
+    const layout = solveLayout(262, 'mythic-plus', 'focus')
+    const lua = renderLuaAddon([toProfile(layout, 'mythic-plus')], 'KeybindOptimizer', undefined, BUILD)
+    expect(lua).toContain('local ADDON_VERSION = "2.4.0"')
+    expect(lua).toContain(`local DATA_BUILD = "${BUILD}"`)
+    expect(lua).toContain('runStatus')
   })
 
   it('offers every slash command as a button in the browser and settings panel', () => {
@@ -335,6 +356,17 @@ describe('lua addon generator', () => {
     expect(lua).toContain('Прерывание')
     expect(lua).toContain('Interrupt')
     expect(() => parseLua(lua, { luaVersion: '5.1' })).not.toThrow()
+  })
+
+  it('turns real ally-targeted spells into optional mouseover macros', () => {
+    const layout = solveLayout(263, 'mythic-plus', 'focus')
+    const allyBinds = layout.binds.filter((bind) => bind.ability.targeting === 'ally')
+    expect(allyBinds.length).toBeGreaterThan(0)
+    const allySpellIds = new Set(allyBinds.map((bind) => bind.ability.spellId))
+    const entries = buildLuaBindEntries(layout.binds)
+    expect(
+      entries.some((entry) => entry.spell !== undefined && allySpellIds.has(entry.spell) && entry.mouseover),
+    ).toBe(true)
   })
 
   it('is locale-independent without decor: no localized names inside the addon source', () => {
@@ -431,6 +463,8 @@ describe('lua addon generator', () => {
     expect(toc).toContain('## Interface: 120007')
     expect(toc).toContain('## SavedVariables: KeybindOptimizerDB')
     expect(toc).toContain('## SavedVariablesPerCharacter: KeybindOptimizerCharDB')
+    expect(toc).toContain('## Version: 2.4.0')
+    expect(toc).toContain(`## X-KeybindOptimizer-Data-Build: ${BUILD}`)
   })
 
   it('packs a ZIP with the correct addon folder structure that round-trips', async () => {

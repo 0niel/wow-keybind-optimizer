@@ -1,4 +1,11 @@
 {
+  "healing_rain": { "category": "heal-utility", "targeting": "ground" },
+  "blizzard": { "category": "rotational-core", "targeting": "ground" },
+  "flamestrike": { "category": "rotational-core", "targeting": "ground" },
+  "death_and_decay": { "category": "rotational-core", "targeting": "ground" },
+  "rend": { "category": "rotational-core", "targeting": "enemy" },
+  "curse_of_weakness": { "category": "utility", "targeting": "enemy" },
+  "empower_rune_weapon": { "category": "cooldown-burst", "targeting": "self" },
   "wind_shear": { "category": "interrupt", "reactivity": 1 },
   "kick": { "category": "interrupt", "reactivity": 1 },
   "counterspell": { "category": "interrupt", "reactivity": 1 },

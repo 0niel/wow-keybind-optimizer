@@ -47,5 +47,18 @@
   260,
   252,
   254
- ]
+ ],
+ "sources": [
+  { "id": "game-tables", "name": "wago.tools", "url": "https://wago.tools" },
+  { "id": "combat-logs", "name": "Warcraft Logs", "url": "https://www.warcraftlogs.com" },
+  { "id": "simulation", "name": "SimulationCraft", "url": "https://www.simulationcraft.org" },
+  { "id": "spell-text", "name": "Wowhead", "url": "https://www.wowhead.com" }
+ ],
+ "coverage": {
+  "specs": 40,
+  "spellMeta": 918,
+  "localizedSpells": 3872,
+  "combatLogSpecs": 40,
+  "simulationSpecs": 32
+ }
 }

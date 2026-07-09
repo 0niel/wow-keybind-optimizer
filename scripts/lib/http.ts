@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const CACHE_DIR = join(process.cwd(), 'scripts', '.cache', 'http')
@@ -14,12 +14,12 @@ async function throttle(minIntervalMs: number): Promise<void> {
 
 export async function fetchJsonCached<T>(
   url: string,
-  options: { minIntervalMs?: number; cacheKey?: string } = {},
+  options: { minIntervalMs?: number; cacheKey?: string; maxAgeMs?: number } = {},
 ): Promise<T> {
   mkdirSync(CACHE_DIR, { recursive: true })
   const key = options.cacheKey ?? createHash('sha1').update(url).digest('hex')
   const cachePath = join(CACHE_DIR, `${key}.json`)
-  if (existsSync(cachePath)) {
+  if (cacheIsFresh(cachePath, options.maxAgeMs)) {
     return JSON.parse(readFileSync(cachePath, 'utf8')) as T
   }
   await throttle(options.minIntervalMs ?? 150)
@@ -34,18 +34,24 @@ export async function fetchJsonCached<T>(
 
 export async function fetchTextCached(
   url: string,
-  options: { minIntervalMs?: number } = {},
+  options: { minIntervalMs?: number; maxAgeMs?: number } = {},
 ): Promise<string> {
   mkdirSync(CACHE_DIR, { recursive: true })
   const key = createHash('sha1').update(url).digest('hex')
   const cachePath = join(CACHE_DIR, `${key}.txt`)
-  if (existsSync(cachePath)) return readFileSync(cachePath, 'utf8')
+  if (cacheIsFresh(cachePath, options.maxAgeMs)) return readFileSync(cachePath, 'utf8')
   await throttle(options.minIntervalMs ?? 150)
   const response = await fetch(url, { headers: { 'User-Agent': 'wow-keybind-optimizer-snapshot' } })
   if (!response.ok) throw new Error(`GET ${url} -> ${response.status}`)
   const payload = await response.text()
   writeFileSync(cachePath, payload, 'utf8')
   return payload
+}
+
+function cacheIsFresh(path: string, maxAgeMs = Number.POSITIVE_INFINITY): boolean {
+  if (!existsSync(path)) return false
+  if (process.env['SNAPSHOT_REFRESH'] === '1') return false
+  return Date.now() - statSync(path).mtimeMs <= maxAgeMs
 }
 
 export function loadEnvLocal(): Record<string, string> {
