@@ -220,12 +220,19 @@ export function ExportPanel({
   }
 
   const placements = useMemo(() => buildLuaBindPlacements(binds, decor), [binds, decor])
+  const addonBindCount = useMemo(
+    () => profiles.reduce((total, profile) => total + profile.binds.length, 0),
+    [profiles],
+  )
+
+  const buildLuaSource = () =>
+    `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(profiles, ADDON_NAME, decor, build)}`
 
   const content = useMemo(() => {
     if (tab === 'list' || tab === 'bars') return renderPlainList(binds)
     if (tab === 'macros') return renderMacroList(binds)
-    return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(profiles, ADDON_NAME, decor, build)}`
-  }, [tab, binds, profiles, build, decor])
+    return ''
+  }, [tab, binds])
 
   const copyImportString = async () => {
     const importString = await encodeImportString(profiles)
@@ -235,7 +242,7 @@ export function ExportPanel({
   }
 
   const copy = async () => {
-    await navigator.clipboard.writeText(content)
+    await navigator.clipboard.writeText(tab === 'lua' ? buildLuaSource() : content)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
@@ -392,9 +399,17 @@ export function ExportPanel({
           })}
         </div>
       )}
-      {(tab === 'macros' || tab === 'lua') && <CodeBlock code={content} />}
+      {tab === 'macros' && <CodeBlock code={content} />}
       {tab === 'macros' && (
         <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('macrosHint')}</p>
+      )}
+      {tab === 'lua' && (
+        <div className="inset-panel lua-summary">
+          <div>
+            <h3>{t('luaReadyTitle')}</h3>
+            <p>{t('luaReadyHint', { profiles: profiles.length, binds: addonBindCount })}</p>
+          </div>
+        </div>
       )}
       {tab === 'lua' && cart.length > 0 && (
         <div style={{ marginTop: 14 }}>

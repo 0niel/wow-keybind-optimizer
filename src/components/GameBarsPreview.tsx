@@ -212,8 +212,7 @@ export function GameBarsPreview({
           position: 'relative',
           borderRadius: 16,
           padding: '28px 20px 20px',
-          background:
-            'radial-gradient(120% 90% at 50% 0%, #2a3346 0%, #131a28 55%, #0b0f18 100%)',
+          background: '#131a28',
           border: '1px solid rgba(255,255,255,0.08)',
           overflowX: 'auto',
         }}

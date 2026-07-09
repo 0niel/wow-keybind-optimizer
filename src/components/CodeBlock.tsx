@@ -37,8 +37,22 @@ function tokenizeLine(line: string): Token[] {
   return tokens
 }
 
-export function CodeBlock({ code, maxHeight = 420 }: { code: string; maxHeight?: number }) {
-  const lines = useMemo(() => code.split('\n').map(tokenizeLine), [code])
+export function CodeBlock({
+  code,
+  maxHeight = 420,
+  maxLines = Number.POSITIVE_INFINITY,
+}: {
+  code: string
+  maxHeight?: number
+  maxLines?: number
+}) {
+  const { lines, truncated } = useMemo(() => {
+    const sourceLines = code.split('\n')
+    return {
+      lines: sourceLines.slice(0, maxLines).map(tokenizeLine),
+      truncated: sourceLines.length > maxLines,
+    }
+  }, [code, maxLines])
   return (
     <pre
       style={{
@@ -56,13 +70,18 @@ export function CodeBlock({ code, maxHeight = 420 }: { code: string; maxHeight?:
       {lines.map((tokens, lineIndex) => (
         <Fragment key={lineIndex}>
           {tokens.map((token, tokenIndex) => (
-            <span key={tokenIndex} style={token.color ? { color: token.color } : undefined}>
-              {token.text}
-            </span>
+            token.color ? (
+              <span key={tokenIndex} style={{ color: token.color }}>
+                {token.text}
+              </span>
+            ) : (
+              <Fragment key={tokenIndex}>{token.text}</Fragment>
+            )
           ))}
           {'\n'}
         </Fragment>
       ))}
+      {truncated ? '…\n' : null}
     </pre>
   )
 }

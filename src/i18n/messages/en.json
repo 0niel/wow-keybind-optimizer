@@ -191,6 +191,8 @@
     "tabList": "Bind list",
     "tabMacros": "Macros",
     "tabLua": "Lua addon",
+    "luaReadyTitle": "Addon ready to export",
+    "luaReadyHint": "Profiles: {profiles} · assignments: {binds}. Full Lua is generated only when copying or downloading, so opening this tab no longer blocks the page.",
     "copy": "Copy",
     "copied": "Copied!",
     "download": "Download",

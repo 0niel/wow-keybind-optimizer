@@ -128,9 +128,7 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(circle at 50% -20%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 34rem),
-    var(--page);
+  background: var(--page);
   color: var(--text);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -185,8 +183,7 @@ select:focus {
   background: var(--panel);
   border-radius: var(--r-panel);
   padding: clamp(20px, 3vw, 32px);
-  border: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
-  box-shadow: 0 18px 60px color-mix(in srgb, var(--text) 4%, transparent);
+  border: 1px solid var(--inset-strong);
 }
 
 .inset-panel {
@@ -308,8 +305,7 @@ select:focus {
   padding: 20px 24px;
   border-radius: 20px;
   background: var(--panel);
-  border: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
-  box-shadow: 0 18px 60px color-mix(in srgb, var(--text) 5%, transparent);
+  border: 1px solid var(--inset-strong);
 }
 
 .hero-input:hover {
@@ -338,7 +334,6 @@ select:focus {
   background: var(--overlay);
   border-radius: 20px;
   padding: 18px;
-  backdrop-filter: blur(16px);
   outline: 2px solid var(--inset-strong);
 }
 
@@ -415,11 +410,9 @@ select:focus {
   gap: 16px;
   min-height: 58px;
   padding: 8px 10px 8px 14px;
-  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  border: 1px solid var(--inset-strong);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
-  backdrop-filter: blur(18px) saturate(1.25);
+  background: var(--panel);
 }
 
 .workspace-nav-links {
@@ -588,7 +581,7 @@ select:focus {
   gap: 7px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ok) 13%, transparent);
+  background: var(--inset);
   color: var(--ok);
   font-size: 0.74rem;
   font-weight: 750;
@@ -597,13 +590,12 @@ select:focus {
 }
 
 .live-badge[data-modeled='true'] {
-  background: color-mix(in srgb, var(--warn) 13%, transparent);
+  background: var(--inset);
   color: var(--warn);
 }
 
 .live-badge[data-modeled='true'] .live-dot {
   background: var(--warn);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 14%, transparent);
 }
 
 .live-dot {
@@ -611,7 +603,6 @@ select:focus {
   height: 7px;
   border-radius: 50%;
   background: var(--ok);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 14%, transparent);
 }
 
 .data-build-card {
@@ -713,6 +704,24 @@ select:focus {
   text-overflow: ellipsis;
 }
 
+.lua-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.lua-summary h3 {
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.lua-summary > div:first-child p {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
 .loading-block {
   width: min(420px, 100%);
   display: grid;
@@ -728,13 +737,12 @@ select:focus {
 .loading-line {
   height: 10px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--inset), var(--inset-strong), var(--inset));
-  background-size: 220% 100%;
-  animation: shimmer 1.25s linear infinite;
+  background: var(--inset-strong);
+  animation: loading-pulse 1.25s ease-in-out infinite alternate;
 }
 
-@keyframes shimmer {
-  to { background-position: -220% 0; }
+@keyframes loading-pulse {
+  to { opacity: 0.45; }
 }
 
 @media (prefers-reduced-motion: reduce) {
