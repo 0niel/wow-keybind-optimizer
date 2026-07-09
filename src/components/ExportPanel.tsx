@@ -11,12 +11,15 @@ import {
   buildAddonKeyboard,
   buildAddonProfile,
   buildExportBinds,
+  buildLuaBindPlacements,
   renderLuaAddon,
   renderMacroList,
   renderPlainList,
   renderAddonToc,
   ADDON_UI_KEYS,
 } from '@/lib/exports'
+import { encodeImportString } from '@/lib/import-string'
+import { GameBarsPreview } from './GameBarsPreview'
 import type { HardwareConfig } from '@/core/model/hardware'
 import type { AddonDecor, AddonLocaleStrings, AddonUiKey } from '@/lib/exports'
 import { buildZipBlob } from '@/lib/zip'
@@ -42,7 +45,7 @@ function localeStringsFor(messages: Messages): AddonLocaleStrings {
   return { categories, ui }
 }
 
-type ExportTab = 'list' | 'macros' | 'lua'
+type ExportTab = 'list' | 'bars' | 'macros' | 'lua'
 
 interface Props {
   variants: LayoutVariant[]
@@ -99,6 +102,7 @@ export function ExportPanel({
   const [tab, setTab] = useState<ExportTab>('list')
   const [copied, setCopied] = useState(false)
   const [added, setAdded] = useState(false)
+  const [importCopied, setImportCopied] = useState(false)
 
   const labels: ZeroSpellLabels = useMemo(
     () => ({
@@ -214,11 +218,20 @@ export function ExportPanel({
     setTimeout(() => setAdded(false), 1500)
   }
 
+  const placements = useMemo(() => buildLuaBindPlacements(binds, decor), [binds, decor])
+
   const content = useMemo(() => {
-    if (tab === 'list') return renderPlainList(binds)
+    if (tab === 'list' || tab === 'bars') return renderPlainList(binds)
     if (tab === 'macros') return renderMacroList(binds)
     return `-- ${ADDON_NAME}.toc\n${renderAddonToc(ADDON_NAME, build)}\n\n-- ${ADDON_NAME}.lua\n${renderLuaAddon(profiles, ADDON_NAME, decor)}`
   }, [tab, binds, profiles, build, decor])
+
+  const copyImportString = async () => {
+    const importString = await encodeImportString(profiles)
+    await navigator.clipboard.writeText(importString)
+    setImportCopied(true)
+    setTimeout(() => setImportCopied(false), 1500)
+  }
 
   const copy = async () => {
     await navigator.clipboard.writeText(content)
@@ -262,6 +275,7 @@ export function ExportPanel({
         <SegmentedControl<ExportTab>
           options={[
             { value: 'list', label: t('tabList') },
+            { value: 'bars', label: t('tabBars') },
             { value: 'macros', label: t('tabMacros') },
             { value: 'lua', label: t('tabLua') },
           ]}
@@ -270,22 +284,32 @@ export function ExportPanel({
         />
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {tab === 'lua' && (
-            <button className="action" onClick={addCurrentToCart}>
-              {added ? t('addedToAddon') : t('addToAddon')}
-            </button>
+            <>
+              <button className="action" onClick={addCurrentToCart}>
+                {added ? t('addedToAddon') : t('addToAddon')}
+              </button>
+              <button className="action" data-primary onClick={copyImportString}>
+                {importCopied ? t('importCopied') : t('importCopy')}
+              </button>
+            </>
           )}
-          <button className="action" onClick={copy}>
-            {copied ? t('copied') : t('copy')}
-          </button>
-          <button className="action" data-primary={tab === 'lua'} onClick={download}>
-            {tab === 'lua' ? t('downloadAddon') : t('download')}
-          </button>
+          {tab !== 'bars' && (
+            <>
+              <button className="action" onClick={copy}>
+                {copied ? t('copied') : t('copy')}
+              </button>
+              <button className="action" data-primary={tab === 'lua'} onClick={download}>
+                {tab === 'lua' ? t('downloadAddon') : t('download')}
+              </button>
+            </>
+          )}
           <button className="action" onClick={shareUrl}>
             {t('share')}
           </button>
         </div>
       </div>
-      {tab === 'list' ? (
+      {tab === 'bars' && <GameBarsPreview placements={placements} spellMeta={spellMeta} />}
+      {tab === 'list' && (
         <div
           style={{
             display: 'flex',
@@ -366,9 +390,8 @@ export function ExportPanel({
             )
           })}
         </div>
-      ) : (
-        <CodeBlock code={content} />
       )}
+      {(tab === 'macros' || tab === 'lua') && <CodeBlock code={content} />}
       {tab === 'macros' && (
         <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('macrosHint')}</p>
       )}
@@ -419,7 +442,10 @@ export function ExportPanel({
         </div>
       )}
       {tab === 'lua' && (
-        <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('luaHint')}</p>
+        <>
+          <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('luaHint')}</p>
+          <p style={{ marginTop: 6, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('importHint')}</p>
+        </>
       )}
     </section>
   )

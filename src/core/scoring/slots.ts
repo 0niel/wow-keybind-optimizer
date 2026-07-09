@@ -1,7 +1,7 @@
 import type { HardwareConfig, Modifier, PhysicalKey } from '@/core/model/hardware'
 import type { Slot } from '@/core/model/ability'
 import { buildKeyboardGeometry, isBindableKey } from '@/core/hardware/keyboards'
-import { DEFAULT_TIER, MOVEMENT_SCHEMES, ROTATION_KEY_ORDER } from '@/core/hardware/movement-schemes'
+import { MOVEMENT_SCHEMES, ROTATION_KEY_ORDER } from '@/core/hardware/movement-schemes'
 import { MOUSE_BUTTONS, WHEEL_BUTTONS } from '@/core/hardware/mice'
 
 const TIER_WEIGHT = 0.65
@@ -19,7 +19,11 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
   const movement = new Set(scheme.movementKeyIds)
 
   const bindableKeys = keys.filter(
-    (key) => isBindableKey(key) && !movement.has(key.id) && !banned.has(key.id),
+    (key) =>
+      isBindableKey(key) &&
+      !movement.has(key.id) &&
+      !banned.has(key.id) &&
+      scheme.tierByKeyId[key.id] !== undefined,
   )
 
   const rawFitts = new Map<string, number>()
@@ -44,7 +48,7 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
 
   const slots: Slot[] = []
   for (const key of bindableKeys) {
-    const tier = scheme.tierByKeyId[key.id] ?? DEFAULT_TIER
+    const tier = scheme.tierByKeyId[key.id] ?? 0
     const fitts = (rawFitts.get(key.id) ?? maxFitts) / maxFitts
     const quality = TIER_WEIGHT * tier + FITTS_WEIGHT * (1 - fitts)
     const movementPenalty = isMovementNeighbor(key, anchors) ? MOVEMENT_NEIGHBOR_PENALTY : 0

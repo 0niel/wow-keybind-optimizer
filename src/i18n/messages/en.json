@@ -216,7 +216,33 @@
       "clearMainButton": "Clear main bar",
       "stateOn": "ON",
       "stateOff": "OFF",
-      "help": "/kbo — layout browser, /kbo apply — apply, /kbo force — force apply, /kbo check — verify, /kbo profile N — pick layout, /kbo bars — show hidden bars, /kbo auto — login auto-apply, /kbo colors, /kbo legend, /kbo mainbar, /kbo mouseover, /kbo clearmain"
+      "help": "/kbo — layout browser, /kbo apply — apply, /kbo force — force apply, /kbo check — verify, /kbo import — import a layout string, /kbo profile N — pick layout, /kbo bars — show hidden bars, /kbo auto — login auto-apply, /kbo colors, /kbo legend, /kbo mainbar, /kbo mouseover, /kbo clearmain",
+      "importButton": "Import layout…",
+      "importTitle": "Import a layout from the site",
+      "importHint": "Paste the import string (starts with !KBO1!) and press Import — no addon re-download needed.",
+      "importAccept": "Import",
+      "importCancel": "Cancel",
+      "importedTag": "imported",
+      "msgImported": "layouts imported: %d — select one and press Apply",
+      "importErrFormat": "import string is corrupted or has an unsupported format",
+      "importErrChecksum": "import string is incomplete — copy it fully and paste again",
+      "importErrClient": "this game client does not support import strings (C_EncodingUtil missing)"
+    },
+    "importTitle": "Import string",
+    "importCopy": "Copy import string",
+    "importCopied": "String copied",
+    "importHint": "In game: /kbo → “Import layout…” (or /kbo import), paste the string — the addon applies everything without re-downloading.",
+    "tabBars": "In game",
+    "bars": {
+      "main": "Main action bar",
+      "bar2": "Bar 2 (bottom left)",
+      "bar3": "Bar 3 (bottom right)",
+      "bar4": "Bar 4 (right side)",
+      "bar5": "Bar 5 (left side)",
+      "extra": "Bar {n} (hidden by default)",
+      "hiddenHint": "Hidden bars can be enabled with /kbo bars or in Edit Mode.",
+      "keysOnly": "Key-only binds (not on bars)",
+      "empty": "empty"
     }
   }
 }

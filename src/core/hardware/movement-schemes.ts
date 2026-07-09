@@ -18,7 +18,7 @@ const WASD_TIERS: Record<string, number> = {
   Tab: 0.78,
   KeyZ: 0.62,
   KeyX: 0.62,
-  CapsLock: 0.5,
+  CapsLock: 0.72,
   KeyY: 0.45,
   KeyH: 0.45,
   KeyB: 0.45,
@@ -29,9 +29,6 @@ const WASD_TIERS: Record<string, number> = {
   F3: 0.4,
   F4: 0.3,
   F5: 0.3,
-  KeyU: 0.3,
-  KeyJ: 0.3,
-  KeyM: 0.3,
 }
 
 function shiftTiersRight(tiers: Record<string, number>): Record<string, number> {
@@ -50,9 +47,6 @@ function shiftTiersRight(tiers: Record<string, number>): Record<string, number> 
     KeyY: 'KeyU',
     KeyH: 'KeyJ',
     KeyN: 'KeyM',
-    KeyU: 'KeyI',
-    KeyJ: 'KeyK',
-    KeyM: 'Comma',
   }
   const result: Record<string, number> = {}
   for (const [keyId, tier] of Object.entries(tiers)) {
@@ -76,8 +70,6 @@ export const MOVEMENT_SCHEMES: Record<MovementSchemeId, MovementScheme> = {
     tierByKeyId: shiftTiersRight(WASD_TIERS),
   },
 }
-
-export const DEFAULT_TIER = 0.1
 
 export const ROTATION_KEY_ORDER: Record<MovementSchemeId, string[]> = {
   wasd: [
