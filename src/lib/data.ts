@@ -120,7 +120,9 @@ export async function loadExamples(): Promise<ExamplePreset[]> {
 export const FALLBACK_ICON = 'inv_misc_questionmark'
 
 export function spellIconUrl(icon: string): string {
-  const clean = icon.trim().replace(/\s+/g, '').toLowerCase() || FALLBACK_ICON
+  // FileData icon names occasionally contain spaces. Zamimg exposes those
+  // files with hyphen-separated slugs; deleting whitespace produces a 404.
+  const clean = icon.trim().replace(/\s+/g, '-').toLowerCase() || FALLBACK_ICON
   return `https://wow.zamimg.com/images/wow/icons/large/${clean}.jpg`
 }
 
