@@ -1,4 +1,5 @@
-import type { HardwareConfig, Modifier, PhysicalKey } from '@/core/model/hardware'
+import type { HardwareConfig, KeyPriority, Modifier, PhysicalKey } from '@/core/model/hardware'
+import { BOOSTED_KEY_TIER, LOWERED_TIER_FACTOR } from '@/core/model/hardware'
 import type { Slot } from '@/core/model/ability'
 import { buildKeyboardGeometry, isBindableKey } from '@/core/hardware/keyboards'
 import { MOVEMENT_SCHEMES, ROTATION_KEY_ORDER } from '@/core/hardware/movement-schemes'
@@ -7,6 +8,12 @@ import { MOUSE_BUTTONS, WHEEL_BUTTONS } from '@/core/hardware/mice'
 const TIER_WEIGHT = 0.65
 const FITTS_WEIGHT = 0.35
 const MOVEMENT_NEIGHBOR_PENALTY = 0.08
+
+function applyPriority(base: number, priority: KeyPriority | undefined): number {
+  if (priority === 'boost') return Math.max(base, BOOSTED_KEY_TIER)
+  if (priority === 'lower') return base * LOWERED_TIER_FACTOR
+  return base
+}
 
 export function enumerateSlots(config: HardwareConfig): Slot[] {
   const scheme = MOVEMENT_SCHEMES[config.movementScheme]
@@ -17,13 +24,14 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
     .filter((key): key is PhysicalKey => key !== undefined)
   const banned = new Set(config.bannedKeyIds)
   const movement = new Set(scheme.movementKeyIds)
+  const priorities = config.keyPriorities ?? {}
 
   const bindableKeys = keys.filter(
     (key) =>
       isBindableKey(key) &&
       !movement.has(key.id) &&
       !banned.has(key.id) &&
-      scheme.tierByKeyId[key.id] !== undefined,
+      (scheme.tierByKeyId[key.id] !== undefined || priorities[key.id] === 'boost'),
   )
 
   const rawFitts = new Map<string, number>()
@@ -48,7 +56,7 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
 
   const slots: Slot[] = []
   for (const key of bindableKeys) {
-    const tier = scheme.tierByKeyId[key.id] ?? 0
+    const tier = applyPriority(scheme.tierByKeyId[key.id] ?? 0, priorities[key.id])
     const fitts = (rawFitts.get(key.id) ?? maxFitts) / maxFitts
     const quality = TIER_WEIGHT * tier + FITTS_WEIGHT * (1 - fitts)
     const movementPenalty = isMovementNeighbor(key, anchors) ? MOVEMENT_NEIGHBOR_PENALTY : 0
@@ -78,15 +86,16 @@ export function enumerateSlots(config: HardwareConfig): Slot[] {
   const mouseModifierPenalty: Record<string, number> = { none: 1, shift: 0.75, ctrl: 0.4, alt: 0.32 }
   for (const button of mouseButtons) {
     if (banned.has(button.id)) continue
+    const reach = applyPriority(button.reach, priorities[button.id])
     for (const modifier of config.enabledModifiers) {
       const accessibility =
-        button.reach * (config.modifierFactors[modifier] ?? 1) * (mouseModifierPenalty[modifier] ?? 1)
+        reach * (config.modifierFactors[modifier] ?? 1) * (mouseModifierPenalty[modifier] ?? 1)
       slots.push({
         id: slotId(button.id, modifier),
         keyId: button.id,
         keyLabel: button.label,
         modifier,
-        tier: button.reach,
+        tier: reach,
         fitts: 0,
         accessibility,
         isMouse: true,

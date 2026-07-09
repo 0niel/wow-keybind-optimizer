@@ -22,13 +22,17 @@ const TRINKET_DEFENSIVE_SYNERGY = 0.5
 
 const SEMANTIC_GROUPS: AbilityCategory[][] = [
   ['cc-hard'],
+  ['cc-soft'],
   ['external'],
   ['heal-utility'],
   ['dispel'],
   ['mobility'],
   ['defensive-major', 'defensive-minor'],
   ['cooldown-burst'],
+  ['utility'],
 ]
+
+const MAINTENANCE_SYNERGY = 0.55
 
 export interface ProblemInput {
   abilities: Ability[]
@@ -50,9 +54,29 @@ export function buildAssignmentProblem(input: ProblemInput): AssignmentProblem {
     slots,
     synergies,
     arenaTriplets,
-    constraints: input.constraints,
+    constraints: {
+      ...input.constraints,
+      lockedBinds: sanitizeLockedBinds(input.constraints.lockedBinds, abilities, slots),
+    },
     weights: { ...DEFAULT_OBJECTIVE_WEIGHTS, ...input.weights },
   }
+}
+
+function sanitizeLockedBinds(
+  lockedBinds: Record<string, string>,
+  abilities: Ability[],
+  slots: AssignmentProblem['slots'],
+): Record<string, string> {
+  const abilityIds = new Set(abilities.map((ability) => ability.id))
+  const slotIds = new Set(slots.map((slot) => slot.id))
+  const usedSlots = new Set<string>()
+  const sanitized: Record<string, string> = {}
+  for (const [abilityId, slotId] of Object.entries(lockedBinds)) {
+    if (!abilityIds.has(abilityId) || !slotIds.has(slotId) || usedSlots.has(slotId)) continue
+    sanitized[abilityId] = slotId
+    usedSlots.add(slotId)
+  }
+  return sanitized
 }
 
 function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[] {
@@ -86,6 +110,7 @@ function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[]
 
   for (const group of SEMANTIC_GROUPS) {
     const groupSet = new Set(group)
+    const weight = group.includes('utility') ? MAINTENANCE_SYNERGY : SEMANTIC_SYNERGY
     const members = abilities.filter(
       (ability) => groupSet.has(ability.category) && ability.variantKind === 'base',
     )
@@ -93,7 +118,7 @@ function buildSynergies(abilities: Ability[], spec: SpecSnapshot): SynergyEdge[]
       for (let j = i + 1; j < members.length; j++) {
         const a = members[i]
         const b = members[j]
-        if (a && b) addEdge(a.id, b.id, SEMANTIC_SYNERGY)
+        if (a && b) addEdge(a.id, b.id, weight)
       }
     }
   }

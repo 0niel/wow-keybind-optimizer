@@ -13,6 +13,14 @@ interface BarCell {
   hotkey: string
   category: string
   variant?: string
+  mouseover?: boolean
+}
+
+function macroTag(cell: BarCell): string | null {
+  if (cell.variant === 'focus') return '@focus'
+  if (cell.variant?.startsWith('arena')) return `@${cell.variant.slice(-1)}`
+  if (cell.mouseover) return '@mo'
+  return null
 }
 
 const CELL_SIZE = 44
@@ -29,15 +37,16 @@ function shortWowKey(key: string): string {
 }
 
 function BarButton({ cell }: { cell: BarCell | undefined }) {
+  const tag = cell ? macroTag(cell) : null
   return (
     <div
-      title={cell ? `${cell.name} — ${cell.hotkey}${cell.variant ? ` [@${cell.variant}]` : ''}` : undefined}
+      title={cell ? `${cell.name} — ${cell.hotkey}${tag ? ` ${tag}` : ''}` : undefined}
       style={{
         position: 'relative',
         width: CELL_SIZE,
         height: CELL_SIZE,
         borderRadius: 8,
-        border: '1px solid rgba(255,255,255,0.14)',
+        border: tag ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.14)',
         background: cell ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.38)',
         boxShadow: cell ? 'none' : 'inset 0 2px 8px rgba(0,0,0,0.55)',
         flexShrink: 0,
@@ -52,6 +61,24 @@ function BarButton({ cell }: { cell: BarCell | undefined }) {
           loading="lazy"
           style={{ position: 'absolute', inset: 3, borderRadius: 6, objectFit: 'cover' }}
         />
+      )}
+      {tag && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 1,
+            left: 2,
+            fontSize: 8.5,
+            fontWeight: 800,
+            padding: '0 3px',
+            borderRadius: 4,
+            background: 'var(--accent)',
+            color: 'var(--on-accent)',
+            lineHeight: 1.5,
+          }}
+        >
+          {tag}
+        </span>
       )}
       {cell && (
         <span
@@ -132,7 +159,7 @@ export function GameBarsPreview({
 }) {
   const t = useTranslations('export.bars')
 
-  const { cellsByBar, keysOnly, hasExtra } = useMemo(() => {
+  const { cellsByBar, keysOnly, hasExtra, hasMacro } = useMemo(() => {
     const bySlot = new Map<number, BarCell>()
     const unplaced: BarCell[] = []
     for (const { bind, entry } of placements) {
@@ -147,6 +174,7 @@ export function GameBarsPreview({
         hotkey: shortWowKey(entry.key),
         category: entry.category ?? bind.ability.category,
         variant: entry.variant,
+        mouseover: entry.mouseover,
       }
       if (entry.slot === undefined) unplaced.push(cell)
       else bySlot.set(entry.slot, cell)
@@ -158,10 +186,12 @@ export function GameBarsPreview({
       row[slot % BAR_SIZE] = cell
       byBar.set(bar, row)
     }
+    const hasMacro = [...bySlot.values()].some((cell) => macroTag(cell) !== null) || unplaced.some((cell) => macroTag(cell) !== null)
     return {
       cellsByBar: byBar,
       keysOnly: unplaced,
       hasExtra: [...byBar.keys()].some((bar) => bar >= 5),
+      hasMacro,
     }
   }, [placements, spellMeta])
 
@@ -229,6 +259,11 @@ export function GameBarsPreview({
             ))}
           </div>
         </div>
+      )}
+      {hasMacro && (
+        <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-soft)' }}>
+          <b style={{ color: 'var(--accent)' }}>@</b> {t('macroNote')}
+        </p>
       )}
       {hasExtra && (
         <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('hiddenHint')}</p>

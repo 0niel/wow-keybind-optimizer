@@ -7,10 +7,12 @@ const RELAXATION_STEP = 0.05
 export interface FeasibilityContext {
   reactiveSlotThreshold: number
   warnings: string[]
+  lockedSlotIds: Set<string>
 }
 
 export function prepareFeasibility(problem: AssignmentProblem): FeasibilityContext {
   const warnings: string[] = []
+  const lockedSlotIds = new Set(Object.values(problem.constraints.lockedBinds))
   let threshold = problem.weights.reactiveSlotThreshold
   const reactiveAbilities = problem.abilities.filter(
     (ability) => ability.reactivity >= REACTIVE_HARD_THRESHOLD,
@@ -26,7 +28,7 @@ export function prepareFeasibility(problem: AssignmentProblem): FeasibilityConte
   if (threshold < problem.weights.reactiveSlotThreshold) {
     warnings.push(`reactive-threshold-relaxed:${threshold.toFixed(2)}`)
   }
-  return { reactiveSlotThreshold: threshold, warnings }
+  return { reactiveSlotThreshold: threshold, warnings, lockedSlotIds }
 }
 
 export function isFeasible(
@@ -35,13 +37,11 @@ export function isFeasible(
   problem: AssignmentProblem,
   context: FeasibilityContext,
 ): boolean {
+  const lockedSlot = problem.constraints.lockedBinds[ability.id]
+  if (lockedSlot !== undefined) return lockedSlot === slot.id
+  if (context.lockedSlotIds.has(slot.id)) return false
   if (ability.panic >= PANIC_HARD_THRESHOLD && slot.modifier !== 'none') return false
-  if (
-    ability.category === 'interrupt' &&
-    ability.variantKind === 'base' &&
-    slot.modifier !== 'none' &&
-    problem.constraints.lockedBinds[ability.id] === undefined
-  ) {
+  if (ability.category === 'interrupt' && ability.variantKind === 'base' && slot.modifier !== 'none') {
     return false
   }
   if (ability.reactivity >= REACTIVE_HARD_THRESHOLD && slot.accessibility < context.reactiveSlotThreshold) {
@@ -54,11 +54,5 @@ export function isFeasible(
   ) {
     return false
   }
-  const lockedSlot = problem.constraints.lockedBinds[ability.id]
-  if (lockedSlot !== undefined && lockedSlot !== slot.id) return false
-  const lockedAbilityForSlot = Object.entries(problem.constraints.lockedBinds).find(
-    ([, slotId]) => slotId === slot.id,
-  )
-  if (lockedAbilityForSlot && lockedAbilityForSlot[0] !== ability.id) return false
   return true
 }

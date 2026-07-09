@@ -30,6 +30,8 @@ export interface MovementScheme {
   tierByKeyId: Record<string, number>
 }
 
+export type KeyPriority = 'boost' | 'lower'
+
 export interface HardwareConfig {
   formFactor: KeyboardFormFactor
   layout: PhysicalLayout
@@ -39,9 +41,13 @@ export interface HardwareConfig {
   enabledModifiers: Modifier[]
   includeMouseWheel: boolean
   bannedKeyIds: string[]
+  keyPriorities: Record<string, KeyPriority>
 }
 
 export const DEFAULT_BANNED_KEY_IDS = ['Tab']
+
+export const BOOSTED_KEY_TIER = 1
+export const LOWERED_TIER_FACTOR = 0.45
 
 export const DEFAULT_HARDWARE_CONFIG: HardwareConfig = {
   formFactor: 'tkl',
@@ -52,4 +58,5 @@ export const DEFAULT_HARDWARE_CONFIG: HardwareConfig = {
   enabledModifiers: ['none', 'shift', 'ctrl', 'alt'],
   includeMouseWheel: false,
   bannedKeyIds: DEFAULT_BANNED_KEY_IDS,
+  keyPriorities: {},
 }

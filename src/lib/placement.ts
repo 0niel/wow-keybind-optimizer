@@ -58,6 +58,8 @@ function byModifierThenKey(a: Entry, b: Entry): number {
   )
 }
 
+const isDigitKey = (keyId: string): boolean => DIGIT_COLUMN[keyId] !== undefined
+
 export function buildPlacementPlan(binds: PlannedBind[]): (number | null)[] {
   const result: (number | null)[] = binds.map(() => null)
   const entries = binds
@@ -65,12 +67,17 @@ export function buildPlacementPlan(binds: PlannedBind[]): (number | null)[] {
     .filter(([bind]) => bind.placeable)
 
   const baseDigits = entries
-    .filter(([bind]) => bind.modifier === 'none' && DIGIT_COLUMN[bind.keyId] !== undefined)
+    .filter(([bind]) => bind.modifier === 'none' && isDigitKey(bind.keyId))
     .sort(byKeyOrder)
-  const baseOthers = entries
-    .filter(([bind]) => bind.modifier === 'none' && DIGIT_COLUMN[bind.keyId] === undefined)
+  const baseLetters = entries
+    .filter(([bind]) => bind.modifier === 'none' && !isDigitKey(bind.keyId))
     .sort(byKeyOrder)
-  const shiftAll = entries.filter(([bind]) => bind.modifier === 'shift').sort(byKeyOrder)
+  const shiftDigits = entries
+    .filter(([bind]) => bind.modifier === 'shift' && isDigitKey(bind.keyId))
+    .sort(byKeyOrder)
+  const shiftLetters = entries
+    .filter(([bind]) => bind.modifier === 'shift' && !isDigitKey(bind.keyId))
+    .sort(byKeyOrder)
   const rest = entries
     .filter(([bind]) => bind.modifier === 'ctrl' || bind.modifier === 'alt')
     .sort(byModifierThenKey)
@@ -78,63 +85,20 @@ export function buildPlacementPlan(binds: PlannedBind[]): (number | null)[] {
   let nextBar = 0
   const pool: Entry[] = []
 
-  if (baseDigits.length > 0) {
+  const fillBar = (groups: Entry[][]): void => {
+    const ordered = groups.flat()
+    if (ordered.length === 0) return
     const bar = nextBar++
-    for (const [bind, index] of baseDigits) {
-      result[index] = bar * BAR_SIZE + (DIGIT_COLUMN[bind.keyId] ?? 0)
-    }
-  }
-
-  const letterColumn = new Map<string, number>()
-  baseOthers.slice(0, BAR_SIZE).forEach(([bind], position) => {
-    letterColumn.set(bind.keyId, position)
-  })
-
-  if (shiftAll.length > 0) {
-    const bar = nextBar++
-    const used = new Set<number>()
-    const shiftOthers: Entry[] = []
-    for (const entry of shiftAll) {
-      const column = DIGIT_COLUMN[entry[0].keyId]
-      if (column !== undefined) {
-        result[entry[1]] = bar * BAR_SIZE + column
-        used.add(column)
-      } else {
-        shiftOthers.push(entry)
-      }
-    }
-    const unaligned: Entry[] = []
-    for (const entry of shiftOthers) {
-      const aligned = letterColumn.get(entry[0].keyId)
-      if (aligned !== undefined && !used.has(aligned)) {
-        result[entry[1]] = bar * BAR_SIZE + aligned
-        used.add(aligned)
-      } else {
-        unaligned.push(entry)
-      }
-    }
-    let column = 0
-    for (const entry of unaligned) {
-      while (column < BAR_SIZE && used.has(column)) column++
-      if (column < BAR_SIZE) {
-        result[entry[1]] = bar * BAR_SIZE + column
-        used.add(column)
-        column++
-      } else {
-        pool.push(entry)
-      }
-    }
-  }
-
-  if (baseOthers.length > 0) {
-    const bar = nextBar++
-    baseOthers.slice(0, BAR_SIZE).forEach(([, index], position) => {
-      result[index] = bar * BAR_SIZE + position
+    ordered.slice(0, BAR_SIZE).forEach(([, index], column) => {
+      result[index] = bar * BAR_SIZE + column
     })
-    for (const entry of baseOthers.slice(BAR_SIZE)) pool.push(entry)
+    for (const entry of ordered.slice(BAR_SIZE)) pool.push(entry)
   }
 
-  pool.sort(byModifierThenKey)
+  fillBar([baseDigits])
+  fillBar([shiftDigits, shiftLetters])
+  fillBar([baseLetters])
+
   const packed = [...pool, ...rest].sort(byModifierThenKey)
   let bar = nextBar
   let column = 0

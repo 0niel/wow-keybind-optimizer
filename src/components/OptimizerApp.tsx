@@ -6,6 +6,7 @@ import { useGameData, useSpecSnapshot } from '@/hooks/useGameData'
 import { useSolver } from '@/hooks/useSolver'
 import { DEFAULT_INPUTS, deserializeInputs, effectiveTargetBinds, serializeInputs } from '@/state/inputs'
 import type { OptimizerInputs } from '@/state/inputs'
+import { DEFAULT_BANNED_KEY_IDS } from '@/core/model/hardware'
 import {
   classPreservation,
   classTagFromSlug,
@@ -101,13 +102,14 @@ export function OptimizerApp() {
         mode: inputs.mode,
         arenaTargetScheme: inputs.arenaTargetScheme,
         hardware: inputs.hardware,
-        constraints: { lockedBinds: {}, bannedSlotIds: [], preservedBinds: {} },
+        constraints: { lockedBinds: inputs.pinnedBinds, bannedSlotIds: [], preservedBinds: {} },
         seed: inputs.seed,
         strategyId: 'qap-annealing',
         spellNames,
         preservedBinds: preservation.preservedBinds,
         anchorInterruptSlotId: preservation.anchorInterruptSlotId,
         includeTargetBinds: effectiveTargetBinds(inputs),
+        excludedAbilityIds: inputs.excludedAbilityIds,
       })
     }, 350)
     return () => {
@@ -191,8 +193,16 @@ export function OptimizerApp() {
   const toggleKeyBan = useCallback(
     (keyId: string) => {
       const banned = inputs.hardware.bannedKeyIds.includes(keyId)
+      const pinnedBinds = banned
+        ? inputs.pinnedBinds
+        : Object.fromEntries(
+            Object.entries(inputs.pinnedBinds).filter(
+              ([, slotId]) => slotId !== keyId && !slotId.endsWith(`+${keyId}`),
+            ),
+          )
       updateInputs({
         ...inputs,
+        pinnedBinds,
         hardware: {
           ...inputs.hardware,
           bannedKeyIds: banned
@@ -203,6 +213,86 @@ export function OptimizerApp() {
     },
     [inputs, updateInputs],
   )
+
+  const setKeyPriority = useCallback(
+    (keyId: string, priority: 'boost' | 'lower' | null) => {
+      const keyPriorities = { ...inputs.hardware.keyPriorities }
+      if (priority === null) delete keyPriorities[keyId]
+      else keyPriorities[keyId] = priority
+      updateInputs({ ...inputs, hardware: { ...inputs.hardware, keyPriorities } })
+    },
+    [inputs, updateInputs],
+  )
+
+  const pinAbility = useCallback(
+    (abilityId: string, slotId: string) => {
+      const pinnedBinds = Object.fromEntries(
+        Object.entries(inputs.pinnedBinds).filter(
+          ([pinnedAbility, pinnedSlot]) => pinnedAbility !== abilityId && pinnedSlot !== slotId,
+        ),
+      )
+      pinnedBinds[abilityId] = slotId
+      updateInputs({ ...inputs, pinnedBinds })
+    },
+    [inputs, updateInputs],
+  )
+
+  const unpinSlot = useCallback(
+    (slotId: string) => {
+      const pinnedBinds = Object.fromEntries(
+        Object.entries(inputs.pinnedBinds).filter(([, pinnedSlot]) => pinnedSlot !== slotId),
+      )
+      updateInputs({ ...inputs, pinnedBinds })
+    },
+    [inputs, updateInputs],
+  )
+
+  const excludeAbility = useCallback(
+    (abilityId: string) => {
+      if (inputs.excludedAbilityIds.includes(abilityId)) return
+      const pinnedBinds = Object.fromEntries(
+        Object.entries(inputs.pinnedBinds).filter(([pinnedAbility]) => pinnedAbility !== abilityId),
+      )
+      updateInputs({
+        ...inputs,
+        pinnedBinds,
+        excludedAbilityIds: [...inputs.excludedAbilityIds, abilityId],
+      })
+    },
+    [inputs, updateInputs],
+  )
+
+  const restoreAbility = useCallback(
+    (abilityId: string) => {
+      updateInputs({
+        ...inputs,
+        excludedAbilityIds: inputs.excludedAbilityIds.filter((id) => id !== abilityId),
+      })
+    },
+    [inputs, updateInputs],
+  )
+
+  const pinAllCurrent = useCallback(() => {
+    if (!selectedVariant) return
+    const pinnedBinds: Record<string, string> = {}
+    for (const assignment of selectedVariant.result.assignments) {
+      pinnedBinds[assignment.abilityId] = assignment.slotId
+    }
+    updateInputs({ ...inputs, pinnedBinds })
+  }, [inputs, selectedVariant, updateInputs])
+
+  const clearOverrides = useCallback(() => {
+    updateInputs({
+      ...inputs,
+      pinnedBinds: {},
+      excludedAbilityIds: [],
+      hardware: {
+        ...inputs.hardware,
+        keyPriorities: {},
+        bannedKeyIds: DEFAULT_BANNED_KEY_IDS,
+      },
+    })
+  }, [inputs, updateInputs])
 
   const handleAbilityClick = useCallback(
     (abilityId: string) => {
@@ -359,7 +449,18 @@ export function OptimizerApp() {
                 text={data.text}
                 highlightAbilityIds={highlightAbilityIds}
                 onAbilityClick={handleAbilityClick}
-                onToggleKeyBan={toggleKeyBan}
+                editing={{
+                  pinnedBinds: inputs.pinnedBinds,
+                  excludedAbilityIds: inputs.excludedAbilityIds,
+                  onToggleKeyBan: toggleKeyBan,
+                  onSetKeyPriority: setKeyPriority,
+                  onPinAbility: pinAbility,
+                  onUnpinSlot: unpinSlot,
+                  onExcludeAbility: excludeAbility,
+                  onRestoreAbility: restoreAbility,
+                  onPinAll: pinAllCurrent,
+                  onClearOverrides: clearOverrides,
+                }}
               />
             </section>
             <ScorePanel

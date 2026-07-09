@@ -377,30 +377,35 @@ describe('lua addon generator', () => {
     if (focusBind) expect(macroBody(focusBind)).toBe('/focus [@mouseover,exists][]')
   })
 
-  it('plans keyboard-mirrored bar slots: digits aligned, layers on separate bars', () => {
+  it('packs bottom bars densely with no interior gaps, layers on separate bars', () => {
     const layout = solveLayout(263, 'arena', 'arena123')
     const entries = buildLuaBindEntries(layout.binds)
-    const digitColumn: Record<string, number> = {
+    const digitOrder: Record<string, number> = {
       '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '0': 9, '-': 10, '=': 11,
     }
     for (const entry of entries) {
       if (entry.command !== undefined) {
         expect(entry.slot).toBeUndefined()
-        continue
-      }
-      expect(entry.slot).toBeDefined()
-      const column = digitColumn[entry.key]
-      if (column !== undefined) {
-        expect(entry.slot).toBe(column)
+      } else {
+        expect(entry.slot).toBeDefined()
       }
     }
-    const shiftDigits = entries.filter(
-      (entry) => entry.slot !== undefined && /^SHIFT-[0-9=-]$/.test(entry.key),
-    )
-    for (const entry of shiftDigits) {
-      const keyChar = entry.key.slice(6)
-      expect((entry.slot ?? 0) % 12).toBe(digitColumn[keyChar])
-      expect(entry.slot ?? 0).toBeGreaterThanOrEqual(12)
+    const baseDigits = entries
+      .filter((entry) => entry.slot !== undefined && /^[0-9=-]$/.test(entry.key))
+      .sort((a, b) => (digitOrder[a.key] ?? 0) - (digitOrder[b.key] ?? 0))
+    baseDigits.forEach((entry, index) => expect(entry.slot).toBe(index))
+
+    const columnsByBar = new Map<number, number[]>()
+    for (const entry of entries) {
+      if (entry.slot === undefined) continue
+      const bar = Math.floor(entry.slot / 12)
+      const columns = columnsByBar.get(bar) ?? []
+      columns.push(entry.slot % 12)
+      columnsByBar.set(bar, columns)
+    }
+    for (const columns of columnsByBar.values()) {
+      const sorted = [...columns].sort((a, b) => a - b)
+      sorted.forEach((column, index) => expect(column).toBe(index))
     }
     const slots = entries.map((entry) => entry.slot).filter((slot) => slot !== undefined)
     expect(new Set(slots).size).toBe(slots.length)

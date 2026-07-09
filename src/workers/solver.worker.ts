@@ -1,6 +1,6 @@
 import { decodeLoadout } from '@/core/decoder'
 import type { NodeSelection } from '@/core/decoder'
-import { extractAbilityPool } from '@/core/extract/ability-pool'
+import { extractAbilityPool, filterExcludedAbilities } from '@/core/extract/ability-pool'
 import { buildAssignmentProblem } from '@/core/problem/build'
 import { solveAssignment, DEFAULT_MOVE_BUDGET } from '@/core/solver'
 import type { SolverStrategyId } from '@/core/solver'
@@ -33,6 +33,7 @@ export interface SolverRequest {
   preservedBinds?: Record<string, string>
   anchorInterruptSlotId?: string
   includeTargetBinds?: boolean
+  excludedAbilityIds?: string[]
 }
 
 export interface LayoutVariant {
@@ -67,17 +68,20 @@ self.onmessage = (event: MessageEvent<SolverRequest>) => {
       request.importString.trim(),
       request.spec.nodes.map((node) => ({ id: node.id, kind: node.kind, maxRanks: node.maxRanks })),
     )
-    const abilities = extractAbilityPool({
-      spec: request.spec,
-      spellMeta: request.spellMeta,
-      selections: decoded.selections,
-      race: request.race,
-      pvpTalentIds: request.pvpTalentIds,
-      mode: request.mode,
-      arenaTargetScheme: request.arenaTargetScheme,
-      spellNames: request.spellNames,
-      includeTargetBinds: request.includeTargetBinds,
-    })
+    const abilities = filterExcludedAbilities(
+      extractAbilityPool({
+        spec: request.spec,
+        spellMeta: request.spellMeta,
+        selections: decoded.selections,
+        race: request.race,
+        pvpTalentIds: request.pvpTalentIds,
+        mode: request.mode,
+        arenaTargetScheme: request.arenaTargetScheme,
+        spellNames: request.spellNames,
+        includeTargetBinds: request.includeTargetBinds,
+      }),
+      request.excludedAbilityIds ?? [],
+    )
     const preservedBinds: Record<string, string> = { ...(request.preservedBinds ?? {}) }
     if (request.anchorInterruptSlotId) {
       const interrupt = abilities.find(

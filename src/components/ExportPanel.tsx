@@ -19,6 +19,7 @@ import {
   ADDON_UI_KEYS,
 } from '@/lib/exports'
 import { encodeImportString } from '@/lib/import-string'
+import { AddonGuide } from './AddonGuide'
 import { GameBarsPreview } from './GameBarsPreview'
 import type { HardwareConfig } from '@/core/model/hardware'
 import type { AddonDecor, AddonLocaleStrings, AddonUiKey } from '@/lib/exports'
@@ -441,12 +442,7 @@ export function ExportPanel({
           </p>
         </div>
       )}
-      {tab === 'lua' && (
-        <>
-          <p style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('luaHint')}</p>
-          <p style={{ marginTop: 6, fontSize: '0.8rem', color: 'var(--text-faint)' }}>{t('importHint')}</p>
-        </>
-      )}
+      {tab === 'lua' && <AddonGuide />}
     </section>
   )
 }

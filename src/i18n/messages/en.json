@@ -69,7 +69,23 @@
     "targetArena": "Target arena {n}",
     "setFocus": "Set focus",
     "editKeys": "Edit keys",
-    "editKeysHint": "Click keys to exclude them from the layout or bring them back. Tab is excluded by default — it usually targets enemies. The layout re-solves automatically."
+    "editKeysHint": "Click any key to set its priority, pin an ability, or ban it. Pick the layer with the Base/Shift/Ctrl/Alt tabs — pinning applies to the selected layer. The layout re-solves automatically.",
+    "editPriority": "Key priority",
+    "editPriorityUp": "Higher",
+    "editPriorityDown": "Lower",
+    "editBanKey": "Ban",
+    "editUnbanKey": "Allow this key",
+    "editCurrentBind": "Currently on this key",
+    "editPin": "Pin",
+    "editUnpin": "Unpin",
+    "editExclude": "Exclude",
+    "editAssign": "Assign an ability",
+    "editSearch": "Search ability…",
+    "editNoResults": "No matches",
+    "editPinAll": "Pin everything as is",
+    "editReset": "Reset customization",
+    "editRestore": "Bring back",
+    "editEmptySlot": "Slot is free — pick an ability below"
   },
   "hover": {
     "keyTier": "{tier}-tier key",
@@ -216,7 +232,7 @@
       "clearMainButton": "Clear main bar",
       "stateOn": "ON",
       "stateOff": "OFF",
-      "help": "/kbo — layout browser, /kbo apply — apply, /kbo force — force apply, /kbo check — verify, /kbo import — import a layout string, /kbo profile N — pick layout, /kbo bars — show hidden bars, /kbo auto — login auto-apply, /kbo colors, /kbo legend, /kbo mainbar, /kbo mouseover, /kbo clearmain",
+      "help": "/kbo — layout browser, /kbo apply — apply, /kbo force — force apply, /kbo check — verify, /kbo import — import a layout string, /kbo profile N — pick layout, /kbo bars — show hidden bars, /kbo auto — login auto-apply, /kbo colors, /kbo legend, /kbo mainbar, /kbo mouseover, /kbo clearmain, /kbo wipe — clear all bars",
       "importButton": "Import layout…",
       "importTitle": "Import a layout from the site",
       "importHint": "Paste the import string (starts with !KBO1!) and press Import — no addon re-download needed.",
@@ -226,7 +242,9 @@
       "msgImported": "layouts imported: %d — select one and press Apply",
       "importErrFormat": "import string is corrupted or has an unsupported format",
       "importErrChecksum": "import string is incomplete — copy it fully and paste again",
-      "importErrClient": "this game client does not support import strings (C_EncodingUtil missing)"
+      "importErrClient": "this game client does not support import strings (C_EncodingUtil missing)",
+      "wipeButton": "Clear all bars",
+      "msgWiped": "all managed bars cleared: %d slots (mounts, toys and personal macros kept) — backup saved"
     },
     "importTitle": "Import string",
     "importCopy": "Copy import string",
@@ -242,7 +260,38 @@
       "extra": "Bar {n} (hidden by default)",
       "hiddenHint": "Hidden bars can be enabled with /kbo bars or in Edit Mode.",
       "keysOnly": "Key-only binds (not on bars)",
-      "empty": "empty"
+      "empty": "empty",
+      "macroNote": "The @focus / @1 / @mo marks are macros (same icon, different target): @focus hits your focus, @1–3 the arena enemies, @mo the unit under your cursor. These are not duplicates."
+    },
+    "guide": {
+      "installTitle": "Install",
+      "step1": "Click “Download addon (.zip)” and unpack it into World of Warcraft/_retail_/Interface/AddOns — you should get a KeybindOptimizer folder inside.",
+      "step2": "Fully restart the game (or /reload if it is already running).",
+      "step3": "On the character screen open “AddOns” and enable “Load out of date AddOns” if KeybindOptimizer is flagged as outdated.",
+      "updateTitle": "Update without re-downloading",
+      "updateText": "You never need to re-download the addon: press “Copy import string”, then in game — /kbo import, paste the string, pick the layout and hit Apply.",
+      "howTitle": "How it works",
+      "how1": "/kbo opens the layout browser: every variant is shown on a bar grid with real icons — pick one and press Apply.",
+      "how2": "Bars mirror the keyboard: the main bar is the number row, the next one holds letter keys, then one bar per modifier; digits stay in the same columns.",
+      "how3": "The addon only touches spells and its own macros: mounts, toys, items, pets and your personal macros are preserved. Applying is idempotent — on login it re-applies only if something drifted.",
+      "how4": "Druids and rogues page the main bar in forms/stealth, so it is skipped for them by default. Client language does not matter — abilities are resolved by ID.",
+      "commandsTitle": "Commands",
+      "commands": {
+        "apply": "apply the layout",
+        "force": "force apply",
+        "check": "verify the layout",
+        "import": "import a layout string",
+        "profile N": "pick layout #N",
+        "bars": "show hidden bars",
+        "auto": "auto-apply on login",
+        "colors": "category colors",
+        "legend": "color legend",
+        "mainbar": "use the main bar",
+        "mouseover": "mouseover macros",
+        "clearmain": "clear the main bar",
+        "browser": "layout browser",
+        "wipe": "clear all bars"
+      }
     }
   }
 }

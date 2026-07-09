@@ -2,6 +2,7 @@ import type { ArenaTargetScheme, GameMode } from '@/core/model/ability'
 import type {
   HardwareConfig,
   KeyboardFormFactor,
+  KeyPriority,
   Modifier,
   MouseModel,
   MovementSchemeId,
@@ -18,6 +19,8 @@ export interface OptimizerInputs {
   arenaTargetBinds: boolean | null
   hardware: HardwareConfig
   seed: number
+  pinnedBinds: Record<string, string>
+  excludedAbilityIds: string[]
 }
 
 export const DEFAULT_INPUTS: OptimizerInputs = {
@@ -29,6 +32,8 @@ export const DEFAULT_INPUTS: OptimizerInputs = {
   arenaTargetBinds: null,
   hardware: DEFAULT_HARDWARE_CONFIG,
   seed: 1,
+  pinnedBinds: {},
+  excludedAbilityIds: [],
 }
 
 export function effectiveTargetBinds(inputs: OptimizerInputs): boolean {
@@ -64,6 +69,15 @@ export function serializeInputs(inputs: OptimizerInputs): URLSearchParams {
     params.set('ban', h.bannedKeyIds.length === 0 ? 'none' : h.bannedKeyIds.join('.'))
   }
   if (inputs.seed !== 1) params.set('seed', String(inputs.seed))
+  const priorities = Object.entries(h.keyPriorities)
+    .map(([keyId, priority]) => `${keyId}:${priority === 'boost' ? 'up' : 'down'}`)
+    .join('.')
+  if (priorities) params.set('prio', priorities)
+  const pins = Object.entries(inputs.pinnedBinds)
+    .map(([abilityId, slotId]) => `${abilityId}@${slotId}`)
+    .join('~')
+  if (pins) params.set('pin', pins)
+  if (inputs.excludedAbilityIds.length > 0) params.set('ex', inputs.excludedAbilityIds.join('~'))
   return params
 }
 
@@ -91,6 +105,25 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
         ? []
         : banRaw.split('.').filter(Boolean)
 
+  const keyPriorities: Record<string, KeyPriority> = {}
+  for (const entry of (params.get('prio') ?? '').split('.')) {
+    const [keyId, direction] = entry.split(':')
+    if (!keyId) continue
+    if (direction === 'up') keyPriorities[keyId] = 'boost'
+    else if (direction === 'down') keyPriorities[keyId] = 'lower'
+  }
+
+  const pinnedBinds: Record<string, string> = {}
+  for (const entry of (params.get('pin') ?? '').split('~')) {
+    const separator = entry.indexOf('@')
+    if (separator <= 0) continue
+    const abilityId = entry.slice(0, separator)
+    const slotId = entry.slice(separator + 1)
+    if (abilityId && slotId) pinnedBinds[abilityId] = slotId
+  }
+
+  const excludedAbilityIds = (params.get('ex') ?? '').split('~').filter(Boolean)
+
   const hardware: HardwareConfig = {
     ...DEFAULT_HARDWARE_CONFIG,
     formFactor,
@@ -100,6 +133,7 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
     enabledModifiers,
     includeMouseWheel: params.get('wheel') === '1',
     bannedKeyIds,
+    keyPriorities,
   }
 
   const mode = GAME_MODES.find((value) => value === params.get('mode')) ?? DEFAULT_INPUTS.mode
@@ -117,5 +151,7 @@ export function deserializeInputs(params: URLSearchParams): OptimizerInputs {
     arenaTargetBinds: params.get('tb') === '1' ? true : params.get('tb') === '0' ? false : null,
     hardware,
     seed: params.get('seed') ? Number.parseInt(params.get('seed') ?? '1', 10) : 1,
+    pinnedBinds,
+    excludedAbilityIds,
   }
 }

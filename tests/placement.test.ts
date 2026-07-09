@@ -7,13 +7,13 @@ function bind(keyId: string, modifier: PlannedBind['modifier'], placeable = true
 }
 
 describe('placement plan', () => {
-  it('mirrors the number row onto the first bar with gaps preserved', () => {
+  it('compacts the number row onto the first bar with no interior gaps', () => {
     const plan = buildPlacementPlan([
       bind('Digit3', 'none'),
       bind('Digit1', 'none'),
       bind('Equal', 'none'),
     ])
-    expect(plan).toEqual([2, 0, 11])
+    expect(plan).toEqual([1, 0, 2])
   })
 
   it('puts base-layer letters on their own bar in keyboard order when no shift binds exist', () => {
@@ -29,15 +29,15 @@ describe('placement plan', () => {
     expect(plan[3]).toBe(BAR_SIZE + 2)
   })
 
-  it('stacks the shift layer right above the main bar with digit columns paired', () => {
+  it('stacks the shift layer right above the main bar with digit columns paired and compacted', () => {
     const plan = buildPlacementPlan([
       bind('Digit5', 'none'),
       bind('Digit5', 'shift'),
       bind('Digit1', 'none'),
       bind('Digit1', 'shift'),
     ])
-    expect(plan[0]).toBe(4)
-    expect(plan[1]).toBe(BAR_SIZE + 4)
+    expect(plan[0]).toBe(1)
+    expect(plan[1]).toBe(BAR_SIZE + 1)
     expect(plan[2]).toBe(0)
     expect(plan[3]).toBe(BAR_SIZE + 0)
   })
@@ -51,8 +51,8 @@ describe('placement plan', () => {
       bind('KeyR', 'ctrl'),
     ])
     expect(plan[0]).toBe(0)
-    expect(plan[2]).toBe(BAR_SIZE + 1)
-    expect(plan[3]).toBe(BAR_SIZE + 0)
+    expect(plan[2]).toBe(BAR_SIZE + 0)
+    expect(plan[3]).toBe(BAR_SIZE + 1)
     expect(plan[1]).toBe(2 * BAR_SIZE)
     expect(plan[4]).toBe(3 * BAR_SIZE)
   })
@@ -83,7 +83,7 @@ describe('placement plan', () => {
     expect(plan).toEqual([0, 1, 2, 3, 4])
   })
 
-  it('aligns shift letters with their base-letter column when it is free', () => {
+  it('packs shift letters densely right after the shift digits', () => {
     const plan = buildPlacementPlan([
       bind('Digit1', 'none'),
       bind('KeyQ', 'none'),
@@ -98,7 +98,7 @@ describe('placement plan', () => {
     expect(plan[3]).toBe(BAR_SIZE + 1)
   })
 
-  it('falls back to the first free column when the aligned column is taken', () => {
+  it('leaves no interior gap between shift digits and shift letters', () => {
     const plan = buildPlacementPlan([
       bind('KeyQ', 'none'),
       bind('KeyQ', 'shift'),

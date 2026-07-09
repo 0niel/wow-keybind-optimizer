@@ -21,6 +21,16 @@ export interface ExtractionInput {
 
 const PVP_MODES: GameMode[] = ['arena', 'rbg', 'battleground']
 
+export function filterExcludedAbilities(abilities: Ability[], excludedIds: string[]): Ability[] {
+  if (excludedIds.length === 0) return abilities
+  const excluded = new Set(excludedIds)
+  return abilities.filter(
+    (ability) =>
+      !excluded.has(ability.id) &&
+      !(ability.baseAbilityId !== null && excluded.has(ability.baseAbilityId)),
+  )
+}
+
 const CPM_CAP = 10
 const APL_RANK_BEST = 0.9
 const APL_RANK_WORST = 0.15
